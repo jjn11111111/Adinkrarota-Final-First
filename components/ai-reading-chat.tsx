@@ -112,7 +112,7 @@ export function AIReadingChat({
     ) {
       hasAutoInterpreted.current = true;
       sendMessage({ 
-        text: "Please provide a comprehensive interpretation of this sacred reading. Draw from all sources of universal wisdom—Adinkra philosophy, Tarot tradition, astrological correspondences, numerological significance, and the collective wisdom of all spiritual traditions. Illuminate both the individual cards and their interconnected message."
+        text: "Please provide a comprehensive interpretation of this reading. Draw from all sources of universal wisdom—Adinkra philosophy, Tarot tradition, astrological correspondences, numerological significance, and the collective wisdom of all spiritual traditions. Illuminate both the individual cards and their interconnected message."
       });
     }
   }, [autoInterpret, isVisible, aiSettings?.enabled, cards.length, messages.length, status, sendMessage]);

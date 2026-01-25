@@ -236,7 +236,7 @@ export default function PortalPage() {
                 Guidebook
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Learn the sacred mathematics
+                Learn the mathematics of Adinkra
               </p>
               <span className="inline-flex items-center gap-1 text-primary text-sm group-hover:gap-2 transition-all">
                 Study <ArrowRight className="w-4 h-4" />
@@ -325,7 +325,7 @@ export default function PortalPage() {
         >
           <Shield className="w-5 h-5 text-primary flex-shrink-0" />
           <p className="text-sm text-muted-foreground">
-            Your data is sacred and protected. We never sell, trade, or share
+            Your data is protected. We never sell, trade, or share
             your information. <Link href="/privacy" className="text-primary hover:underline">Read our pledge</Link>
           </p>
         </motion.div>

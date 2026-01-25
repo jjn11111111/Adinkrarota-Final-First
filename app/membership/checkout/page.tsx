@@ -61,7 +61,7 @@ export default function MembershipCheckoutPage() {
             Complete Your Membership
           </h1>
           <p className="text-muted-foreground font-serif">
-            One-time sacred offering for eternal access
+            One-time offering for eternal access
           </p>
         </div>
 

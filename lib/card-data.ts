@@ -60,9 +60,9 @@ export const majorArcana: CardType[] = [
     suit: "major",
     adinkraSymbol: "Hye Wonhye",
     adinkraMeaning: "That which cannot be burned, imperishability and endurance",
-    tarotMeaning: "Intuition, sacred knowledge, divine feminine, the subconscious",
+    tarotMeaning: "Intuition, hidden knowledge, divine feminine, the subconscious",
     fusedInterpretation: "The High Priestess embodies Hye Wonhye, the imperishable flame of inner knowing. She guards eternal truths that no fire can consume, wisdom that endures beyond time.",
-    keywords: ["intuition", "imperishability", "sacred knowledge", "mystery"],
+    keywords: ["intuition", "imperishability", "hidden knowledge", "mystery"],
     celestialBody: "Moon",
     imageUrl: "/images/cards/high-priestess.jpeg"
   },
@@ -74,7 +74,7 @@ export const majorArcana: CardType[] = [
     adinkraSymbol: "Asase Ye Duru",
     adinkraMeaning: "The Earth has weight, providence and the divinity of Mother Earth",
     tarotMeaning: "Femininity, beauty, nature, nurturing, abundance",
-    fusedInterpretation: "The Empress embodies Asase Ye Duru, the sacred weight of Mother Earth herself. Her abundance springs from honoring the land, her nurturing mirrors the providence of the divine feminine ground beneath all life.",
+    fusedInterpretation: "The Empress embodies Asase Ye Duru, the weight of Mother Earth herself. Her abundance springs from honoring the land, her nurturing mirrors the providence of the divine feminine ground beneath all life.",
     keywords: ["abundance", "earth", "providence", "divine feminine"],
     celestialBody: "Venus",
     imageUrl: "/images/cards/empress.jpeg"
@@ -100,8 +100,8 @@ export const majorArcana: CardType[] = [
     adinkraSymbol: "Mpuannum",
     adinkraMeaning: "Five tufts of hair, priestly office, loyalty, and adroitness",
     tarotMeaning: "Spiritual wisdom, religious beliefs, tradition, conformity",
-    fusedInterpretation: "The Hierophant wears Mpuannum, the five tufts marking priestly consecration. He bridges heaven and earth through sacred ritual, transmitting ancient wisdom to those who seek.",
-    keywords: ["tradition", "priesthood", "sacred knowledge", "spiritual authority"],
+    fusedInterpretation: "The Hierophant wears Mpuannum, the five tufts marking priestly consecration. He bridges heaven and earth through ritual, transmitting ancient wisdom to those who seek.",
+    keywords: ["tradition", "priesthood", "esoteric knowledge", "spiritual authority"],
     celestialBody: "Taurus",
     imageUrl: "/images/cards/hierophant.jpeg"
   },
@@ -511,7 +511,7 @@ export const cups: CardType[] = [
     adinkraSymbol: "Mpatapo",
     adinkraMeaning: "Knot of reconciliation, peacemaking and unity",
     tarotMeaning: "Love, new relationships, compassion, creativity",
-    fusedInterpretation: "The Ace overflows with Mpatapo's reconciling waters. A new wellspring of collective love emerges—the self and the whole become one in this sacred chalice of emotional beginning.",
+    fusedInterpretation: "The Ace overflows with Mpatapo's reconciling waters. A new wellspring of collective love emerges—the self and the whole become one in this chalice of emotional beginning.",
     keywords: ["love", "collective", "unity", "emotional beginning"],
     element: "Water",
     imageUrl: "/images/cards/ace-cups.jpeg"
@@ -524,7 +524,7 @@ export const cups: CardType[] = [
     adinkraSymbol: "Akoka Sun",
     adinkraMeaning: "The joining of two souls, unity and combination",
     tarotMeaning: "Unified love, partnership, mutual attraction",
-    fusedInterpretation: "Two cups meet in Akoka Sun's sacred union. The power to combine or repel rests in this moment—choose connection and hearts align across all dimensions.",
+    fusedInterpretation: "Two cups meet in Akoka Sun's union. The power to combine or repel rests in this moment—choose connection and hearts align across all dimensions.",
     keywords: ["partnership", "combination", "unity", "attraction"],
     element: "Water",
     imageUrl: "/images/cards/2-cups.jpeg"
@@ -909,7 +909,7 @@ export const pentacles: CardType[] = [
     adinkraSymbol: "Boa Me Ne Me Mmoa Wo",
     adinkraMeaning: "Help me and let me help you, cooperation",
     tarotMeaning: "Teamwork, collaboration, learning, implementation",
-    fusedInterpretation: "Three pentacles rise through Boa Me Ne Me Mmoa Wo's sacred exchange. True collaboration enriches all—but beware usury disguised as partnership.",
+    fusedInterpretation: "Three pentacles rise through Boa Me Ne Me Mmoa Wo's exchange. True collaboration enriches all—but beware usury disguised as partnership.",
     keywords: ["collaboration", "usury", "teamwork", "skill"],
     element: "Earth",
     imageUrl: "/images/cards/3-pentacles.jpeg"

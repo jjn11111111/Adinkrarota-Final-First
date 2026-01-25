@@ -1,4 +1,4 @@
--- Adinkrarota Sacred Economy Database Schema
+-- Adinkrarota Economy Database Schema
 -- This schema supports the guest/member access model with strict privacy protections
 
 -- User profiles table (extends Supabase auth.users)
