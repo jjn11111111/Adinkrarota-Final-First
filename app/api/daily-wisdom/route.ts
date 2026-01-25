@@ -1,5 +1,5 @@
 import { generateText } from "ai";
-import { cards, drawCardsWithPolarity } from "@/lib/card-data";
+import { drawCardsWithPolarity } from "@/lib/card-data";
 import { getGuidebookEntry } from "@/lib/guidebook-data";
 
 export const maxDuration = 30;

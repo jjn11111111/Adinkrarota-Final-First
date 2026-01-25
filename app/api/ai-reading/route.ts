@@ -1,4 +1,4 @@
-import { convertToModelMessages, streamText, UIMessage, consumeStream } from "ai";
+import { convertToModelMessages, streamText, UIMessage } from "ai";
 import { UNIVERSAL_WISDOM_SYSTEM_PROMPT, SPREAD_BUILDER_ASSISTANT_PROMPT } from "@/lib/ai-wisdom-prompt";
 
 export const maxDuration = 60;
@@ -58,10 +58,7 @@ export async function POST(req: Request) {
       abortSignal: req.signal,
     });
 
-    return result.toUIMessageStreamResponse({
-      originalMessages: messages,
-      consumeSseStream: consumeStream,
-    });
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error("AI Reading Error:", error);
     return Response.json(

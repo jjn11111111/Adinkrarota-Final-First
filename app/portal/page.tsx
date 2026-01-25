@@ -12,7 +12,6 @@ import {
   BookOpen,
   Layout,
   History,
-  Settings,
   LogOut,
   Star,
   Shield,
@@ -21,6 +20,7 @@ import {
   ArrowRight,
   User,
 } from "lucide-react";
+import { DailyWisdom } from "@/components/daily-wisdom";
 
 export default function PortalPage() {
   const router = useRouter();
@@ -174,6 +174,16 @@ export default function PortalPage() {
               </div>
             )}
           </div>
+        </motion.div>
+
+        {/* Daily Wisdom - AI Feature */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <DailyWisdom />
         </motion.div>
 
         {/* Quick Actions Grid */}
