@@ -125,7 +125,7 @@ export default function PricingPage() {
             </p>
 
             <div className="space-y-3 mb-8">
-              {product?.features.map((feature, index) => (
+              {(product?.features ?? []).map((feature, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                   <span className="text-sm text-foreground">{feature}</span>
