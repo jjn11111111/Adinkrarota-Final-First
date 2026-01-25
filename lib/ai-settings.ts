@@ -1,72 +1,43 @@
-export interface AIProvider {
+export interface AIModel {
   id: string;
   name: string;
-  models: { id: string; name: string }[];
-  requiresApiKey: boolean;
-  keyEnvVar?: string;
+  description: string;
 }
 
-export const AI_PROVIDERS: AIProvider[] = [
+// All models work via Vercel AI Gateway - no API keys needed
+export const AI_MODELS: AIModel[] = [
   {
-    id: "openai",
-    name: "OpenAI",
-    models: [
-      { id: "openai/gpt-4o", name: "GPT-4o" },
-      { id: "openai/gpt-4o-mini", name: "GPT-4o Mini" },
-      { id: "openai/gpt-4-turbo", name: "GPT-4 Turbo" },
-    ],
-    requiresApiKey: true,
-    keyEnvVar: "OPENAI_API_KEY",
+    id: "anthropic/claude-sonnet-4-5",
+    name: "Claude Sonnet 4.5",
+    description: "Anthropic's most capable model for nuanced interpretations",
   },
   {
-    id: "anthropic",
-    name: "Anthropic",
-    models: [
-      { id: "anthropic/claude-sonnet-4-5", name: "Claude Sonnet 4.5" },
-      { id: "anthropic/claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet" },
-      { id: "anthropic/claude-3-haiku-20240307", name: "Claude 3 Haiku" },
-    ],
-    requiresApiKey: true,
-    keyEnvVar: "ANTHROPIC_API_KEY",
+    id: "openai/gpt-4o",
+    name: "GPT-4o",
+    description: "OpenAI's flagship multimodal model",
   },
   {
-    id: "google",
-    name: "Google AI",
-    models: [
-      { id: "google/gemini-2.0-flash-exp", name: "Gemini 2.0 Flash" },
-      { id: "google/gemini-1.5-pro", name: "Gemini 1.5 Pro" },
-      { id: "google/gemini-1.5-flash", name: "Gemini 1.5 Flash" },
-    ],
-    requiresApiKey: true,
-    keyEnvVar: "GOOGLE_GENERATIVE_AI_API_KEY",
+    id: "openai/gpt-4o-mini",
+    name: "GPT-4o Mini",
+    description: "Fast and efficient for quick readings",
   },
   {
-    id: "groq",
-    name: "Groq (Free)",
-    models: [
-      { id: "groq/llama-3.3-70b-versatile", name: "Llama 3.3 70B" },
-      { id: "groq/mixtral-8x7b-32768", name: "Mixtral 8x7B" },
-    ],
-    requiresApiKey: false,
-    keyEnvVar: "GROQ_API_KEY",
+    id: "groq/llama-3.3-70b-versatile",
+    name: "Llama 3.3 70B",
+    description: "Open source model with fast inference via Groq",
   },
   {
-    id: "xai",
-    name: "xAI Grok (Free)",
-    models: [
-      { id: "xai/grok-2-1212", name: "Grok 2" },
-      { id: "xai/grok-beta", name: "Grok Beta" },
-    ],
-    requiresApiKey: false,
-    keyEnvVar: "XAI_API_KEY",
+    id: "xai/grok-2-1212",
+    name: "Grok 2",
+    description: "xAI's conversational model",
   },
 ];
 
+export const DEFAULT_MODEL_ID = "anthropic/claude-sonnet-4-5";
+
 export interface AISettings {
   enabled: boolean;
-  providerId: string;
   modelId: string;
-  apiKey: string;
 }
 
 const STORAGE_KEY = "adinkrarota-ai-settings";
@@ -92,14 +63,13 @@ export function clearAISettings(): void {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-export function getProviderById(id: string): AIProvider | undefined {
-  return AI_PROVIDERS.find((p) => p.id === id);
+export function getModelById(modelId: string): AIModel | undefined {
+  return AI_MODELS.find((m) => m.id === modelId);
 }
 
-export function getModelById(
-  providerId: string,
-  modelId: string
-): { id: string; name: string } | undefined {
-  const provider = getProviderById(providerId);
-  return provider?.models.find((m) => m.id === modelId);
+export function getDefaultSettings(): AISettings {
+  return {
+    enabled: true,
+    modelId: DEFAULT_MODEL_ID,
+  };
 }

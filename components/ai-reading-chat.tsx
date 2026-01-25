@@ -17,7 +17,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { type AISettings, getAISettings, getProviderById, getModelById } from "@/lib/ai-settings";
+import { type AISettings, getAISettings, getModelById, getDefaultSettings, DEFAULT_MODEL_ID } from "@/lib/ai-settings";
 import { AISettingsModal } from "./ai-settings-modal";
 import type { CardType, DrawnCard } from "@/lib/card-data";
 import { getGuidebookEntry } from "@/lib/guidebook-data";
@@ -85,9 +85,7 @@ export function AIReadingChat({
     transport: new DefaultChatTransport({
       api: "/api/ai-reading",
       body: {
-        providerId: aiSettings?.providerId,
-        modelId: aiSettings?.modelId,
-        apiKey: aiSettings?.apiKey,
+        modelId: aiSettings?.modelId || DEFAULT_MODEL_ID,
         readingContext: buildReadingContext(),
       },
     }),
@@ -136,8 +134,7 @@ export function AIReadingChat({
     sendMessage({ text: prompt });
   };
 
-  const provider = aiSettings ? getProviderById(aiSettings.providerId) : null;
-  const model = aiSettings ? getModelById(aiSettings.providerId, aiSettings.modelId) : null;
+  const selectedModel = aiSettings ? getModelById(aiSettings.modelId) : null;
 
   if (!isVisible) return null;
 
@@ -162,9 +159,9 @@ export function AIReadingChat({
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-sm">AI Collaborator</h3>
-                {aiSettings?.enabled && provider && model && (
+                {aiSettings?.enabled && selectedModel && (
                   <p className="text-xs text-muted-foreground">
-                    {provider.name} - {model.name}
+                    {selectedModel.name}
                   </p>
                 )}
               </div>
@@ -203,15 +200,15 @@ export function AIReadingChat({
                 <Sparkles className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Connect Your AI
+                Enable AI Interpretations
               </h3>
               <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-                Add your AI subscription to get personalized interpretations and
-                chat about your readings.
+                Get personalized interpretations powered by advanced AI models.
+                No API key required.
               </p>
               <Button onClick={() => setShowSettings(true)} className="gap-2">
-                <Settings className="w-4 h-4" />
-                Configure AI
+                <Sparkles className="w-4 h-4" />
+                Enable AI
               </Button>
             </div>
           ) : (
