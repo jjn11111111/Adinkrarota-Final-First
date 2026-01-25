@@ -54,7 +54,7 @@ export default function PricingPage() {
             Membership
           </h1>
           <p className="text-muted-foreground font-serif text-lg max-w-2xl mx-auto">
-            Unlock the full wisdom of the Adinkrarota deck with a one-time sacred offering
+            Unlock the full wisdom of the Adinkrarota deck with a one-time offering
           </p>
         </motion.div>
 
@@ -152,7 +152,7 @@ export default function PricingPage() {
           <div className="flex items-center gap-3 mb-6">
             <Shield className="w-6 h-6 text-primary" />
             <h3 className="text-xl font-semibold text-foreground">
-              Your Data is Sacred
+              Your Data is Protected
             </h3>
           </div>
           
