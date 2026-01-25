@@ -85,19 +85,21 @@ function RegisterSuccessContent() {
             transition={{ delay: 0.4 }}
             className="bg-secondary/30 rounded-xl p-5 mb-6"
           >
-            <h3 className="font-semibold text-foreground mb-3 text-sm">What happens next:</h3>
-            <ol className="space-y-3 text-sm text-muted-foreground">
+            <h3 className="font-serif text-foreground mb-4 text-base text-center">
+              What happens next
+            </h3>
+            <ol className="space-y-4 text-sm text-muted-foreground">
               <li className="flex items-start gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">1</span>
-                <span>Check your email inbox (and spam folder) for the confirmation link</span>
+                <span className="pt-0.5">Check your email inbox (and spam folder) for the confirmation link</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">2</span>
-                <span>Click the link to verify your account</span>
+                <span className="pt-0.5">Click the link to verify your account</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">3</span>
-                <span>
+                <span className="pt-0.5">
                   {isMembership
                     ? "Complete your membership payment to unlock full access"
                     : "Sign in and begin your journey with the Adinkrarota deck"}
@@ -117,7 +119,7 @@ function RegisterSuccessContent() {
                 <Star className="w-5 h-5 text-primary" />
                 <span className="font-semibold text-foreground">Membership Awaits</span>
               </div>
-              <p className="text-xs text-muted-foreground text-center">
+              <p className="text-sm text-muted-foreground text-center">
                 After verifying your email, you will complete your $9.99 one-time payment 
                 for lifetime access to all premium features.
               </p>
@@ -129,24 +131,24 @@ function RegisterSuccessContent() {
               transition={{ delay: 0.5 }}
               className="p-4 rounded-xl bg-secondary/50 border border-border mb-6"
             >
-              <h4 className="font-semibold text-foreground text-sm mb-2 text-center">
-                As a Guest, you will have access to:
+              <h4 className="font-serif text-foreground text-sm mb-3 text-center">
+                As a guest, you will have access to
               </h4>
-              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-3 h-3 text-primary" />
+                  <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
                   <span>7 free readings per year</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <BookOpen className="w-3 h-3 text-primary" />
+                  <BookOpen className="w-4 h-4 text-primary flex-shrink-0" />
                   <span>Full guidebook access</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Shield className="w-3 h-3 text-primary" />
+                  <Shield className="w-4 h-4 text-primary flex-shrink-0" />
                   <span>Your data protected</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Heart className="w-3 h-3 text-primary" />
+                  <Heart className="w-4 h-4 text-primary flex-shrink-0" />
                   <span>AI interpretations</span>
                 </div>
               </div>
