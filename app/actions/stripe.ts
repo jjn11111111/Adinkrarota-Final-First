@@ -38,6 +38,7 @@ export async function createCheckoutSession(productId: string) {
         },
       ],
       mode: "payment",
+      allow_promotion_codes: true,
       return_url: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/membership/success?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
         userId: user.id,
