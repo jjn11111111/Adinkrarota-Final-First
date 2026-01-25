@@ -76,9 +76,6 @@ export default function LoginPage() {
             <Sparkles className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold text-gold-gradient mb-2">Welcome Back</h1>
-          <p className="text-muted-foreground font-serif">
-            Return to the Oracle
-          </p>
         </div>
 
         {/* Login Form */}
@@ -126,7 +123,7 @@ export default function LoginPage() {
             )}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Entering..." : "Enter the Oracle"}
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </div>
         </form>
