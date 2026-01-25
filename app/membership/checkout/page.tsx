@@ -60,8 +60,12 @@ export default function MembershipCheckoutPage() {
           <h1 className="text-3xl font-bold text-gold-gradient mb-2">
             Complete Your Membership
           </h1>
-          <p className="text-muted-foreground font-serif">
-            One-time offering for eternal access
+          <p className="text-muted-foreground font-serif mb-4">
+            One-time payment for lifetime access
+          </p>
+          <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+            Thank you for choosing to support Adinkrarota. Your membership helps us continue 
+            developing this fusion of Tarot and Adinkra wisdom for seekers around the world.
           </p>
         </div>
 
@@ -90,7 +94,7 @@ export default function MembershipCheckoutPage() {
               </p>
 
               <div className="space-y-3">
-                {product?.features.map((feature, index) => (
+                {(product?.features ?? []).map((feature, index) => (
                   <div key={index} className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                     <span className="text-sm text-foreground">{feature}</span>
