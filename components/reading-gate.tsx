@@ -61,7 +61,7 @@ export function ReadingGate({ children, spreadType = "single" }: ReadingGateProp
           
           <p className="text-muted-foreground font-serif mb-6 leading-relaxed">
             To receive guidance from the Adinkrarota, please register or sign in. 
-            Your readings are sacred and will be preserved for your reflection.
+            Your readings will be preserved for your reflection.
           </p>
 
           <div className="space-y-4">

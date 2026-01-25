@@ -15,9 +15,11 @@ import {
   Settings,
   MessageCircle,
   BookOpen,
+  Save,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { type AISettings, getAISettings, getProviderById, getModelById } from "@/lib/ai-settings";
+import { type AISettings, getAISettings, getModelById, getDefaultSettings, DEFAULT_MODEL_ID } from "@/lib/ai-settings";
 import { AISettingsModal } from "./ai-settings-modal";
 import type { CardType, DrawnCard } from "@/lib/card-data";
 import { getGuidebookEntry } from "@/lib/guidebook-data";
@@ -30,6 +32,7 @@ interface AIReadingChatProps {
   isVisible: boolean;
   onClose: () => void;
   autoInterpret?: boolean; // Automatically request interpretation when opened
+  readingId?: string; // If provided, allows saving AI interpretation to database
 }
 
 export function AIReadingChat({
@@ -39,12 +42,46 @@ export function AIReadingChat({
   isVisible,
   onClose,
   autoInterpret = false,
+  readingId,
 }: AIReadingChatProps) {
   const [aiSettings, setAISettings] = useState<AISettings | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Function to save AI interpretation to database
+  const saveInterpretation = async () => {
+    if (!readingId || messages.length === 0) return;
+    
+    // Extract all assistant messages as the interpretation
+    const interpretation = messages
+      .filter(m => m.role === "assistant")
+      .map(m => m.parts.filter(p => p.type === "text").map(p => (p as { type: "text"; text: string }).text).join(""))
+      .join("\n\n---\n\n");
+    
+    if (!interpretation.trim()) return;
+    
+    setSaveStatus("saving");
+    
+    try {
+      const response = await fetch("/api/readings/save-interpretation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ readingId, interpretation }),
+      });
+      
+      if (response.ok) {
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 3000);
+      } else {
+        setSaveStatus("idle");
+      }
+    } catch {
+      setSaveStatus("idle");
+    }
+  };
 
   // Load AI settings on mount
   useEffect(() => {
@@ -85,9 +122,7 @@ export function AIReadingChat({
     transport: new DefaultChatTransport({
       api: "/api/ai-reading",
       body: {
-        providerId: aiSettings?.providerId,
-        modelId: aiSettings?.modelId,
-        apiKey: aiSettings?.apiKey,
+        modelId: aiSettings?.modelId || DEFAULT_MODEL_ID,
         readingContext: buildReadingContext(),
       },
     }),
@@ -112,7 +147,7 @@ export function AIReadingChat({
     ) {
       hasAutoInterpreted.current = true;
       sendMessage({ 
-        text: "Please provide a comprehensive interpretation of this sacred reading. Draw from all sources of universal wisdom—Adinkra philosophy, Tarot tradition, astrological correspondences, numerological significance, and the collective wisdom of all spiritual traditions. Illuminate both the individual cards and their interconnected message."
+        text: "Please provide a comprehensive interpretation of this reading. Draw from all sources of universal wisdom—Adinkra philosophy, Tarot tradition, astrological correspondences, numerological significance, and the collective wisdom of all spiritual traditions. Illuminate both the individual cards and their interconnected message."
       });
     }
   }, [autoInterpret, isVisible, aiSettings?.enabled, cards.length, messages.length, status, sendMessage]);
@@ -136,8 +171,7 @@ export function AIReadingChat({
     sendMessage({ text: prompt });
   };
 
-  const provider = aiSettings ? getProviderById(aiSettings.providerId) : null;
-  const model = aiSettings ? getModelById(aiSettings.providerId, aiSettings.modelId) : null;
+  const selectedModel = aiSettings ? getModelById(aiSettings.modelId) : null;
 
   if (!isVisible) return null;
 
@@ -162,14 +196,37 @@ export function AIReadingChat({
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-sm">AI Collaborator</h3>
-                {aiSettings?.enabled && provider && model && (
+                {aiSettings?.enabled && selectedModel && (
                   <p className="text-xs text-muted-foreground">
-                    {provider.name} - {model.name}
+                    {selectedModel.name}
                   </p>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {/* Save button - only show when there are messages and a reading ID */}
+              {readingId && messages.some(m => m.role === "assistant") && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={saveInterpretation}
+                  disabled={saveStatus === "saving"}
+                  className="h-8 w-8"
+                  title="Save interpretation to reading"
+                >
+                  {saveStatus === "saved" ? (
+                    <Check className="w-4 h-4 text-green-500" />
+                  ) : saveStatus === "saving" ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full"
+                    />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -203,15 +260,15 @@ export function AIReadingChat({
                 <Sparkles className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Connect Your AI
+                Enable AI Interpretations
               </h3>
               <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-                Add your AI subscription to get personalized interpretations and
-                chat about your readings.
+                Get personalized interpretations powered by advanced AI models.
+                No API key required.
               </p>
               <Button onClick={() => setShowSettings(true)} className="gap-2">
-                <Settings className="w-4 h-4" />
-                Configure AI
+                <Sparkles className="w-4 h-4" />
+                Enable AI
               </Button>
             </div>
           ) : (

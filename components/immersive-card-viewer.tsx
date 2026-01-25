@@ -24,7 +24,7 @@ export function ImmersiveCardViewer({ card, onClose }: ImmersiveCardViewerProps)
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(true); // Auto-show details by default
 
   // Mouse tracking for 3D rotation
   const mouseX = useMotionValue(0);
@@ -298,110 +298,252 @@ export function ImmersiveCardViewer({ card, onClose }: ImmersiveCardViewerProps)
           </motion.div>
         </div>
 
-        {/* Details Panel */}
+        {/* Details Panel - Artful animated reveal */}
         <motion.div
-          initial={{ opacity: 0, x: 50 }}
+          initial={{ opacity: 0, x: 80, scale: 0.95 }}
           animate={{
             opacity: showDetails ? 1 : 0,
-            x: showDetails ? 0 : 50,
+            x: showDetails ? 0 : 80,
+            scale: showDetails ? 1 : 0.95,
             pointerEvents: showDetails ? "auto" : "none",
           }}
-          transition={{ duration: 0.3 }}
-          className="w-96 max-h-[80vh] overflow-y-auto mystical-border rounded-xl bg-card/90 backdrop-blur-sm p-6"
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="w-96 max-h-[80vh] overflow-y-auto mystical-border rounded-xl bg-card/90 backdrop-blur-sm p-6 hidden md:block"
         >
-          <div className="space-y-6">
-            <div>
+          <motion.div 
+            className="space-y-6"
+            initial="hidden"
+            animate={showDetails ? "visible" : "hidden"}
+            variants={{
+              visible: {
+                transition: {
+                  staggerChildren: 0.08,
+                  delayChildren: 0.2,
+                },
+              },
+            }}
+          >
+            {/* Header with name and polarity */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 },
+              }}
+              transition={{ duration: 0.4 }}
+            >
               <div className="flex items-center gap-3 mb-1">
-                <h3 className="text-lg font-semibold text-gold-gradient">
+                <h3 className="text-xl font-semibold text-gold-gradient">
                   {card.name}
                 </h3>
                 {hasPolarity(card) && (
-                  <span 
+                  <motion.span 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4, type: "spring" }}
                     className={`px-3 py-1 text-xs font-semibold rounded-full ${
                       isReversed 
-                        ? "bg-purple-900/30 text-purple-900 border border-purple-700/50" 
+                        ? "bg-purple-900/30 text-purple-300 border border-purple-700/50" 
                         : "bg-primary/20 text-primary border border-primary/30"
                     }`}
                   >
                     {isReversed ? "Shadow" : "Light"}
-                  </span>
+                  </motion.span>
                 )}
               </div>
               <p className="text-sm text-muted-foreground font-serif">
                 {card.suit === "major" ? "Major Arcana" : `${suitData.name} • ${suitData.element}`}
               </p>
+              
+              {/* Decorative divider */}
+              <motion.div 
+                className="mt-4 h-px w-full"
+                style={{ background: `linear-gradient(to right, transparent, ${suitData.color}50, transparent)` }}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: showDetails ? 1 : 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+              />
+            </motion.div>
+
+            {/* Adinkra Symbol */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 },
+              }}
+              transition={{ duration: 0.4 }}
+              className="bg-secondary/30 rounded-lg p-4"
+            >
+              <h4 className="text-xs uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: suitData.color }} />
+                Adinkra Symbol
+              </h4>
+              <p className="text-lg font-serif font-semibold" style={{ color: suitData.color }}>
+                {card.adinkraSymbol}
+              </p>
+              <p className="text-sm text-muted-foreground font-serif mt-1 italic">
+                {card.adinkraMeaning}
+              </p>
+            </motion.div>
+
+            {/* Tarot Meaning */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 },
+              }}
+              transition={{ duration: 0.4 }}
+            >
+              <h4 className="text-xs uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: suitData.color }} />
+                Tarot Meaning
+              </h4>
+              <p className="text-sm text-foreground/80 font-serif leading-relaxed">
+                {card.tarotMeaning}
+              </p>
+            </motion.div>
+
+            {/* Fused Interpretation - Highlighted */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 },
+              }}
+              transition={{ duration: 0.4 }}
+              className="relative"
+            >
+              <div 
+                className="absolute -left-2 top-0 bottom-0 w-0.5 rounded-full"
+                style={{ backgroundColor: suitData.color }}
+              />
+              <h4 className="text-xs uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
+                <Sparkles className="w-3 h-3" />
+                Fused Interpretation
+              </h4>
+              <p className="text-sm text-foreground font-serif leading-relaxed">
+                {card.fusedInterpretation}
+              </p>
+            </motion.div>
+
+            {/* Keywords */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 },
+              }}
+              transition={{ duration: 0.4 }}
+            >
+              <h4 className="text-xs uppercase tracking-widest text-primary mb-3">
+                Keywords
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {card.keywords.map((keyword, index) => (
+                  <motion.span
+                    key={keyword}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 + index * 0.05 }}
+                    className="px-3 py-1.5 text-xs rounded-full bg-muted text-foreground/80 font-serif border border-border/50 hover:border-primary/50 transition-colors"
+                  >
+                    {keyword}
+                  </motion.span>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Celestial & Element Row */}
+            {(card.celestialBody || card.element) && (
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 },
+                }}
+                transition={{ duration: 0.4 }}
+                className="flex gap-4 pt-2"
+              >
+                {card.celestialBody && (
+                  <div className="flex-1 bg-secondary/20 rounded-lg p-3 text-center">
+                    <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+                      Celestial
+                    </h4>
+                    <p className="text-sm font-serif text-foreground">
+                      {card.celestialBody}
+                    </p>
+                  </div>
+                )}
+                {card.element && (
+                  <div className="flex-1 bg-secondary/20 rounded-lg p-3 text-center">
+                    <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+                      Element
+                    </h4>
+                    <p className="text-sm font-serif" style={{ color: suitData.color }}>
+                      {card.element}
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </motion.div>
+        </motion.div>
+        
+        {/* Mobile Details Bottom Sheet */}
+        <motion.div
+          initial={{ y: "100%" }}
+          animate={{ y: showDetails ? 0 : "100%" }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-primary/20 rounded-t-2xl max-h-[60vh] overflow-y-auto z-50"
+        >
+          <div className="sticky top-0 bg-card/95 backdrop-blur-sm p-4 border-b border-border flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gold-gradient">{card.name}</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDetails(false)}
+              className="text-muted-foreground"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="p-4 space-y-4">
+            <div className="bg-secondary/30 rounded-lg p-3">
+              <p className="text-sm font-semibold" style={{ color: suitData.color }}>
+                {card.adinkraSymbol}
+              </p>
+              <p className="text-xs text-muted-foreground font-serif italic">
+                {card.adinkraMeaning}
+              </p>
             </div>
-
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-xs uppercase tracking-widest text-primary mb-2">
-                  Adinkra Symbol
-                </h4>
-                <p className="text-sm font-serif" style={{ color: suitData.color }}>
-                  {card.adinkraSymbol}
-                </p>
-                <p className="text-sm text-muted-foreground font-serif mt-1">
-                  {card.adinkraMeaning}
-                </p>
-              </div>
-
-              <div>
-                <h4 className="text-xs uppercase tracking-widest text-primary mb-2">
-                  Tarot Meaning
-                </h4>
-                <p className="text-sm text-foreground/80 font-serif">
-                  {card.tarotMeaning}
-                </p>
-              </div>
-
-              <div>
-                <h4 className="text-xs uppercase tracking-widest text-primary mb-2">
-                  Fused Interpretation
-                </h4>
-                <p className="text-sm text-foreground/90 font-serif leading-relaxed">
-                  {card.fusedInterpretation}
-                </p>
-              </div>
-
-              <div>
-                <h4 className="text-xs uppercase tracking-widest text-primary mb-2">
-                  Keywords
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {card.keywords.map((keyword) => (
-                    <span
-                      key={keyword}
-                      className="px-3 py-1 text-xs rounded-full bg-muted text-foreground/80 font-serif"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {card.celestialBody && (
-                <div>
-                  <h4 className="text-xs uppercase tracking-widest text-primary mb-2">
-                    Celestial Association
-                  </h4>
-                  <p className="text-sm text-muted-foreground font-serif">
-                    {card.celestialBody}
-                  </p>
-                </div>
-              )}
-
-              {card.element && (
-                <div>
-                  <h4 className="text-xs uppercase tracking-widest text-primary mb-2">
-                    Element
-                  </h4>
-                  <p className="text-sm font-serif" style={{ color: suitData.color }}>
-                    {card.element}
-                  </p>
-                </div>
-              )}
+            <div>
+              <h4 className="text-xs uppercase tracking-widest text-primary mb-1">Fused Interpretation</h4>
+              <p className="text-sm text-foreground/90 font-serif leading-relaxed">
+                {card.fusedInterpretation}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {card.keywords.map((keyword) => (
+                <span key={keyword} className="px-2 py-1 text-xs rounded-full bg-muted text-foreground/80 font-serif">
+                  {keyword}
+                </span>
+              ))}
             </div>
           </div>
+        </motion.div>
+        
+        {/* Mobile Details Toggle Button */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: showDetails ? 0 : 1 }}
+          transition={{ delay: 0.5 }}
+          className="md:hidden absolute bottom-24 left-1/2 -translate-x-1/2"
+        >
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setShowDetails(true)}
+            className="gap-2"
+          >
+            <Sparkles className="w-4 h-4" />
+            View Details
+          </Button>
         </motion.div>
       </div>
     </motion.div>

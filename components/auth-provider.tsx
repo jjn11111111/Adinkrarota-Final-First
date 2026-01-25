@@ -43,43 +43,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
 
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+  const fetchProfile = async (userId: string, userEmail?: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-    if (error) {
-      console.error("Error fetching profile:", error);
-      return null;
+      if (error) {
+        // If table doesn't exist or profile not found, create a fallback profile from user metadata
+        console.error("Error fetching profile:", error.message);
+        
+        // Return a default guest profile based on auth user data
+        return {
+          id: userId,
+          email: userEmail || "",
+          accountType: "guest" as AccountType,
+          readingsThisYear: 0,
+          readingsToday: 0,
+          lastReadingDate: null,
+          displayName: undefined,
+          birthName: undefined,
+          birthDate: undefined,
+          birthPlace: undefined,
+          birthTime: undefined,
+          gender: undefined,
+          memberSince: undefined,
+        };
+      }
+
+      // Calculate readings today
+      const today = new Date().toISOString().split("T")[0];
+      const lastReadingDate = data.last_reading_date?.split("T")[0];
+      const readingsToday = lastReadingDate === today ? data.readings_today : 0;
+
+      // Calculate readings this year
+      const currentYear = new Date().getFullYear();
+      const yearResetDate = data.year_reset_date?.split("-")[0];
+      const readingsThisYear = yearResetDate === String(currentYear) ? data.readings_this_year : 0;
+
+      return {
+        id: data.id,
+        email: data.email || "",
+        accountType: data.account_type as AccountType,
+        readingsThisYear,
+        readingsToday,
+        lastReadingDate: data.last_reading_date,
+        displayName: data.display_name,
+        birthName: data.birth_name,
+        birthDate: data.birth_date,
+        birthPlace: data.birth_place,
+        birthTime: data.birth_time,
+        gender: data.gender,
+        memberSince: data.member_since,
+      };
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      // Return default profile on any error
+      return {
+        id: userId,
+        email: userEmail || "",
+        accountType: "guest" as AccountType,
+        readingsThisYear: 0,
+        readingsToday: 0,
+        lastReadingDate: null,
+        displayName: undefined,
+        birthName: undefined,
+        birthDate: undefined,
+        birthPlace: undefined,
+        birthTime: undefined,
+        gender: undefined,
+        memberSince: undefined,
+      };
     }
-
-    // Calculate readings today
-    const today = new Date().toISOString().split("T")[0];
-    const lastReadingDate = data.last_reading_date?.split("T")[0];
-    const readingsToday = lastReadingDate === today ? data.readings_today : 0;
-
-    // Calculate readings this year
-    const currentYear = new Date().getFullYear();
-    const yearResetDate = data.year_reset_date?.split("-")[0];
-    const readingsThisYear = yearResetDate === String(currentYear) ? data.readings_this_year : 0;
-
-    return {
-      id: data.id,
-      email: data.email || "",
-      accountType: data.account_type as AccountType,
-      readingsThisYear,
-      readingsToday,
-      lastReadingDate: data.last_reading_date,
-      displayName: data.display_name,
-      birthName: data.birth_name,
-      birthDate: data.birth_date,
-      birthPlace: data.birth_place,
-      birthTime: data.birth_time,
-      gender: data.gender,
-      memberSince: data.member_since,
-    };
   };
 
   const refreshProfile = async () => {
@@ -99,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(currentUser);
 
       if (currentUser) {
-        const userProfile = await fetchProfile(currentUser.id);
+        const userProfile = await fetchProfile(currentUser.id, currentUser.email || undefined);
         setProfile(userProfile);
       }
 
@@ -113,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          const userProfile = await fetchProfile(session.user.id);
+          const userProfile = await fetchProfile(session.user.id, session.user.email || undefined);
           setProfile(userProfile);
         } else {
           setProfile(null);

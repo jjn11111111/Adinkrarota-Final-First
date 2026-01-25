@@ -89,12 +89,17 @@ function RegisterContent() {
 
     const supabase = createClient();
 
+    // Construct the redirect URL - prioritize env var for dev, fallback to origin
+    const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL 
+      || `${window.location.origin}/auth/callback`;
+    
+    console.log("[v0] SignUp redirect URL:", redirectUrl);
+    
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-          `${window.location.origin}/auth/callback`,
+        emailRedirectTo: redirectUrl,
         data: {
           account_type: isMembership ? "member_pending" : "guest",
           birth_name: isMembership ? birthName : null,

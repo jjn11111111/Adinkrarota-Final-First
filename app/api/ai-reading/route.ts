@@ -1,77 +1,43 @@
 import { convertToModelMessages, streamText, UIMessage } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createGroq } from "@ai-sdk/groq";
-import { createXai } from "@ai-sdk/xai";
 import { UNIVERSAL_WISDOM_SYSTEM_PROMPT, SPREAD_BUILDER_ASSISTANT_PROMPT } from "@/lib/ai-wisdom-prompt";
 
 export const maxDuration = 60;
 
-function createProviderModel(
-  providerId: string,
-  modelId: string,
-  apiKey: string
-) {
-  switch (providerId) {
-    case "openai": {
-      const openai = createOpenAI({ apiKey });
-      return openai(modelId.replace("openai/", ""));
-    }
-    case "anthropic": {
-      const anthropic = createAnthropic({ apiKey });
-      return anthropic(modelId.replace("anthropic/", ""));
-    }
-    case "google": {
-      const google = createGoogleGenerativeAI({ apiKey });
-      return google(modelId.replace("google/", ""));
-    }
-    case "groq": {
-      const groq = createGroq({ apiKey });
-      return groq(modelId.replace("groq/", ""));
-    }
-    case "xai": {
-      const xai = createXai({ apiKey });
-      return xai(modelId.replace("xai/", ""));
-    }
-    default:
-      throw new Error(`Unsupported provider: ${providerId}`);
-  }
-}
+// Default model for Vercel AI Gateway (zero config)
+const DEFAULT_MODEL = "anthropic/claude-sonnet-4-20250514";
 
-// Server-side API keys for free providers
-const SERVER_API_KEYS: Record<string, string | undefined> = {
-  groq: process.env.GROQ_API_KEY,
-  xai: process.env.XAI_API_KEY,
+// Model mapping for Vercel AI Gateway format
+const MODEL_MAP: Record<string, string> = {
+  // OpenAI
+  "openai/gpt-4o": "openai/gpt-4o",
+  "openai/gpt-4o-mini": "openai/gpt-4o-mini",
+  "openai/gpt-4-turbo": "openai/gpt-4-turbo",
+  // Anthropic
+  "anthropic/claude-sonnet-4-5": "anthropic/claude-sonnet-4-20250514",
+  "anthropic/claude-3-5-sonnet-20241022": "anthropic/claude-3-5-sonnet-20241022",
+  "anthropic/claude-3-haiku-20240307": "anthropic/claude-3-haiku-20240307",
+  // Groq (via gateway)
+  "groq/llama-3.3-70b-versatile": "groq/llama-3.3-70b-versatile",
+  "groq/mixtral-8x7b-32768": "groq/mixtral-8x7b-32768",
+  // xAI (via gateway)
+  "xai/grok-2-1212": "xai/grok-2-1212",
+  "xai/grok-beta": "xai/grok-beta",
 };
 
 export async function POST(req: Request) {
   try {
     const {
       messages,
-      providerId,
       modelId,
-      apiKey,
       readingContext,
     }: {
       messages: UIMessage[];
-      providerId: string;
-      modelId: string;
-      apiKey?: string;
+      modelId?: string;
       readingContext?: string;
     } = await req.json();
 
-    // Use server API key for free providers, otherwise require user's key
-    const effectiveApiKey = apiKey || SERVER_API_KEYS[providerId];
-
-    if (!effectiveApiKey) {
-      return Response.json(
-        { error: "API key is required for this provider" },
-        { status: 400 }
-      );
-    }
-
-    const model = createProviderModel(providerId, modelId, effectiveApiKey);
+    // Use Vercel AI Gateway - resolve model ID or use default
+    const model = modelId ? (MODEL_MAP[modelId] || modelId) : DEFAULT_MODEL;
 
     // Determine which system prompt to use based on context
     const isSpreadBuilder = readingContext?.includes("SPREAD_BUILDER_MODE");
@@ -86,8 +52,8 @@ export async function POST(req: Request) {
     const result = streamText({
       model,
       system: systemMessage,
-      messages: convertToModelMessages(messages),
-      maxOutputTokens: 2000,
+      messages: await convertToModelMessages(messages),
+      maxOutputTokens: 2500,
       temperature: 0.8,
       abortSignal: req.signal,
     });

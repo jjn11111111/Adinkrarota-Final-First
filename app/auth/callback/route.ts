@@ -19,6 +19,16 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/membership/checkout`);
       }
       
+      // Check if this is a new user (email just confirmed) by checking created_at
+      const createdAt = user?.created_at ? new Date(user.created_at) : null;
+      const now = new Date();
+      const isNewUser = createdAt && (now.getTime() - createdAt.getTime() < 5 * 60 * 1000); // Within 5 minutes
+      
+      if (isNewUser) {
+        // Redirect to welcome page for new users
+        return NextResponse.redirect(`${origin}/auth/welcome`);
+      }
+      
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

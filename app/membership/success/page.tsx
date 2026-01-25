@@ -106,7 +106,7 @@ function SuccessContent() {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative z-10 text-center max-w-md"
+        className="relative z-10 text-center max-w-lg"
       >
         <div className="p-8 rounded-2xl bg-card border border-primary/30">
           {/* Success icon with animation */}
@@ -124,52 +124,91 @@ function SuccessContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <h1 className="text-3xl font-bold text-gold-gradient mb-2">
-              Welcome, Member
+            <h1 className="text-3xl font-bold text-gold-gradient mb-3">
+              Thank You for Your Support
             </h1>
 
-            <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="flex items-center justify-center gap-2 mb-2">
               <Star className="w-5 h-5 text-primary" />
-              <span className="text-muted-foreground font-serif">
-                Your journey has truly begun
+              <span className="text-foreground font-serif text-lg">
+                Welcome to Lifetime Membership
               </span>
               <Star className="w-5 h-5 text-primary" />
             </div>
 
-            <p className="text-muted-foreground mb-8">
-              You now have lifetime access to the full wisdom of the Adinkrarota
-              Oracle. May it serve you well on your path.
+            <p className="text-muted-foreground mb-6">
+              Your commitment to this journey means everything. You now have 
+              unlimited access to the full wisdom of the Adinkrarota deck.
             </p>
+
+            {/* What's Unlocked */}
+            <div className="bg-secondary/30 rounded-xl p-5 mb-6 text-left">
+              <h3 className="font-semibold text-foreground mb-3 text-sm text-center">
+                What you have unlocked:
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-muted-foreground">Daily readings (1 per day, forever)</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-muted-foreground">AI-powered interpretations</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-muted-foreground">Reading history and journaling</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-muted-foreground">Custom spread builder</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-muted-foreground">Birth chart integration</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-muted-foreground">All future features included</span>
+                </div>
+              </div>
+            </div>
 
             <div className="space-y-3">
               <Button asChild className="w-full gap-2">
-                <Link href="/reading">
-                  Begin Your First Reading
+                <Link href="/portal">
+                  Enter Your Portal
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
 
-              <Button asChild variant="outline" className="w-full bg-transparent">
-                <Link href="/portal">
-                  Visit Your Portal
+              <Button asChild variant="outline" className="w-full bg-transparent gap-2">
+                <Link href="/reading">
+                  <Sparkles className="w-4 h-4" />
+                  Begin Your First Reading
                 </Link>
               </Button>
             </div>
           </motion.div>
         </div>
 
-        {/* Decorative elements */}
+        {/* Decorative footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="mt-8 flex items-center justify-center gap-4"
+          className="mt-8"
         >
-          <Sparkles className="w-4 h-4 text-primary/50" />
-          <p className="text-sm text-muted-foreground font-serif italic">
-            The Oracle recognizes your commitment
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <Sparkles className="w-4 h-4 text-primary/50" />
+            <p className="text-sm text-muted-foreground font-serif italic">
+              May the wisdom of the ancestors guide your path
+            </p>
+            <Sparkles className="w-4 h-4 text-primary/50" />
+          </div>
+          <p className="text-xs text-muted-foreground/60">
+            A receipt has been sent to your email address
           </p>
-          <Sparkles className="w-4 h-4 text-primary/50" />
         </motion.div>
       </motion.div>
     </div>

@@ -30,7 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { getAISettings, type AISettings } from "@/lib/ai-settings";
+import { getAISettings, type AISettings, DEFAULT_MODEL_ID } from "@/lib/ai-settings";
 
 export interface CustomSpreadPosition {
   id: string;
@@ -135,9 +135,7 @@ export function SpreadBuilder({
     transport: new DefaultChatTransport({
       api: "/api/ai-reading",
       body: {
-        providerId: aiSettings?.providerId,
-        modelId: aiSettings?.modelId,
-        apiKey: aiSettings?.apiKey,
+        modelId: aiSettings?.modelId || DEFAULT_MODEL_ID,
         readingContext: "SPREAD_BUILDER_MODE\n\nYou are helping the user create a custom tarot spread. Suggest position names, descriptions, and thematic coherence. Keep suggestions concise and meaningful.",
       },
     }),

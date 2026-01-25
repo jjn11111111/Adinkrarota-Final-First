@@ -103,7 +103,7 @@ export default function AdinkrarotaApp() {
               <section className="py-20 px-6">
                 <div className="max-w-6xl mx-auto">
                   <h2 className="text-3xl font-bold text-center text-gold-gradient mb-12">
-                    The Sacred Fusion
+                    The Fusion
                   </h2>
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                     <FeatureCard
@@ -134,7 +134,7 @@ export default function AdinkrarotaApp() {
               <section className="py-20 px-6 bg-secondary/30">
                 <div className="max-w-4xl mx-auto text-center">
                   <h2 className="text-3xl font-bold text-gold-gradient mb-6">
-                    The Sacred Mathematics
+                    The Mathematics
                   </h2>
                   <p className="text-muted-foreground font-serif leading-relaxed mb-6">
                     In 2010, physicist Dr. Sylvester James Gates Jr. discovered something remarkable: 
@@ -156,7 +156,7 @@ export default function AdinkrarotaApp() {
                     </p>
                   </div>
                   <p className="text-muted-foreground font-serif leading-relaxed">
-                    This is not metaphor. This is the convergence of ancestral wisdom, sacred geometry, 
+                    This is not metaphor. This is the convergence of ancestral wisdom, geometry, 
                     and mathematical truth—three streams of knowledge flowing into one powerful tool for 
                     guidance and self-discovery.
                   </p>
@@ -248,7 +248,7 @@ export default function AdinkrarotaApp() {
       <footer className="relative z-10 py-8 px-6 border-t border-border bg-background/50">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-sm text-muted-foreground font-serif">
-            ADINKRAROTA — Where ancestral wisdom, sacred geometry, and mathematical truth converge
+            ADINKRAROTA — Where ancestral wisdom, geometry, and mathematical truth converge
           </p>
           <p className="text-xs text-muted-foreground/60 mt-2 font-serif">
             Honoring the Akan people of Ghana and Cote d{"'"}Ivoire, whose Adinkra symbols encode the universe{"'"}s error-correcting wisdom

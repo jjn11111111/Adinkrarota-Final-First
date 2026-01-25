@@ -12,7 +12,6 @@ import {
   BookOpen,
   Layout,
   History,
-  Settings,
   LogOut,
   Star,
   Shield,
@@ -21,6 +20,7 @@ import {
   ArrowRight,
   User,
 } from "lucide-react";
+import { DailyWisdom } from "@/components/daily-wisdom";
 
 export default function PortalPage() {
   const router = useRouter();
@@ -176,6 +176,16 @@ export default function PortalPage() {
           </div>
         </motion.div>
 
+        {/* Daily Wisdom - AI Feature */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <DailyWisdom />
+        </motion.div>
+
         {/* Quick Actions Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           <motion.div
@@ -236,7 +246,7 @@ export default function PortalPage() {
                 Guidebook
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Learn the sacred mathematics
+                Learn the mathematics of Adinkra
               </p>
               <span className="inline-flex items-center gap-1 text-primary text-sm group-hover:gap-2 transition-all">
                 Study <ArrowRight className="w-4 h-4" />
@@ -325,7 +335,7 @@ export default function PortalPage() {
         >
           <Shield className="w-5 h-5 text-primary flex-shrink-0" />
           <p className="text-sm text-muted-foreground">
-            Your data is sacred and protected. We never sell, trade, or share
+            Your data is protected. We never sell, trade, or share
             your information. <Link href="/privacy" className="text-primary hover:underline">Read our pledge</Link>
           </p>
         </motion.div>

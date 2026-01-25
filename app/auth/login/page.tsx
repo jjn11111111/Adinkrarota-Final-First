@@ -19,6 +19,37 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setError("Please enter your email address first");
+      return;
+    }
+    
+    setResendStatus("sending");
+    const supabase = createClient();
+    
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+    console.log("[v0] Resend confirmation to:", email, "redirect:", redirectUrl);
+    
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: redirectUrl,
+      },
+    });
+    
+    if (error) {
+      console.log("[v0] Resend error:", error.message);
+      setError(error.message);
+      setResendStatus("idle");
+    } else {
+      setResendStatus("sent");
+      setError(null);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,9 +107,6 @@ export default function LoginPage() {
             <Sparkles className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold text-gold-gradient mb-2">Welcome Back</h1>
-          <p className="text-muted-foreground font-serif">
-            Return to the Oracle
-          </p>
         </div>
 
         {/* Login Form */}
@@ -122,14 +150,47 @@ export default function LoginPage() {
             {error && (
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
                 {error}
+                {error.includes("Email not confirmed") && (
+                  <button
+                    type="button"
+                    onClick={handleResendConfirmation}
+                    disabled={resendStatus === "sending"}
+                    className="block mt-2 text-primary hover:underline"
+                  >
+                    {resendStatus === "sending" ? "Sending..." : "Resend confirmation email"}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {resendStatus === "sent" && (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-600 text-sm">
+                Confirmation email sent! Please check your inbox.
               </div>
             )}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Entering..." : "Enter the Oracle"}
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </div>
         </form>
+
+        {/* Resend confirmation for users who haven't received email */}
+        <div className="mt-4 p-4 rounded-xl bg-muted/30 border border-border">
+          <p className="text-xs text-muted-foreground mb-2">
+            Did not receive confirmation email?
+          </p>
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="sm"
+            onClick={handleResendConfirmation}
+            disabled={resendStatus === "sending" || !email}
+            className="w-full"
+          >
+            {resendStatus === "sending" ? "Sending..." : resendStatus === "sent" ? "Email Sent!" : "Resend Confirmation Email"}
+          </Button>
+        </div>
 
         {/* Register links */}
         <div className="mt-6 text-center space-y-3">

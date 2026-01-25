@@ -83,7 +83,7 @@ export function Guidebook({ initialCardId }: GuidebookProps) {
                 <Book className="w-8 h-8 text-primary mb-4" />
                 <h3 className="text-xl font-semibold text-primary mb-2">Introduction</h3>
                 <p className="text-muted-foreground font-serif text-sm">
-                  Learn about the sacred fusion of Tarot and Adinkra wisdom traditions.
+                  Learn about the fusion of Tarot and Adinkra wisdom traditions.
                 </p>
               </motion.button>
 
@@ -266,7 +266,7 @@ export function Guidebook({ initialCardId }: GuidebookProps) {
 
             <div className="max-w-4xl mx-auto">
               <h1 className="text-4xl font-bold text-gold-gradient mb-8 text-center">
-                The Sacred Mathematics of Adinkra
+                The Mathematics of Adinkra
               </h1>
               <p className="text-center text-primary font-serif mb-8 text-lg">
                 Error-Correcting Codes, Supersymmetry, and Ancestral Wisdom
@@ -359,7 +359,7 @@ export function Guidebook({ initialCardId }: GuidebookProps) {
                   <li className="flex gap-3">
                     <span className="text-primary font-bold">2.</span>
                     <span className="text-muted-foreground">
-                      <strong className="text-foreground">Sacred Geometry</strong> — The Tarot{"'"}s archetypal 
+                      <strong className="text-foreground">Geometry</strong> — The Tarot{"'"}s archetypal 
                       journey through the Major and Minor Arcana, mapping the soul{"'"}s evolution through 
                       universal patterns.
                     </span>

@@ -31,7 +31,7 @@ const cormorant = Cormorant({ // Declaring Cormorant font
 });
 
 export const metadata: Metadata = {
-  title: 'ADINKRAROTA | Sacred Fusion of Tarot & Adinkra',
+  title: 'ADINKRAROTA | Fusion of Tarot & Adinkra',
   description: 'An immersive journey through the fusion of traditional Tarot archetypes and West African Adinkra symbols. Explore 78 cards of cosmic wisdom.',
   generator: 'v0.app',
   icons: {

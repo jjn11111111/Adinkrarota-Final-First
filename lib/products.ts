@@ -6,12 +6,12 @@ export interface Product {
   features: string[];
 }
 
-// Adinkrarota Sacred Economy Offerings
+// Adinkrarota Economy Offerings
 export const PRODUCTS: Product[] = [
   {
     id: "lifetime-membership",
     name: "Lifetime Membership",
-    description: "Eternal access to the Adinkrarota Oracle - a one-time sacred offering",
+    description: "Eternal access to the Adinkrarota Oracle - a one-time offering",
     priceInCents: 999, // $9.99
     features: [
       "Daily single card readings (unlimited)",
@@ -58,7 +58,7 @@ export const MEMBER_DAILY_READINGS = 1; // Per day, unlimited over time
 export const DATA_PLEDGE = `
 ADINKRAROTA DATA PROTECTION PLEDGE
 
-Your information is sacred. We pledge:
+Your information is protected. We pledge:
 
 1. Your personal data will NEVER be sold, traded, or shared with third parties.
 
