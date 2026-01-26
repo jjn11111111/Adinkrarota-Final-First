@@ -3,13 +3,13 @@
 // ADINKRAROTA - Tarot + Adinkra Portal
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Starfield } from "@/components/starfield";
 import { Navigation } from "@/components/navigation";
 import { HeroSection } from "@/components/hero-section";
 import { CardGallery } from "@/components/card-gallery";
 import { CardReading } from "@/components/card-reading";
 import { Guidebook } from "@/components/guidebook";
 import { SpreadBuilder, type CustomSpread } from "@/components/spread-builder";
+import { ParallaxStarfield, CosmicOrbs, RevealOnScroll, ParallaxSection } from "@/components/parallax-layers";
 
 type View = "home" | "gallery" | "reading" | "guidebook" | "spread-builder";
 
@@ -77,8 +77,11 @@ export default function AdinkrarotaApp() {
 
   return (
     <div className="min-h-screen cosmic-bg">
-      {/* Animated starfield background */}
-      <Starfield />
+      {/* Parallax starfield background with depth layers */}
+      <ParallaxStarfield />
+      
+      {/* Floating cosmic orbs with mouse parallax */}
+      <CosmicOrbs />
 
       {/* Navigation */}
       <Navigation currentView={currentView} onNavigate={handleNavigate} />
@@ -99,67 +102,114 @@ export default function AdinkrarotaApp() {
                 onReading={() => handleNavigate("reading")}
               />
 
-              {/* Feature highlights */}
-              <section className="py-20 px-6">
+              {/* Feature highlights with parallax reveal */}
+              <section className="py-20 px-6 relative">
                 <div className="max-w-6xl mx-auto">
-                  <h2 className="text-3xl font-bold text-center text-gold-gradient mb-12">
-                    The Fusion
-                  </h2>
+                  <RevealOnScroll>
+                    <h2 className="text-3xl font-bold text-center text-gold-gradient mb-12">
+                      The Fusion
+                    </h2>
+                  </RevealOnScroll>
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <FeatureCard
-                      title="78 Cards"
-                      description="Complete Major and Minor Arcana, each paired with an Adinkra symbol from Akan tradition."
-                      symbol="A"
-                    />
-                    <FeatureCard
-                      title="Layered Wisdom"
-                      description="Every card weaves Tarot archetype meanings with Adinkra philosophical concepts."
-                      symbol="N"
-                    />
-                    <FeatureCard
-                      title="Divine Readings"
-                      description="Multiple spread options from single card guidance to the full Celtic Cross."
-                      symbol="S"
-                    />
-                    <FeatureCard
-                      title="Create Your Spread"
-                      description="Design custom spreads with up to 10 positions for personalized readings."
-                      symbol="+"
-                    />
+                    <RevealOnScroll delay={0}>
+                      <ParallaxSection speed={0.1}>
+                        <FeatureCard
+                          title="78 Cards"
+                          description="Complete Major and Minor Arcana, each paired with an Adinkra symbol from Akan tradition."
+                          symbol="A"
+                        />
+                      </ParallaxSection>
+                    </RevealOnScroll>
+                    <RevealOnScroll delay={0.1}>
+                      <ParallaxSection speed={0.15}>
+                        <FeatureCard
+                          title="Layered Wisdom"
+                          description="Every card weaves Tarot archetype meanings with Adinkra philosophical concepts."
+                          symbol="N"
+                        />
+                      </ParallaxSection>
+                    </RevealOnScroll>
+                    <RevealOnScroll delay={0.2}>
+                      <ParallaxSection speed={0.2}>
+                        <FeatureCard
+                          title="Divine Readings"
+                          description="Multiple spread options from single card guidance to the full Celtic Cross."
+                          symbol="S"
+                        />
+                      </ParallaxSection>
+                    </RevealOnScroll>
+                    <RevealOnScroll delay={0.3}>
+                      <ParallaxSection speed={0.25}>
+                        <FeatureCard
+                          title="Create Your Spread"
+                          description="Design custom spreads with up to 10 positions for personalized readings."
+                          symbol="+"
+                        />
+                      </ParallaxSection>
+                    </RevealOnScroll>
                   </div>
                 </div>
               </section>
 
-              {/* About section */}
-              <section className="py-20 px-6 bg-secondary/30">
-                <div className="max-w-4xl mx-auto text-center">
-                  <h2 className="text-3xl font-bold text-gold-gradient mb-6">
-                    The Mathematics
-                  </h2>
-                  <p className="text-muted-foreground font-serif leading-relaxed mb-6">
-                    In 2010, physicist Dr. Sylvester James Gates Jr. discovered something remarkable: 
-                    the mathematical equations of supersymmetry contain embedded <span className="text-primary font-semibold">error-correcting codes</span>—the 
-                    same codes used in computer science to ensure data integrity.
-                  </p>
-                  <p className="text-muted-foreground font-serif leading-relaxed mb-6">
-                    These mathematical structures are called <span className="text-primary font-semibold">{'"'}Adinkra{'"'}</span> in physics 
-                    because of their resemblance to the traditional Akan symbols. This convergence suggests 
-                    that ancestral African wisdom may have been encoding truths about reality{"'"}s fundamental 
-                    structure—truths that modern physics is only now recognizing.
-                  </p>
-                  <div className="p-6 rounded-xl bg-card/50 border border-primary/30 mb-6">
-                    <p className="text-foreground font-serif leading-relaxed italic">
-                      {'"'}By pairing Tarot archetypes with Adinkra symbols, Adinkrarota creates a 
-                      <span className="text-primary font-semibold"> redundant wisdom system</span>—like 
-                      error-correcting codes, the combined message is more robust and clear than either 
-                      system alone.{'"'}
+              {/* About section with parallax */}
+              <section className="py-20 px-6 bg-secondary/30 relative overflow-hidden">
+                {/* Parallax background elements */}
+                <motion.div 
+                  className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl"
+                  style={{ y: -50 }}
+                  animate={{ y: [-50, -30, -50], x: [0, 20, 0] }}
+                  transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div 
+                  className="absolute bottom-0 left-0 w-80 h-80 bg-accent/5 rounded-full blur-3xl"
+                  animate={{ y: [0, -30, 0], x: [0, -20, 0] }}
+                  transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                />
+                
+                <div className="max-w-4xl mx-auto text-center relative z-10">
+                  <RevealOnScroll>
+                    <h2 className="text-3xl font-bold text-gold-gradient mb-6">
+                      The Mathematics
+                    </h2>
+                  </RevealOnScroll>
+                  <RevealOnScroll delay={0.1}>
+                    <ParallaxSection speed={0.08}>
+                      <p className="text-muted-foreground font-serif leading-relaxed mb-6">
+                        In 2010, physicist Dr. Sylvester James Gates Jr. discovered something remarkable: 
+                        the mathematical equations of supersymmetry contain embedded <span className="text-primary font-semibold">error-correcting codes</span>—the 
+                        same codes used in computer science to ensure data integrity.
+                      </p>
+                    </ParallaxSection>
+                  </RevealOnScroll>
+                  <RevealOnScroll delay={0.2}>
+                    <ParallaxSection speed={0.12}>
+                      <p className="text-muted-foreground font-serif leading-relaxed mb-6">
+                        These mathematical structures are called <span className="text-primary font-semibold">{'"'}Adinkra{'"'}</span> in physics 
+                        because of their resemblance to the traditional Akan symbols. This convergence suggests 
+                        that ancestral African wisdom may have been encoding truths about reality{"'"}s fundamental 
+                        structure—truths that modern physics is only now recognizing.
+                      </p>
+                    </ParallaxSection>
+                  </RevealOnScroll>
+                  <RevealOnScroll delay={0.3}>
+                    <ParallaxSection speed={0.15}>
+                      <div className="p-6 rounded-xl bg-card/50 border border-primary/30 mb-6 backdrop-blur-sm">
+                        <p className="text-foreground font-serif leading-relaxed italic">
+                          {'"'}By pairing Tarot archetypes with Adinkra symbols, Adinkrarota creates a 
+                          <span className="text-primary font-semibold"> redundant wisdom system</span>—like 
+                          error-correcting codes, the combined message is more robust and clear than either 
+                          system alone.{'"'}
+                        </p>
+                      </div>
+                    </ParallaxSection>
+                  </RevealOnScroll>
+                  <RevealOnScroll delay={0.4}>
+                    <p className="text-muted-foreground font-serif leading-relaxed">
+                      This is not metaphor. This is the convergence of ancestral wisdom, geometry, 
+                      and mathematical truth—three streams of knowledge flowing into one powerful tool for 
+                      guidance and self-discovery.
                     </p>
-                  </div>
-                  <p className="text-muted-foreground font-serif leading-relaxed">
-                    This is not metaphor. This is the convergence of ancestral wisdom, geometry, 
-                    and mathematical truth—three streams of knowledge flowing into one powerful tool for 
-                    guidance and self-discovery.
-                  </p>
+                  </RevealOnScroll>
                 </div>
               </section>
             </motion.div>
@@ -259,7 +309,7 @@ export default function AdinkrarotaApp() {
   );
 }
 
-// Feature card component
+// Feature card component with 3D hover effect
 function FeatureCard({
   title,
   description,
@@ -271,12 +321,25 @@ function FeatureCard({
 }) {
   return (
     <motion.div
-      whileHover={{ y: -4 }}
-      className="p-8 rounded-xl mystical-border bg-card/50 backdrop-blur-sm text-center"
+      whileHover={{ 
+        y: -8,
+        rotateX: 5,
+        rotateY: 5,
+        transition: { duration: 0.3 }
+      }}
+      className="p-8 rounded-xl mystical-border bg-card/50 backdrop-blur-sm text-center perspective-1000 preserve-3d h-full"
+      style={{ transformStyle: "preserve-3d" }}
     >
-      <div className="w-16 h-16 mx-auto mb-6 rounded-full border border-primary/30 flex items-center justify-center">
+      <motion.div 
+        className="w-16 h-16 mx-auto mb-6 rounded-full border border-primary/30 flex items-center justify-center"
+        whileHover={{ 
+          scale: 1.1,
+          boxShadow: "0 0 30px rgba(233, 30, 140, 0.4)",
+        }}
+        transition={{ duration: 0.3 }}
+      >
         <span className="text-2xl font-serif text-gold-gradient">{symbol}</span>
-      </div>
+      </motion.div>
       <h3 className="text-xl font-semibold text-primary mb-3">{title}</h3>
       <p className="text-muted-foreground font-serif text-sm leading-relaxed">
         {description}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import type { CardType } from "@/lib/card-data";
 import { suitInfo } from "@/lib/card-data";
@@ -11,14 +12,32 @@ interface CardThumbnailProps {
 
 export function CardThumbnail({ card, onClick }: CardThumbnailProps) {
   const suitData = suitInfo[card.suit];
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+    const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+    setMousePosition({ x, y });
+  };
+
+  const handleMouseLeave = () => {
+    setMousePosition({ x: 0, y: 0 });
+  };
 
   return (
     <motion.button
       onClick={onClick}
-      className="relative w-full aspect-[2/3] rounded-lg overflow-hidden card-glow group"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="relative w-full aspect-[2/3] rounded-lg overflow-hidden card-glow group perspective-1000"
       whileHover={{ scale: 1.05, y: -8 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      style={{
+        transform: `perspective(1000px) rotateX(${mousePosition.y * -10}deg) rotateY(${mousePosition.x * 10}deg)`,
+        transformStyle: "preserve-3d",
+      }}
     >
       {/* Card Image or Fallback Background */}
       {card.imageUrl ? (

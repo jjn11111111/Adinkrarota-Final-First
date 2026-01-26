@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import { Search, Filter, Grid3X3, LayoutList } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
 import { CardThumbnail } from "./card-thumbnail";
 import { ImmersiveCardViewer } from "./immersive-card-viewer";
 import { allCards, type CardType, type CardSuit, suitInfo } from "@/lib/card-data";
+import { useMouseParallax } from "@/hooks/use-parallax";
 
 const suits: CardSuit[] = ["major", "wands", "cups", "swords", "pentacles"];
 
