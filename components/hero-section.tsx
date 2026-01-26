@@ -306,19 +306,48 @@ export function HeroSection({ onExplore, onReading }: HeroSectionProps) {
         </motion.div>
       </motion.div>
 
-      {/* Scroll indicator */}
+      {/* Enhanced scroll indicator with parallax response */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.4 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.4, duration: 0.6 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        style={{
+          opacity: contentOpacity,
+        }}
       >
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
+        <motion.span
+          className="text-xs text-muted-foreground/60 font-serif tracking-widest uppercase"
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="text-muted-foreground/50"
         >
-          <ChevronDown className="w-6 h-6" />
+          Scroll to explore
+        </motion.span>
+        <motion.div
+          className="relative w-6 h-10 rounded-full border border-muted-foreground/30 flex justify-center"
+          style={{
+            transform: `translateX(${mousePosition.x * 0.1}px)`,
+          }}
+        >
+          <motion.div
+            className="absolute top-2 w-1.5 h-1.5 rounded-full bg-primary"
+            animate={{ 
+              y: [0, 16, 0],
+              opacity: [1, 0.5, 1],
+            }}
+            transition={{ 
+              duration: 1.5, 
+              repeat: Infinity, 
+              ease: "easeInOut" 
+            }}
+          />
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, 4, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+          className="text-muted-foreground/40"
+        >
+          <ChevronDown className="w-4 h-4" />
         </motion.div>
       </motion.div>
     </section>

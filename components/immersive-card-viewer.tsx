@@ -87,11 +87,51 @@ export function ImmersiveCardViewer({ card, onClose }: ImmersiveCardViewerProps)
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      {/* Ambient light effect */}
-      <div
+      {/* Enhanced ambient light effect with parallax */}
+      <motion.div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `radial-gradient(circle at 50% 50%, ${suitData.color}15 0%, transparent 60%)`,
+        }}
+        animate={{
+          opacity: [0.8, 1, 0.8],
+          scale: [1, 1.05, 1],
+        }}
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      
+      {/* Floating particle orbs */}
+      <motion.div
+        className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl pointer-events-none"
+        style={{ backgroundColor: `${suitData.color}10` }}
+        animate={{
+          x: [0, 30, 0],
+          y: [0, -20, 0],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      <motion.div
+        className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl pointer-events-none"
+        style={{ backgroundColor: `${suitData.color}08` }}
+        animate={{
+          x: [0, -40, 0],
+          y: [0, 30, 0],
+          scale: [1.1, 1, 1.1],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 1,
         }}
       />
 
