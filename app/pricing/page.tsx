@@ -5,9 +5,11 @@ import Link from "next/link";
 import { ArrowLeft, Check, Sparkles, Star, Shield, Crown, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PRODUCTS, GUEST_YEARLY_READINGS, DATA_PLEDGE } from "@/lib/products";
+import { useMouseParallax } from "@/hooks/use-parallax";
 
 export default function PricingPage() {
   const product = PRODUCTS.find((p) => p.id === "lifetime-membership");
+  const mousePosition = useMouseParallax({ strength: 20, easing: 0.04 });
 
   const guestFeatures = [
     `${GUEST_YEARLY_READINGS} readings per year`,
@@ -18,16 +20,42 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Background pattern */}
-      <div className="fixed inset-0 opacity-5 pointer-events-none">
-        <div
-          className="absolute inset-0"
+    <div className="min-h-screen bg-background overflow-hidden">
+      {/* Parallax background elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* Base pattern with mouse parallax */}
+        <motion.div
+          className="absolute inset-0 opacity-5"
           style={{
             backgroundImage: `url('/images/adinkra-pattern.png')`,
             backgroundSize: "400px",
             backgroundRepeat: "repeat",
+            transform: `translate(${mousePosition.x * 0.05}px, ${mousePosition.y * 0.05}px)`,
           }}
+        />
+        
+        {/* Floating orbs */}
+        <motion.div
+          className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
+          style={{
+            transform: `translate(${mousePosition.x * 0.3}px, ${mousePosition.y * 0.3}px)`,
+          }}
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.15, 0.1],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-40 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl"
+          style={{
+            transform: `translate(${mousePosition.x * -0.25}px, ${mousePosition.y * -0.25}px)`,
+          }}
+          animate={{
+            scale: [1.1, 1, 1.1],
+            opacity: [0.08, 0.12, 0.08],
+          }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
         />
       </div>
 
@@ -65,8 +93,16 @@ export default function PricingPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="p-6 rounded-2xl bg-card border border-border"
+            whileHover={{ 
+              y: -8,
+              transition: { duration: 0.3 }
+            }}
+            className="p-6 rounded-2xl bg-card border border-border relative overflow-hidden group"
           >
+            {/* Hover glow effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-br from-muted/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            />
             <div className="flex items-center gap-3 mb-4">
               <Users className="w-6 h-6 text-muted-foreground" />
               <h2 className="text-xl font-semibold text-foreground">Guest</h2>
@@ -101,12 +137,39 @@ export default function PricingPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="p-6 rounded-2xl bg-card border-2 border-primary relative overflow-hidden"
+            whileHover={{ 
+              y: -8,
+              scale: 1.02,
+              transition: { duration: 0.3 }
+            }}
+            className="p-6 rounded-2xl bg-card border-2 border-primary relative overflow-hidden group"
           >
+            {/* Animated glow effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-50 group-hover:opacity-100 transition-opacity duration-500"
+            />
+            <motion.div
+              className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500"
+              animate={{
+                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+              }}
+              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+            />
+            
             {/* Recommended badge */}
-            <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-4 py-1 text-xs font-medium rounded-bl-lg">
+            <motion.div 
+              className="absolute top-0 right-0 bg-primary text-primary-foreground px-4 py-1 text-xs font-medium rounded-bl-lg"
+              animate={{
+                boxShadow: [
+                  "0 0 10px rgba(233, 30, 140, 0.3)",
+                  "0 0 20px rgba(233, 30, 140, 0.5)",
+                  "0 0 10px rgba(233, 30, 140, 0.3)",
+                ],
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
               Recommended
-            </div>
+            </motion.div>
 
             <div className="flex items-center gap-3 mb-4">
               <Crown className="w-6 h-6 text-primary" />

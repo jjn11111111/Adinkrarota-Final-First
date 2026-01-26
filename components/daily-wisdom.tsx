@@ -132,10 +132,36 @@ export function DailyWisdom() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-card border border-primary/20 overflow-hidden relative"
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.3 }}
+      className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-card border border-primary/20 overflow-hidden relative group"
     >
-      {/* Subtle pattern overlay */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none">
+      {/* Animated background orbs */}
+      <motion.div
+        className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none"
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.3, 0.5, 0.3],
+          x: [0, 10, 0],
+          y: [0, -5, 0],
+        }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute -bottom-8 -left-8 w-24 h-24 bg-accent/10 rounded-full blur-2xl pointer-events-none"
+        animate={{
+          scale: [1.1, 1, 1.1],
+          opacity: [0.2, 0.4, 0.2],
+          x: [0, -8, 0],
+          y: [0, 8, 0],
+        }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      />
+      
+      {/* Subtle pattern overlay with parallax hover effect */}
+      <motion.div 
+        className="absolute inset-0 opacity-5 pointer-events-none transition-transform duration-500 group-hover:scale-105"
+      >
         <div
           className="absolute inset-0"
           style={{
@@ -143,7 +169,7 @@ export function DailyWisdom() {
             backgroundSize: "20px 20px",
           }}
         />
-      </div>
+      </motion.div>
 
       <div className="relative z-10">
         {/* Header */}

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import { Search, Filter, Grid3X3, LayoutList } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
 import { CardThumbnail } from "./card-thumbnail";
 import { ImmersiveCardViewer } from "./immersive-card-viewer";
 import { allCards, type CardType, type CardSuit, suitInfo } from "@/lib/card-data";
+import { useMouseParallax } from "@/hooks/use-parallax";
 
 const suits: CardSuit[] = ["major", "wands", "cups", "swords", "pentacles"];
 
@@ -22,6 +23,8 @@ export function CardGallery() {
   const [selectedSuits, setSelectedSuits] = useState<CardSuit[]>(suits);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mousePosition = useMouseParallax({ strength: 15, easing: 0.05 });
 
   const filteredCards = useMemo(() => {
     return allCards.filter((card) => {
@@ -145,11 +148,31 @@ export function CardGallery() {
               if (cards.length === 0) return null;
 
               return (
-                <section key={suit}>
-                  <div className="flex items-center gap-4 mb-8">
-                    <div
+                <motion.section 
+                  key={suit}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <motion.div 
+                    className="flex items-center gap-4 mb-8"
+                    style={{
+                      transform: `translateX(${mousePosition.x * 0.03}px)`,
+                    }}
+                  >
+                    <motion.div
                       className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: suitInfo[suit].color }}
+                      whileHover={{ scale: 1.5 }}
+                      animate={{
+                        boxShadow: [
+                          `0 0 10px ${suitInfo[suit].color}40`,
+                          `0 0 20px ${suitInfo[suit].color}60`,
+                          `0 0 10px ${suitInfo[suit].color}40`,
+                        ],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
                     />
                     <h2 className="text-2xl font-semibold text-gold-gradient">
                       {suitInfo[suit].name}
@@ -157,10 +180,16 @@ export function CardGallery() {
                     <span className="text-sm text-muted-foreground font-serif">
                       {suitInfo[suit].element} • {cards.length} cards
                     </span>
-                  </div>
-                  <p className="text-muted-foreground font-serif mb-6 max-w-2xl">
+                  </motion.div>
+                  <motion.p 
+                    className="text-muted-foreground font-serif mb-6 max-w-2xl"
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                  >
                     {suitInfo[suit].description}
-                  </p>
+                  </motion.p>
                   <motion.div
                     className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
                     initial="hidden"
@@ -188,7 +217,7 @@ export function CardGallery() {
                       </motion.div>
                     ))}
                   </motion.div>
-                </section>
+                </motion.section>
               );
             })}
           </div>

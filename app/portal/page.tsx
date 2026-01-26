@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { getUserAccess, type UserAccess } from "@/lib/access-control";
 import { Button } from "@/components/ui/button";
+import { useMouseParallax } from "@/hooks/use-parallax";
 import {
   Sparkles,
   BookOpen,
@@ -56,18 +57,56 @@ export default function PortalPage() {
   }
 
   const isMember = access.accountType === "member";
+  const mousePosition = useMouseParallax({ strength: 20, easing: 0.04 });
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Background pattern */}
-      <div className="fixed inset-0 opacity-5 pointer-events-none">
-        <div
-          className="absolute inset-0"
+    <div className="min-h-screen bg-background overflow-hidden">
+      {/* Parallax background elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* Base pattern */}
+        <motion.div
+          className="absolute inset-0 opacity-5"
           style={{
             backgroundImage: `url('/images/adinkra-pattern.png')`,
             backgroundSize: "400px",
             backgroundRepeat: "repeat",
+            transform: `translate(${mousePosition.x * 0.05}px, ${mousePosition.y * 0.05}px)`,
           }}
+        />
+        
+        {/* Floating orbs */}
+        <motion.div
+          className="absolute top-20 right-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
+          style={{
+            transform: `translate(${mousePosition.x * 0.3}px, ${mousePosition.y * 0.3}px)`,
+          }}
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.15, 0.1],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-20 left-20 w-80 h-80 bg-accent/10 rounded-full blur-3xl"
+          style={{
+            transform: `translate(${mousePosition.x * -0.2}px, ${mousePosition.y * -0.2}px)`,
+          }}
+          animate={{
+            scale: [1.1, 1, 1.1],
+            opacity: [0.08, 0.12, 0.08],
+          }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        />
+        <motion.div
+          className="absolute top-1/2 left-1/3 w-64 h-64 bg-primary/5 rounded-full blur-2xl"
+          style={{
+            transform: `translate(${mousePosition.x * 0.15}px, ${mousePosition.y * 0.15}px)`,
+          }}
+          animate={{
+            y: [-20, 20, -20],
+            opacity: [0.05, 0.1, 0.05],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         />
       </div>
 

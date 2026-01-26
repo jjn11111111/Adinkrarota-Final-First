@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { allCards as cards, type CardType as Card } from "@/lib/card-data";
 import { getGuidebookEntry, getSuitIntro } from "@/lib/guidebook-data";
 import Image from "next/image";
+import { useMouseParallax } from "@/hooks/use-parallax";
 
 type GuidebookView = "index" | "introduction" | "symbols" | "card-detail";
 
@@ -20,6 +21,7 @@ export function Guidebook({ initialCardId }: GuidebookProps) {
     initialCardId ? cards.find(c => c.id === initialCardId) || null : null
   );
   const [selectedSuit, setSelectedSuit] = useState<string | null>(null);
+  const mousePosition = useMouseParallax({ strength: 15, easing: 0.05 });
 
   const majorArcana = cards.filter(c => c.suit === "major");
   const wands = cards.filter(c => c.suit === "wands");
@@ -52,7 +54,31 @@ export function Guidebook({ initialCardId }: GuidebookProps) {
   };
 
   return (
-    <div className="min-h-screen px-4 py-8 max-w-6xl mx-auto">
+    <div className="min-h-screen px-4 py-8 max-w-6xl mx-auto relative overflow-hidden">
+      {/* Floating parallax background orbs */}
+      <motion.div
+        className="fixed top-20 left-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"
+        style={{
+          transform: `translate(${mousePosition.x * 0.4}px, ${mousePosition.y * 0.4}px)`,
+        }}
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="fixed bottom-40 right-10 w-80 h-80 bg-accent/5 rounded-full blur-3xl pointer-events-none"
+        style={{
+          transform: `translate(${mousePosition.x * -0.3}px, ${mousePosition.y * -0.3}px)`,
+        }}
+        animate={{
+          scale: [1.1, 1, 1.1],
+          opacity: [0.2, 0.4, 0.2],
+        }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+      />
+
       <AnimatePresence mode="wait">
         {view === "index" && (
           <motion.div
@@ -62,39 +88,68 @@ export function Guidebook({ initialCardId }: GuidebookProps) {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Header */}
-            <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold text-gold-gradient mb-4">
+            {/* Header with subtle parallax */}
+            <motion.div 
+              className="text-center mb-12"
+              style={{
+                transform: `translateY(${mousePosition.y * 0.05}px)`,
+              }}
+            >
+              <motion.h1 
+                className="text-4xl md:text-5xl font-bold text-gold-gradient mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
                 The Guidebook
-              </h1>
-              <p className="text-muted-foreground font-serif max-w-2xl mx-auto">
+              </motion.h1>
+              <motion.p 
+                className="text-muted-foreground font-serif max-w-2xl mx-auto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
                 Explore the wisdom of Adinkrarota. Each card weaves together Tarot archetypes 
                 with the philosophical depth of Akan Adinkra symbols.
-              </p>
-            </div>
+              </motion.p>
+            </motion.div>
 
-            {/* Introduction Sections */}
+            {/* Introduction Sections with hover parallax */}
             <div className="grid md:grid-cols-2 gap-6 mb-12">
               <motion.button
-                whileHover={{ y: -4 }}
+                whileHover={{ 
+                  y: -8,
+                  scale: 1.02,
+                  transition: { duration: 0.3 }
+                }}
                 onClick={() => setView("introduction")}
-                className="p-6 rounded-xl mystical-border bg-card/50 backdrop-blur-sm text-left group"
+                className="p-6 rounded-xl mystical-border bg-card/50 backdrop-blur-sm text-left group relative overflow-hidden"
               >
-                <Book className="w-8 h-8 text-primary mb-4" />
-                <h3 className="text-xl font-semibold text-primary mb-2">Introduction</h3>
-                <p className="text-muted-foreground font-serif text-sm">
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                />
+                <Book className="w-8 h-8 text-primary mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300" />
+                <h3 className="text-xl font-semibold text-primary mb-2 relative z-10">Introduction</h3>
+                <p className="text-muted-foreground font-serif text-sm relative z-10">
                   Learn about the fusion of Tarot and Adinkra wisdom traditions.
                 </p>
               </motion.button>
 
               <motion.button
-                whileHover={{ y: -4 }}
+                whileHover={{ 
+                  y: -8,
+                  scale: 1.02,
+                  transition: { duration: 0.3 }
+                }}
                 onClick={() => setView("symbols")}
-                className="p-6 rounded-xl mystical-border bg-card/50 backdrop-blur-sm text-left group"
+                className="p-6 rounded-xl mystical-border bg-card/50 backdrop-blur-sm text-left group relative overflow-hidden"
               >
-                <Sparkles className="w-8 h-8 text-primary mb-4" />
-                <h3 className="text-xl font-semibold text-primary mb-2">Error-Correcting Wisdom</h3>
-                <p className="text-muted-foreground font-serif text-sm">
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                />
+                <Sparkles className="w-8 h-8 text-primary mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300" />
+                <h3 className="text-xl font-semibold text-primary mb-2 relative z-10">Error-Correcting Wisdom</h3>
+                <p className="text-muted-foreground font-serif text-sm relative z-10">
                   Discover the astonishing connection between Adinkra symbols, supersymmetry physics, and the universe{"'"}s error-correcting codes.
                 </p>
               </motion.button>

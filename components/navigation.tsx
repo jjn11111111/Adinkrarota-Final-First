@@ -36,23 +36,36 @@ export function Navigation({ currentView, onNavigate }: NavigationProps) {
       className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border"
     >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <button
+        {/* Logo with hover effect */}
+        <motion.button
           onClick={() => onNavigate("home")}
           className="flex items-center gap-3 group"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          <div className="w-8 h-8 rounded-full border border-primary/50 flex items-center justify-center group-hover:border-primary transition-colors">
-            <span className="text-sm font-serif text-gold-gradient">A</span>
-          </div>
+          <motion.div 
+            className="w-8 h-8 rounded-full border border-primary/50 flex items-center justify-center group-hover:border-primary transition-colors relative overflow-hidden"
+            whileHover={{
+              boxShadow: "0 0 20px rgba(233, 30, 140, 0.4)",
+            }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-primary/10"
+              initial={{ scale: 0, opacity: 0 }}
+              whileHover={{ scale: 1.5, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            />
+            <span className="text-sm font-serif text-gold-gradient relative z-10">A</span>
+          </motion.div>
           <span className="text-lg font-semibold tracking-wider text-gold-gradient hidden sm:block">
             ADINKRAROTA
           </span>
-        </button>
+        </motion.button>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation with hover effects */}
         <div className="hidden md:flex items-center gap-1">
           {navItems.map((item) => (
-            <button
+            <motion.button
               key={item.view}
               onClick={() => onNavigate(item.view)}
               className={`relative px-4 py-2 text-sm font-serif transition-colors ${
@@ -60,15 +73,28 @@ export function Navigation({ currentView, onNavigate }: NavigationProps) {
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.2 }}
             >
               {item.label}
               {currentView === item.view && (
                 <motion.div
                   layoutId="nav-indicator"
                   className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 0.3 }}
                 />
               )}
-            </button>
+              {/* Hover glow effect */}
+              <motion.div
+                className="absolute inset-0 bg-primary/5 rounded-md pointer-events-none"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileHover={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+              />
+            </motion.button>
           ))}
           
           {/* AI Settings Button */}
