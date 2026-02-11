@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -65,13 +64,9 @@ export default function WelcomePage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-center mb-6"
         >
-          <Image
-            src="/images/portal-logo.png"
-            alt="Adinkrarota"
-            width={100}
-            height={100}
-            className="opacity-80"
-          />
+          <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center">
+            <Sparkles className="w-12 h-12 text-primary" />
+          </div>
         </motion.div>
 
         <motion.div

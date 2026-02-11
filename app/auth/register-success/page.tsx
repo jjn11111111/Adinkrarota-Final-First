@@ -3,7 +3,6 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Mail, Star, Sparkles, BookOpen, Shield, Heart } from "lucide-react";
@@ -37,13 +36,9 @@ function RegisterSuccessContent() {
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-center mb-8"
         >
-          <Image
-            src="/images/portal-logo.png"
-            alt="Adinkrarota"
-            width={120}
-            height={120}
-            className="opacity-80"
-          />
+          <div className="w-28 h-28 rounded-full bg-primary/20 flex items-center justify-center">
+            <Sparkles className="w-14 h-14 text-primary" />
+          </div>
         </motion.div>
 
         <div className="p-8 rounded-2xl bg-card border border-primary/20">

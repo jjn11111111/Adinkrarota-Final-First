@@ -168,7 +168,7 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
   const requiresMembership = spreadType === "celtic" || spreadType === "custom";
 
   return (
-    <ReadingGate spreadType={requiresMembership ? "celtic" : "basic"}>
+    <ReadingGate spreadType={requiresMembership ? "celtic" : "single"}>
       <div className="w-full max-w-6xl mx-auto px-6 py-12">
         {/* Back button for custom spreads */}
         {customSpread && onBackToBuilder && (

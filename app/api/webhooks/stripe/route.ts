@@ -44,12 +44,15 @@ export async function POST(request: Request) {
 
     if (userId && session.payment_status === "paid") {
       try {
-        // Update user profile to member
+        // Update user profile to member using correct column names
         const { error } = await supabaseAdmin
           .from("profiles")
           .update({
             account_type: "member",
-            membership_date: new Date().toISOString(),
+            membership_purchased_at: new Date().toISOString(),
+            stripe_customer_id: session.customer as string || null,
+            stripe_payment_id: session.payment_intent as string || null,
+            updated_at: new Date().toISOString(),
           })
           .eq("id", userId);
 

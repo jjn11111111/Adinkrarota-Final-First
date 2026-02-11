@@ -38,14 +38,14 @@ function SuccessContent() {
         await supabase.auth.updateUser({
           data: {
             account_type: "member",
-            membership_date: new Date().toISOString(),
           },
         });
 
-        // Update profile
+        // Update profile with correct column names
         await supabase.from("profiles").update({
           account_type: "member",
-          membership_date: new Date().toISOString(),
+          membership_purchased_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         }).eq("id", user.id);
       }
 
