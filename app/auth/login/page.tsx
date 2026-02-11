@@ -30,8 +30,8 @@ export default function LoginPage() {
     setResendStatus("sending");
     const supabase = createClient();
     
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
-    const redirectUrl = `${baseUrl}/auth/callback`;
+    const { getBaseUrl } = await import("@/lib/site-config");
+    const redirectUrl = `${getBaseUrl()}/auth/callback`;
     
     const { error } = await supabase.auth.resend({
       type: "signup",

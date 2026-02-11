@@ -3,6 +3,7 @@
 import { stripe } from "@/lib/stripe";
 import { PRODUCTS } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
+import { getBaseUrl } from "@/lib/site-config";
 
 export async function createCheckoutSession(productId: string) {
   // Find product in our secure catalog
@@ -39,7 +40,7 @@ export async function createCheckoutSession(productId: string) {
       ],
       mode: "payment",
       allow_promotion_codes: true,
-      return_url: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/membership/success?session_id={CHECKOUT_SESSION_ID}`,
+      return_url: `${getBaseUrl()}/membership/success?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
         userId: user.id,
         productId: product.id,
