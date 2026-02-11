@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth-provider";
@@ -151,13 +150,9 @@ export default function PortalPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="flex items-center gap-3 group">
-            <Image
-              src="/images/portal-logo.png"
-              alt="Adinkrarota"
-              width={40}
-              height={40}
-              className="opacity-80 group-hover:opacity-100 transition-opacity"
-            />
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </div>
             <span className="text-lg font-semibold tracking-wider text-gold-gradient hidden sm:block">
               ADINKRAROTA
             </span>

@@ -39,14 +39,16 @@ export async function getUserAccess(): Promise<UserAccess> {
     };
   }
 
-  const accountType = (user.user_metadata?.account_type as AccountType) || "guest";
-
-  // Get profile for additional data
+  // Get profile for additional data - prefer profile over user_metadata since webhook updates profile directly
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
+
+  const accountType: AccountType = (profile?.account_type as AccountType) 
+    || (user.user_metadata?.account_type as AccountType) 
+    || "guest";
 
   // Determine features based on account type
   const features = accountType === "member" ? MEMBER_FEATURES : GUEST_FEATURES;
