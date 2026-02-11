@@ -30,7 +30,10 @@ export default function LoginPage() {
     setResendStatus("sending");
     const supabase = createClient();
     
-    const redirectUrl = `${window.location.origin}/auth/callback`;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
+    const redirectUrl = `${baseUrl}/auth/callback`;
+    
+    console.log("[v0] Resending confirmation to:", email, "redirect:", redirectUrl);
     
     const { error } = await supabase.auth.resend({
       type: "signup",
@@ -56,10 +59,14 @@ export default function LoginPage() {
 
     const supabase = createClient();
 
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log("[v0] Login attempt:", { email });
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    console.log("[v0] Login result:", { userId: data?.user?.id, error: error?.message });
 
     if (error) {
       setError(error.message);

@@ -89,13 +89,13 @@ function RegisterContent() {
 
     const supabase = createClient();
 
-    // Construct the redirect URL - prioritize env var for dev, fallback to origin
-    const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL 
-      || `${window.location.origin}/auth/callback`;
+    // Use NEXT_PUBLIC_BASE_URL for the redirect, fallback to window origin
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
+    const redirectUrl = `${baseUrl}/auth/callback`;
     
-    console.log("[v0] SignUp redirect URL:", redirectUrl);
+    console.log("[v0] SignUp attempt:", { email, redirectUrl, isMembership });
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -111,8 +111,22 @@ function RegisterContent() {
       },
     });
 
+    console.log("[v0] SignUp response:", { 
+      userId: data?.user?.id, 
+      identities: data?.user?.identities?.length,
+      confirmationSentAt: data?.user?.confirmation_sent_at,
+      error: error?.message 
+    });
+
     if (error) {
       setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    // Check if user already exists (identities will be empty array)
+    if (data?.user?.identities?.length === 0) {
+      setError("An account with this email already exists. Please sign in instead.");
       setLoading(false);
       return;
     }
