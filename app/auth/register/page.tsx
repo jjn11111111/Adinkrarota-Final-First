@@ -93,8 +93,6 @@ function RegisterContent() {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
     const redirectUrl = `${baseUrl}/auth/callback`;
     
-    console.log("[v0] SignUp attempt:", { email, redirectUrl, isMembership });
-    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -109,13 +107,6 @@ function RegisterContent() {
           gender: isMembership ? gender : null,
         },
       },
-    });
-
-    console.log("[v0] SignUp response:", { 
-      userId: data?.user?.id, 
-      identities: data?.user?.identities?.length,
-      confirmationSentAt: data?.user?.confirmation_sent_at,
-      error: error?.message 
     });
 
     if (error) {
