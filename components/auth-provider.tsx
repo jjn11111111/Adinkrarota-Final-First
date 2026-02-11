@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -11,15 +11,16 @@ export interface UserProfile {
   email: string;
   accountType: AccountType;
   readingsThisYear: number;
-  readingsToday: number;
   lastReadingDate: string | null;
-  displayName?: string;
+  yearStarted: number | null;
   birthName?: string;
   birthDate?: string;
   birthPlace?: string;
+  birthCountry?: string;
   birthTime?: string;
   gender?: string;
-  memberSince?: string;
+  membershipPurchasedAt?: string;
+  stripeCustomerId?: string;
 }
 
 interface AuthContextType {
@@ -28,11 +29,11 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   canPerformReading: boolean;
-  remainingReadings: number | "unlimited";
+  remainingReadings: number;
   readingMessage: string;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
-  recordReading: (spreadType: string, spreadName: string, cardsData: unknown) => Promise<boolean>;
+  recordReading: (spreadType: string, spreadName: string, cardsData: unknown, question?: string) => Promise<string | false>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
 
-  const fetchProfile = async (userId: string, userEmail?: string) => {
+  const fetchProfile = useCallback(async (userId: string, userEmail?: string): Promise<UserProfile> => {
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -52,81 +53,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        // If table doesn't exist or profile not found, create a fallback profile from user metadata
         console.error("Error fetching profile:", error.message);
-        
-        // Return a default guest profile based on auth user data
         return {
           id: userId,
           email: userEmail || "",
-          accountType: "guest" as AccountType,
+          accountType: "guest",
           readingsThisYear: 0,
-          readingsToday: 0,
           lastReadingDate: null,
-          displayName: undefined,
-          birthName: undefined,
-          birthDate: undefined,
-          birthPlace: undefined,
-          birthTime: undefined,
-          gender: undefined,
-          memberSince: undefined,
+          yearStarted: null,
         };
       }
 
-      // Calculate readings today
-      const today = new Date().toISOString().split("T")[0];
-      const lastReadingDate = data.last_reading_date?.split("T")[0];
-      const readingsToday = lastReadingDate === today ? data.readings_today : 0;
-
-      // Calculate readings this year
+      // Reset yearly count if new year
       const currentYear = new Date().getFullYear();
-      const yearResetDate = data.year_reset_date?.split("-")[0];
-      const readingsThisYear = yearResetDate === String(currentYear) ? data.readings_this_year : 0;
+      const readingsThisYear = data.year_started === currentYear
+        ? (data.readings_this_year || 0)
+        : 0;
 
       return {
         id: data.id,
         email: data.email || "",
-        accountType: data.account_type as AccountType,
+        accountType: (data.account_type as AccountType) || "guest",
         readingsThisYear,
-        readingsToday,
         lastReadingDate: data.last_reading_date,
-        displayName: data.display_name,
-        birthName: data.birth_name,
-        birthDate: data.birth_date,
-        birthPlace: data.birth_place,
-        birthTime: data.birth_time,
-        gender: data.gender,
-        memberSince: data.member_since,
+        yearStarted: data.year_started,
+        birthName: data.birth_name || undefined,
+        birthDate: data.birth_date || undefined,
+        birthPlace: data.birth_place || undefined,
+        birthCountry: data.birth_country || undefined,
+        birthTime: data.birth_time || undefined,
+        gender: data.gender || undefined,
+        membershipPurchasedAt: data.membership_purchased_at || undefined,
+        stripeCustomerId: data.stripe_customer_id || undefined,
       };
     } catch (err) {
       console.error("Error fetching profile:", err);
-      // Return default profile on any error
       return {
         id: userId,
         email: userEmail || "",
-        accountType: "guest" as AccountType,
+        accountType: "guest",
         readingsThisYear: 0,
-        readingsToday: 0,
         lastReadingDate: null,
-        displayName: undefined,
-        birthName: undefined,
-        birthDate: undefined,
-        birthPlace: undefined,
-        birthTime: undefined,
-        gender: undefined,
-        memberSince: undefined,
+        yearStarted: null,
       };
     }
-  };
+  }, [supabase]);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) {
-      const newProfile = await fetchProfile(user.id);
-      if (newProfile) {
-        setProfile(newProfile);
-      }
+      const newProfile = await fetchProfile(user.id, user.email || undefined);
+      setProfile(newProfile);
     }
-  };
+  }, [user, fetchProfile]);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -146,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
@@ -159,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const signOut = async () => {
@@ -167,11 +146,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
+  // Record a reading and return the reading ID on success, or false on failure
   const recordReading = async (
     spreadType: string,
     spreadName: string,
-    cardsData: unknown
-  ): Promise<boolean> => {
+    cardsData: unknown,
+    question?: string
+  ): Promise<string | false> => {
     if (!user || !profile) return false;
 
     const today = new Date().toISOString().split("T")[0];
@@ -180,44 +161,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if allowed
     if (profile.accountType === "guest") {
       if (profile.readingsThisYear >= 7) {
-        return false; // Exceeded yearly limit
+        return false;
       }
     } else {
-      // Member - check daily limit
-      if (profile.readingsToday >= 1) {
-        return false; // Already did reading today
+      // Member - check daily limit (1 per day)
+      const lastDate = profile.lastReadingDate?.split("T")[0];
+      if (lastDate === today) {
+        return false;
       }
     }
 
-    // Record the reading
-    const { error: readingError } = await supabase.from("readings").insert({
+    // Record the reading in the readings table (column is "cards", not "cards_data")
+    const { data: readingData, error: readingError } = await supabase.from("readings").insert({
       user_id: user.id,
       spread_type: spreadType,
       spread_name: spreadName,
-      cards_data: cardsData,
-    });
+      cards: cardsData,
+      question: question || null,
+    }).select("id").single();
 
     if (readingError) {
       console.error("Error recording reading:", readingError);
       return false;
     }
 
-    // Update profile counters
-    const lastReadingDate = profile.lastReadingDate?.split("T")[0];
-    const yearResetDate = profile.lastReadingDate?.split("-")[0];
-
-    const newReadingsToday = lastReadingDate === today ? profile.readingsToday + 1 : 1;
-    const newReadingsThisYear = yearResetDate === String(currentYear) 
-      ? profile.readingsThisYear + 1 
+    // Update profile counters using actual DB columns
+    const newReadingsThisYear = profile.yearStarted === currentYear
+      ? profile.readingsThisYear + 1
       : 1;
 
     const { error: updateError } = await supabase
       .from("profiles")
       .update({
-        readings_today: newReadingsToday,
         readings_this_year: newReadingsThisYear,
-        last_reading_date: new Date().toISOString(),
-        year_reset_date: `${currentYear}-01-01`,
+        last_reading_date: today,
+        year_started: currentYear,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", user.id);
 
@@ -225,23 +204,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Error updating profile:", updateError);
     }
 
-    // Refresh profile
+    // Refresh profile to get updated counts
     await refreshProfile();
-    return true;
+    return readingData?.id || false;
   };
 
-  // Calculate reading permissions
+  // Calculate reading permissions based on actual DB schema
   const calculateReadingPermissions = () => {
     if (!profile) {
       return {
         canPerformReading: false,
-        remainingReadings: 0 as number | "unlimited",
+        remainingReadings: 0,
         readingMessage: "Please sign in to perform readings",
       };
     }
 
+    const currentYear = new Date().getFullYear();
+    const today = new Date().toISOString().split("T")[0];
+
     if (profile.accountType === "guest") {
-      const remaining = Math.max(0, 7 - profile.readingsThisYear);
+      // Guests: 7 readings per year
+      const yearlyCount = profile.yearStarted === currentYear
+        ? profile.readingsThisYear
+        : 0;
+      const remaining = Math.max(0, 7 - yearlyCount);
       return {
         canPerformReading: remaining > 0,
         remainingReadings: remaining,
@@ -251,8 +237,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     }
 
-    // Member
-    const canRead = profile.readingsToday < 1;
+    // Member: 1 reading per day
+    const lastDate = profile.lastReadingDate?.split("T")[0];
+    const canRead = lastDate !== today;
     return {
       canPerformReading: canRead,
       remainingReadings: canRead ? 1 : 0,

@@ -1,383 +1,490 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
-import { getUserAccess, type UserAccess } from "@/lib/access-control";
+import { useAuth } from "@/components/auth-provider";
+import { DailyWisdom } from "@/components/daily-wisdom";
 import { Button } from "@/components/ui/button";
-import { useMouseParallax } from "@/hooks/use-parallax";
 import {
   Sparkles,
-  BookOpen,
-  Layout,
-  History,
-  LogOut,
   Star,
-  Shield,
-  Calendar,
-  Clock,
+  BookOpen,
+  Crown,
+  LogOut,
   ArrowRight,
+  Calendar,
+  Heart,
+  Eye,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
   User,
+  Shield,
 } from "lucide-react";
-import { DailyWisdom } from "@/components/daily-wisdom";
+
+interface ReadingRecord {
+  id: string;
+  spread_type: string;
+  spread_name: string;
+  cards: unknown;
+  question: string | null;
+  ai_interpretation: string | null;
+  is_favorited: boolean;
+  created_at: string;
+}
 
 export default function PortalPage() {
   const router = useRouter();
-  const [access, setAccess] = useState<UserAccess | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    user,
+    profile,
+    isLoading,
+    isAuthenticated,
+    canPerformReading,
+    remainingReadings,
+    readingMessage,
+    signOut,
+    refreshProfile,
+  } = useAuth();
+
+  const [readings, setReadings] = useState<ReadingRecord[]>([]);
+  const [loadingReadings, setLoadingReadings] = useState(true);
+  const [expandedReading, setExpandedReading] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadAccess() {
-      const userAccess = await getUserAccess();
-      if (!userAccess.isAuthenticated) {
-        router.push("/auth/login");
-        return;
-      }
-      setAccess(userAccess);
-      setLoading(false);
+    if (!isLoading && !isAuthenticated) {
+      router.push("/auth/login");
     }
-    loadAccess();
-  }, [router]);
+  }, [isLoading, isAuthenticated, router]);
 
-  const handleSignOut = async () => {
+  // Fetch reading history
+  useEffect(() => {
+    async function fetchReadings() {
+      if (!user) return;
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("readings")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (!error && data) {
+        setReadings(data);
+      }
+      setLoadingReadings(false);
+    }
+
+    if (isAuthenticated) {
+      fetchReadings();
+    }
+  }, [user, isAuthenticated]);
+
+  const toggleFavorite = async (readingId: string, currentState: boolean) => {
     const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
+    const { error } = await supabase
+      .from("readings")
+      .update({ is_favorited: !currentState })
+      .eq("id", readingId);
+
+    if (!error) {
+      setReadings((prev) =>
+        prev.map((r) =>
+          r.id === readingId ? { ...r, is_favorited: !currentState } : r
+        )
+      );
+    }
   };
 
-  if (loading || !access) {
+  const deleteReading = async (readingId: string) => {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("readings")
+      .delete()
+      .eq("id", readingId);
+
+    if (!error) {
+      setReadings((prev) => prev.filter((r) => r.id !== readingId));
+      await refreshProfile();
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/");
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-primary">Loading your portal...</div>
+        <motion.div
+          className="w-16 h-16 rounded-full border-2 border-primary border-t-transparent"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
       </div>
     );
   }
 
-  const isMember = access.accountType === "member";
-  const mousePosition = useMouseParallax({ strength: 20, easing: 0.04 });
+  if (!isAuthenticated || !profile) return null;
+
+  const isMember = profile.accountType === "member";
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
-      {/* Parallax background elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {/* Base pattern */}
-        <motion.div
-          className="absolute inset-0 opacity-5"
+    <div className="min-h-screen bg-background">
+      {/* Background */}
+      <div className="fixed inset-0 opacity-5 pointer-events-none">
+        <div
+          className="absolute inset-0"
           style={{
-            backgroundImage: `url('/images/adinkra-pattern.png')`,
-            backgroundSize: "400px",
-            backgroundRepeat: "repeat",
-            transform: `translate(${mousePosition.x * 0.05}px, ${mousePosition.y * 0.05}px)`,
+            backgroundImage: `radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)`,
+            backgroundSize: "24px 24px",
           }}
-        />
-        
-        {/* Floating orbs */}
-        <motion.div
-          className="absolute top-20 right-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
-          style={{
-            transform: `translate(${mousePosition.x * 0.3}px, ${mousePosition.y * 0.3}px)`,
-          }}
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.1, 0.15, 0.1],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-20 left-20 w-80 h-80 bg-accent/10 rounded-full blur-3xl"
-          style={{
-            transform: `translate(${mousePosition.x * -0.2}px, ${mousePosition.y * -0.2}px)`,
-          }}
-          animate={{
-            scale: [1.1, 1, 1.1],
-            opacity: [0.08, 0.12, 0.08],
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/3 w-64 h-64 bg-primary/5 rounded-full blur-2xl"
-          style={{
-            transform: `translate(${mousePosition.x * 0.15}px, ${mousePosition.y * 0.15}px)`,
-          }}
-          animate={{
-            y: [-20, 20, -20],
-            opacity: [0.05, 0.1, 0.05],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         />
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+      <div className="relative z-10 max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-12">
-          <div>
-            <h1 className="text-3xl font-bold text-gold-gradient mb-2">
-              Your Portal
-            </h1>
-            <div className="flex items-center gap-2">
-              {isMember ? (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/20 text-primary text-sm">
-                  <Star className="w-4 h-4" />
-                  Lifetime Member
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-secondary text-muted-foreground text-sm">
-                  <Shield className="w-4 h-4" />
-                  Guest
-                </span>
-              )}
-              <span className="text-sm text-muted-foreground">
-                {access.profile?.email}
-              </span>
-            </div>
-          </div>
+        <div className="flex items-center justify-between mb-8">
+          <Link href="/" className="flex items-center gap-3 group">
+            <Image
+              src="/images/portal-logo.png"
+              alt="Adinkrarota"
+              width={40}
+              height={40}
+              className="opacity-80 group-hover:opacity-100 transition-opacity"
+            />
+            <span className="text-lg font-semibold tracking-wider text-gold-gradient hidden sm:block">
+              ADINKRAROTA
+            </span>
+          </Link>
 
-          <Button variant="ghost" onClick={handleSignOut} className="gap-2">
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/">
+              <Button variant="ghost" size="sm">
+                Home
+              </Button>
+            </Link>
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </Button>
+          </div>
         </div>
 
-        {/* Reading Status Card */}
+        {/* Profile Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="p-6 rounded-2xl bg-card border border-border mb-6"
         >
-          <div className="p-6 rounded-2xl bg-card border border-border">
-            <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+                {isMember ? (
+                  <Crown className="w-7 h-7 text-primary" />
+                ) : (
+                  <User className="w-7 h-7 text-muted-foreground" />
+                )}
+              </div>
               <div>
-                <h2 className="text-xl font-semibold text-foreground mb-2">
-                  Reading Allowance
-                </h2>
-                <div className="flex items-center gap-4">
-                  {isMember ? (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-primary" />
-                        <span className="text-muted-foreground">
-                          {access.canDoReading
-                            ? "1 reading available today"
-                            : "Today's reading used"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
-                          Resets at midnight
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-primary" />
-                        <span className="text-muted-foreground">
-                          {access.readingsRemaining} of 7 readings remaining this year
-                        </span>
-                      </div>
-                    </>
-                  )}
+                <h1 className="text-2xl font-bold text-foreground">
+                  {profile.birthName || profile.email.split("@")[0]}
+                </h1>
+                <p className="text-sm text-muted-foreground">{profile.email}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                      isMember
+                        ? "bg-primary/20 text-primary"
+                        : "bg-secondary text-muted-foreground"
+                    }`}
+                  >
+                    {isMember ? (
+                      <>
+                        <Star className="w-3 h-3" />
+                        Lifetime Member
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="w-3 h-3" />
+                        Guest
+                      </>
+                    )}
+                  </span>
                 </div>
               </div>
-
-              <Button
-                asChild
-                disabled={!access.canDoReading}
-                className="gap-2"
-              >
-                <Link href="/reading">
-                  <Sparkles className="w-4 h-4" />
-                  {access.canDoReading ? "Begin Reading" : "No Readings Left"}
-                </Link>
-              </Button>
             </div>
 
-            {/* Upgrade prompt for guests */}
-            {!isMember && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Unlock daily readings and all premium features
-                  </p>
-                  <Button asChild variant="outline" size="sm" className="gap-2 bg-transparent">
-                    <Link href="/membership/checkout">
-                      <Star className="w-4 h-4" />
-                      Become a Member - $9.99
-                    </Link>
-                  </Button>
-                </div>
+            {/* Reading status */}
+            <div className="text-right">
+              <div className="flex items-center gap-2 justify-end">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    canPerformReading ? "bg-green-500" : "bg-amber-500"
+                  }`}
+                />
+                <span className="text-sm font-medium text-foreground">
+                  {remainingReadings} reading{remainingReadings !== 1 ? "s" : ""} available
+                </span>
               </div>
-            )}
+              <p className="text-xs text-muted-foreground mt-1">{readingMessage}</p>
+            </div>
           </div>
         </motion.div>
 
-        {/* Daily Wisdom - AI Feature */}
+        {/* Quick Actions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mb-8"
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6"
+        >
+          <Link href="/">
+            <Button
+              variant="outline"
+              className="w-full h-auto py-4 flex flex-col items-center gap-2 bg-transparent hover:bg-primary/5"
+            >
+              <Sparkles className="w-5 h-5 text-primary" />
+              <span className="text-xs">New Reading</span>
+            </Button>
+          </Link>
+          <Link href="/">
+            <Button
+              variant="outline"
+              className="w-full h-auto py-4 flex flex-col items-center gap-2 bg-transparent hover:bg-primary/5"
+            >
+              <Eye className="w-5 h-5 text-primary" />
+              <span className="text-xs">The Deck</span>
+            </Button>
+          </Link>
+          <Link href="/guidebook">
+            <Button
+              variant="outline"
+              className="w-full h-auto py-4 flex flex-col items-center gap-2 bg-transparent hover:bg-primary/5"
+            >
+              <BookOpen className="w-5 h-5 text-primary" />
+              <span className="text-xs">Guidebook</span>
+            </Button>
+          </Link>
+          {!isMember ? (
+            <Link href="/membership/checkout">
+              <Button className="w-full h-auto py-4 flex flex-col items-center gap-2">
+                <Crown className="w-5 h-5" />
+                <span className="text-xs">Upgrade</span>
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/spread-builder">
+              <Button
+                variant="outline"
+                className="w-full h-auto py-4 flex flex-col items-center gap-2 bg-transparent hover:bg-primary/5"
+              >
+                <Star className="w-5 h-5 text-primary" />
+                <span className="text-xs">Spreads</span>
+              </Button>
+            </Link>
+          )}
+        </motion.div>
+
+        {/* Daily Wisdom */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-6"
         >
           <DailyWisdom />
         </motion.div>
 
-        {/* Quick Actions Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Link
-              href="/reading"
-              className="block p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors group"
-            >
-              <Sparkles className="w-8 h-8 text-primary mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                New Reading
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Consult the Oracle for guidance
-              </p>
-              <span className="inline-flex items-center gap-1 text-primary text-sm group-hover:gap-2 transition-all">
-                Begin <ArrowRight className="w-4 h-4" />
-              </span>
-            </Link>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Link
-              href="/deck"
-              className="block p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors group"
-            >
-              <Layout className="w-8 h-8 text-primary mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                Explore Deck
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Browse all 78 cards and their wisdom
-              </p>
-              <span className="inline-flex items-center gap-1 text-primary text-sm group-hover:gap-2 transition-all">
-                Explore <ArrowRight className="w-4 h-4" />
-              </span>
-            </Link>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Link
-              href="/guidebook"
-              className="block p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors group"
-            >
-              <BookOpen className="w-8 h-8 text-primary mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                Guidebook
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Learn the mathematics of Adinkra
-              </p>
-              <span className="inline-flex items-center gap-1 text-primary text-sm group-hover:gap-2 transition-all">
-                Study <ArrowRight className="w-4 h-4" />
-              </span>
-            </Link>
-          </motion.div>
-
-          {/* Member-only features */}
-          {isMember && (
-            <>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <Link
-                  href="/portal/history"
-                  className="block p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors group"
-                >
-                  <History className="w-8 h-8 text-primary mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Reading History
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Review and journal past readings
-                  </p>
-                  <span className="inline-flex items-center gap-1 text-primary text-sm group-hover:gap-2 transition-all">
-                    View <ArrowRight className="w-4 h-4" />
-                  </span>
-                </Link>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <Link
-                  href="/spread-builder"
-                  className="block p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors group"
-                >
-                  <Layout className="w-8 h-8 text-primary mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Custom Spreads
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Create your own spread patterns
-                  </p>
-                  <span className="inline-flex items-center gap-1 text-primary text-sm group-hover:gap-2 transition-all">
-                    Create <ArrowRight className="w-4 h-4" />
-                  </span>
-                </Link>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                <Link
-                  href="/portal/profile"
-                  className="block p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors group"
-                >
-                  <User className="w-8 h-8 text-primary mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Birth Chart
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    View your astrological profile
-                  </p>
-                  <span className="inline-flex items-center gap-1 text-primary text-sm group-hover:gap-2 transition-all">
-                    View <ArrowRight className="w-4 h-4" />
-                  </span>
-                </Link>
-              </motion.div>
-            </>
-          )}
-        </div>
-
-        {/* Data protection reminder */}
+        {/* Reading History */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="p-4 rounded-xl bg-secondary/50 border border-border flex items-center gap-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
         >
-          <Shield className="w-5 h-5 text-primary flex-shrink-0" />
-          <p className="text-sm text-muted-foreground">
-            Your data is protected. We never sell, trade, or share
-            your information. <Link href="/privacy" className="text-primary hover:underline">Read our pledge</Link>
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              Reading History
+            </h2>
+            <span className="text-sm text-muted-foreground">
+              {readings.length} reading{readings.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+
+          {loadingReadings ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="p-4 rounded-xl bg-card border border-border animate-pulse">
+                  <div className="h-4 bg-muted rounded w-1/3 mb-2" />
+                  <div className="h-3 bg-muted rounded w-2/3" />
+                </div>
+              ))}
+            </div>
+          ) : readings.length === 0 ? (
+            <div className="p-8 rounded-2xl bg-card border border-dashed border-border text-center">
+              <Sparkles className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+              <h3 className="font-semibold text-foreground mb-2">No readings yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Begin your journey with your first card reading
+              </p>
+              <Link href="/">
+                <Button className="gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Start a Reading
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {readings.map((reading) => (
+                <motion.div
+                  key={reading.id}
+                  layout
+                  className="p-4 rounded-xl bg-card border border-border"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold text-foreground text-sm">
+                          {reading.spread_name}
+                        </h3>
+                        <span className="text-xs text-muted-foreground px-2 py-0.5 bg-secondary rounded-full">
+                          {reading.spread_type}
+                        </span>
+                        {reading.is_favorited && (
+                          <Heart className="w-3.5 h-3.5 text-primary fill-primary" />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(reading.created_at).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                      {reading.question && (
+                        <p className="text-xs text-muted-foreground mt-1 italic truncate">
+                          {reading.question}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 ml-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => toggleFavorite(reading.id, reading.is_favorited)}
+                        title={reading.is_favorited ? "Remove from favorites" : "Add to favorites"}
+                      >
+                        <Heart
+                          className={`w-4 h-4 ${
+                            reading.is_favorited
+                              ? "text-primary fill-primary"
+                              : "text-muted-foreground"
+                          }`}
+                        />
+                      </Button>
+                      {reading.ai_interpretation && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            setExpandedReading(
+                              expandedReading === reading.id ? null : reading.id
+                            )
+                          }
+                          title="View AI interpretation"
+                        >
+                          {expandedReading === reading.id ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => deleteReading(reading.id)}
+                        title="Delete reading"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Expanded AI interpretation */}
+                  <AnimatePresence>
+                    {expandedReading === reading.id && reading.ai_interpretation && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-4 pt-4 border-t border-border overflow-hidden"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          <span className="text-xs font-semibold text-foreground">
+                            AI Interpretation
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap font-serif leading-relaxed">
+                          {reading.ai_interpretation}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </motion.div>
+
+        {/* Upgrade Banner for Guests */}
+        {!isMember && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-8 p-6 rounded-2xl bg-primary/10 border border-primary/20 text-center"
+          >
+            <Crown className="w-8 h-8 text-primary mx-auto mb-3" />
+            <h3 className="text-lg font-bold text-foreground mb-2">
+              Unlock More with Lifetime Membership
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+              Daily readings, Celtic Cross spread, AI Oracle, reading journal, custom spreads,
+              and birth chart integration -- all for a one-time payment.
+            </p>
+            <Link href="/membership/checkout">
+              <Button className="gap-2">
+                <Star className="w-4 h-4" />
+                Become a Member - $9.99
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </motion.div>
+        )}
+
+        {/* Footer */}
+        <div className="mt-12 pt-6 border-t border-border text-center">
+          <p className="text-xs text-muted-foreground font-serif">
+            ADINKRAROTA -- Where ancestral wisdom, geometry, and mathematical truth converge
+          </p>
+        </div>
       </div>
     </div>
   );
