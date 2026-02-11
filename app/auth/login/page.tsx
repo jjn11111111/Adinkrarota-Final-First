@@ -31,7 +31,6 @@ export default function LoginPage() {
     const supabase = createClient();
     
     const redirectUrl = `${window.location.origin}/auth/callback`;
-    console.log("[v0] Resend confirmation to:", email, "redirect:", redirectUrl);
     
     const { error } = await supabase.auth.resend({
       type: "signup",
@@ -42,7 +41,6 @@ export default function LoginPage() {
     });
     
     if (error) {
-      console.log("[v0] Resend error:", error.message);
       setError(error.message);
       setResendStatus("idle");
     } else {
