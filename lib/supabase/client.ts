@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 // Singleton pattern to prevent multiple GoTrueClient instances
 let client: SupabaseClient | null = null
 
-export function createClient() {
+export function createClient(): SupabaseClient {
   if (client) {
     return client
   }
@@ -13,9 +13,35 @@ export function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      'Supabase is not configured. Please connect Supabase from the integrations panel.'
-    )
+    // During build/prerendering, env vars may not be available.
+    // Return a dummy client that won't crash but won't do anything.
+    // At runtime in the browser, the env vars will be available.
+    console.warn('Supabase env vars not available — returning placeholder client')
+    return new Proxy({} as SupabaseClient, {
+      get(_target, prop) {
+        if (prop === 'auth') {
+          return {
+            getUser: async () => ({ data: { user: null }, error: null }),
+            getSession: async () => ({ data: { session: null }, error: null }),
+            onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+            signInWithPassword: async () => ({ data: { user: null }, error: { message: 'Supabase not configured' } }),
+            signUp: async () => ({ data: { user: null }, error: { message: 'Supabase not configured' } }),
+            signOut: async () => ({ error: null }),
+            updateUser: async () => ({ data: { user: null }, error: null }),
+            resend: async () => ({ error: null }),
+          }
+        }
+        if (prop === 'from') {
+          return () => ({
+            select: () => ({ eq: () => ({ single: async () => ({ data: null, error: { message: 'Supabase not configured' } }) }), order: () => ({ data: [], error: null }) }),
+            insert: async () => ({ data: null, error: { message: 'Supabase not configured' } }),
+            update: () => ({ eq: async () => ({ error: { message: 'Supabase not configured' } }) }),
+            delete: () => ({ eq: async () => ({ error: { message: 'Supabase not configured' } }) }),
+          })
+        }
+        return undefined
+      },
+    })
   }
 
   client = createBrowserClient(supabaseUrl, supabaseAnonKey)
