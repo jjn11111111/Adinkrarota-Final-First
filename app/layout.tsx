@@ -6,6 +6,7 @@ import './globals.css'
 import { Cinzel, Cormorant } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
 import { SupabaseEnvProvider } from '@/components/supabase-env-provider'
+import { ContentProtection } from '@/components/content-protection'
 
 const bebasNeue = Bebas_Neue({ 
   subsets: ["latin"],
@@ -70,9 +71,11 @@ export default function RootLayout({
           url={process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || ""}
           anonKey={process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}
         >
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <ContentProtection>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </ContentProtection>
         </SupabaseEnvProvider>
         <Analytics />
       </body>

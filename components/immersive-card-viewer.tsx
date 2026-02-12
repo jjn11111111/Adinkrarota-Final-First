@@ -244,7 +244,9 @@ export function ImmersiveCardViewer({ card, onClose }: ImmersiveCardViewerProps)
                   <img
                     src={card.imageUrl || "/placeholder.svg"}
                     alt={card.name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain pointer-events-none select-none"
+                    draggable={false}
+                    onContextMenu={(e) => e.preventDefault()}
                   />
                 </div>
               ) : (
