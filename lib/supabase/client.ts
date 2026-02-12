@@ -3,14 +3,25 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Singleton pattern to prevent multiple GoTrueClient instances
 let client: SupabaseClient | null = null
+let configuredUrl: string | null = null
+let configuredKey: string | null = null
+
+// Called from SupabaseEnvProvider to inject server-provided env vars
+export function setSupabaseEnv(url: string, anonKey: string) {
+  if (configuredUrl !== url || configuredKey !== anonKey) {
+    configuredUrl = url
+    configuredKey = anonKey
+    client = null // Reset client so it picks up new env
+  }
+}
 
 export function createClient(): SupabaseClient {
   if (client) {
     return client
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = configuredUrl || process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = configuredKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
     // During build/prerendering, env vars may not be available.
@@ -50,7 +61,7 @@ export function createClient(): SupabaseClient {
 
 export function isSupabaseConfigured(): boolean {
   return !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    (configuredUrl || process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+    (configuredKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
   )
 }

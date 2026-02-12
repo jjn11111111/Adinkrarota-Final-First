@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { Cinzel, Cormorant } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
+import { SupabaseEnvProvider } from '@/components/supabase-env-provider'
 
 const bebasNeue = Bebas_Neue({ 
   subsets: ["latin"],
@@ -65,9 +66,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${bebasNeue.variable} ${oswald.variable} ${cinzel.variable} ${cormorant.variable} font-sans antialiased`}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <SupabaseEnvProvider
+          url={process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || ""}
+          anonKey={process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}
+        >
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </SupabaseEnvProvider>
         <Analytics />
       </body>
     </html>
