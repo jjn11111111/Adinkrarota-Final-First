@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     
     if (webhookSecret) {
       // Production: verify signature
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
     } else {
       // Development: parse without verification (NOT for production)
       console.warn("STRIPE_WEBHOOK_SECRET not set - skipping signature verification");

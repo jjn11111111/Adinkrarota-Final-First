@@ -14,10 +14,3 @@ export function getStripe(): Stripe {
   }
   return _stripe
 }
-
-// Keep the named export for backward compatibility, but lazy
-export const stripe = new Proxy({} as Stripe, {
-  get(_target, prop) {
-    return (getStripe() as Record<string | symbol, unknown>)[prop]
-  },
-})

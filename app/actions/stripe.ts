@@ -1,6 +1,6 @@
 "use server";
 
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { PRODUCTS } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
 import { getBaseUrl } from "@/lib/site-config";
@@ -22,7 +22,7 @@ export async function createCheckoutSession(productId: string) {
   }
 
   try {
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       ui_mode: "embedded",
       payment_method_types: ["card"],
       line_items: [
@@ -57,7 +57,7 @@ export async function createCheckoutSession(productId: string) {
 
 export async function getCheckoutSession(sessionId: string) {
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
     return { session };
   } catch (error) {
     console.error("Error retrieving session:", error);
