@@ -3,11 +3,13 @@ import { stripe } from "@/lib/stripe";
 import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 
-// Create admin client for webhook (bypasses RLS)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-init admin client for webhook (bypasses RLS)
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -45,7 +47,7 @@ export async function POST(request: Request) {
     if (userId && session.payment_status === "paid") {
       try {
         // Update user profile to member using correct column names
-        const { error } = await supabaseAdmin
+        const { error } = await getSupabaseAdmin()
           .from("profiles")
           .update({
             account_type: "member",
