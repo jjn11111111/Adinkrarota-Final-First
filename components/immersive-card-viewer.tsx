@@ -331,7 +331,9 @@ export function ImmersiveCardViewer({ card, onClose }: ImmersiveCardViewerProps)
                 <img
                   src="/images/guidebook/adinkra-symbols-grid.jpeg"
                   alt="Card back"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain pointer-events-none select-none"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
                 />
               </div>
               <div className="absolute inset-2 border border-primary/30 rounded-lg" />

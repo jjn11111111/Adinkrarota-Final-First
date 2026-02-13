@@ -186,7 +186,9 @@ export function HeroSection({ onExplore, onReading }: HeroSectionProps) {
                 <img
                   src="/images/portal-wheel.png"
                   alt="ADINKRAROTA - Tarot + Adinkra Portal"
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-full w-auto max-w-none"
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-full w-auto max-w-none pointer-events-none select-none"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
                 />
               </motion.div>
               
@@ -203,7 +205,9 @@ export function HeroSection({ onExplore, onReading }: HeroSectionProps) {
                 <img
                   src="/images/portal-wheel.png"
                   alt=""
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-full w-auto max-w-none"
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-full w-auto max-w-none pointer-events-none select-none"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
                 />
               </motion.div>
             </motion.div>

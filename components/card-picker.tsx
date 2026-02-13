@@ -292,7 +292,9 @@ function FaceDownCard({ card, polarity, isSelected, isRevealing, disabled, onCli
           <img
             src="/images/guidebook/adinkra-symbols-grid.jpeg"
             alt="Card back"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover pointer-events-none select-none"
+            draggable={false}
+            onContextMenu={(e) => e.preventDefault()}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           
@@ -314,7 +316,9 @@ function FaceDownCard({ card, polarity, isSelected, isRevealing, disabled, onCli
             <img
               src={card.imageUrl || "/placeholder.svg"}
               alt={card.name}
-              className={`w-full h-full object-contain ${isReversed ? "rotate-180" : ""}`}
+              className={`w-full h-full object-contain pointer-events-none select-none ${isReversed ? "rotate-180" : ""}`}
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-card p-1">

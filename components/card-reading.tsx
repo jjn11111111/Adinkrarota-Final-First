@@ -480,7 +480,9 @@ function SpreadCard({
             <img
               src="/images/guidebook/adinkra-symbols-grid.jpeg"
               alt="Card back"
-              className="absolute inset-0 w-full h-full object-contain"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
             />
             <div className="absolute inset-1 border border-primary/30 rounded-md" />
             <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-white font-serif drop-shadow-lg">
