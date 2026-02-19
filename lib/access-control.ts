@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/browser";
 import { 
   type PremiumFeature, 
   GUEST_FEATURES, 
