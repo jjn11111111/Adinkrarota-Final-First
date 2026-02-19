@@ -15,7 +15,7 @@ export function isSupabaseConfigured(): boolean {
 export function createClient(): SupabaseClient | null {
   if (client) return client
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://nvemsxgytadvdfscfssm.supabase.co'
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
