@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  bundler: 'webpack',
+  turbopack: false,
   typescript: {
     ignoreBuildErrors: true,
   },
