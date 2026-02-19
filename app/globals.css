@@ -258,6 +258,11 @@
   transform: translateZ(0);
 }
 
+/* Ensure positioned ancestor for Radix UI scroll offset calculation */
+body {
+  position: relative;
+}
+
 /* Smooth scroll behavior */
 html {
   scroll-behavior: smooth;
