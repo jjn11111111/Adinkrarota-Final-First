@@ -1,9 +1,8 @@
 "use client";
-/* v2 - null-safe supabase client handling */
 
 import { createContext, useContext, useEffect, useState, useMemo, type ReactNode } from "react";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import type { User, SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 export type AccountType = "guest" | "member";
 
@@ -38,12 +37,23 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Inline safe client creation - avoids cached client.ts throw issue
+let _cachedClient: SupabaseClient | null = null;
+function getSafeSupabaseClient(): SupabaseClient | null {
+  if (_cachedClient) return _cachedClient;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  _cachedClient = createBrowserClient(url, key);
+  return _cachedClient;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const configured = isSupabaseConfigured();
-  const supabase = useMemo(() => configured ? createClient() : null, [configured]);
+  const supabase = useMemo(() => getSafeSupabaseClient(), []);
+  const configured = !!supabase;
 
   const fetchProfile = async (userId: string, userEmail?: string) => {
     if (!supabase) return null;
