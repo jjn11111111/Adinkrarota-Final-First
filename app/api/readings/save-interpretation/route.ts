@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 export async function POST(req: Request) {
   try {
     const supabase = await createClient();
+    if (!supabase) {
+      return Response.json({ error: "Server not configured" }, { status: 500 });
+    }
     
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

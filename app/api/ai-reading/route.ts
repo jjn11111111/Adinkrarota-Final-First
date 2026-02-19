@@ -29,6 +29,9 @@ export async function POST(req: Request) {
   try {
     // Auth check - prevent unauthorized AI usage
     const supabase = await createClient();
+    if (!supabase) {
+      return Response.json({ error: "Server not configured" }, { status: 500 });
+    }
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return Response.json({ error: "Authentication required" }, { status: 401 });

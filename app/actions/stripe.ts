@@ -14,6 +14,9 @@ export async function createCheckoutSession(productId: string) {
 
   // Get the current user
   const supabase = await createClient();
+  if (!supabase) {
+    return { error: "Server not configured" };
+  }
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

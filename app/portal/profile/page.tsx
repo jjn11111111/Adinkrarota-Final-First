@@ -37,6 +37,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const supabase = createClient();
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  // Guard against unconfigured Supabase
+  useEffect(() => { if (!supabase) router.push("/auth/login"); }, [supabase, router]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);

@@ -88,12 +88,11 @@ function RegisterContent() {
     }
 
     const supabase = createClient();
+    if (!supabase) { setError("Authentication not configured"); setLoading(false); return; }
 
     // Construct the redirect URL - prioritize env var for dev, fallback to origin
     const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL 
       || `${window.location.origin}/auth/callback`;
-    
-    console.log("[v0] SignUp redirect URL:", redirectUrl);
     
     const { error } = await supabase.auth.signUp({
       email,

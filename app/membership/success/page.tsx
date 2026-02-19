@@ -31,6 +31,7 @@ function SuccessContent() {
 
       // Update user to full member
       const supabase = createClient();
+      if (!supabase) { setStatus("error"); return; }
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {

@@ -29,9 +29,9 @@ export default function LoginPage() {
     
     setResendStatus("sending");
     const supabase = createClient();
+    if (!supabase) { setError("Authentication not configured"); setResendStatus("idle"); return; }
     
     const redirectUrl = `${window.location.origin}/auth/callback`;
-    console.log("[v0] Resend confirmation to:", email, "redirect:", redirectUrl);
     
     const { error } = await supabase.auth.resend({
       type: "signup",
@@ -57,6 +57,7 @@ export default function LoginPage() {
     setError(null);
 
     const supabase = createClient();
+    if (!supabase) { setError("Authentication not configured"); setLoading(false); return; }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,

@@ -43,6 +43,7 @@ export default function ReadingHistoryPage() {
   const [filter, setFilter] = useState<"all" | "favorited">("all");
 
   const fetchReadings = useCallback(async () => {
+    if (!supabase) { router.push("/auth/login"); return; }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push("/auth/login");
