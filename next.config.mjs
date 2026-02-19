@@ -1,5 +1,4 @@
 /** @type {import('next').NextConfig} */
-/* rebuild-v3 */
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
@@ -7,7 +6,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
- 
+  // Force clean rebuild by adding a unique config key
+  env: {
+    CONFIG_VERSION: 'v4-safe-auth',
+  },
 }
 
 export default nextConfig
