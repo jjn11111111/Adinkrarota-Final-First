@@ -13,13 +13,12 @@ export interface UserProfile {
   readingsThisYear: number;
   readingsToday: number;
   lastReadingDate: string | null;
-  displayName?: string;
   birthName?: string;
   birthDate?: string;
   birthPlace?: string;
   birthTime?: string;
   gender?: string;
-  memberSince?: string;
+  membershipPurchasedAt?: string;
 }
 
 interface AuthContextType {
@@ -45,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string, userEmail?: string) => {
     try {
+      // Fetch profile data
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -52,10 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        // If table doesn't exist or profile not found, create a fallback profile from user metadata
         console.error("Error fetching profile:", error.message);
-        
-        // Return a default guest profile based on auth user data
         return {
           id: userId,
           email: userEmail || "",
@@ -63,25 +60,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           readingsThisYear: 0,
           readingsToday: 0,
           lastReadingDate: null,
-          displayName: undefined,
-          birthName: undefined,
-          birthDate: undefined,
-          birthPlace: undefined,
-          birthTime: undefined,
-          gender: undefined,
-          memberSince: undefined,
         };
       }
 
-      // Calculate readings today
-      const today = new Date().toISOString().split("T")[0];
-      const lastReadingDate = data.last_reading_date?.split("T")[0];
-      const readingsToday = lastReadingDate === today ? data.readings_today : 0;
-
-      // Calculate readings this year
+      // Calculate readings this year from the readings table (accurate count)
       const currentYear = new Date().getFullYear();
-      const yearResetDate = data.year_reset_date?.split("-")[0];
-      const readingsThisYear = yearResetDate === String(currentYear) ? data.readings_this_year : 0;
+      const startOfYear = `${currentYear}-01-01T00:00:00.000Z`;
+      const { count: yearlyCount } = await supabase
+        .from("readings")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gte("created_at", startOfYear);
+
+      const readingsThisYear = yearlyCount || 0;
+
+      // Calculate readings today from the readings table
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { count: dailyCount } = await supabase
+        .from("readings")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gte("created_at", today.toISOString());
+
+      const readingsToday = dailyCount || 0;
 
       return {
         id: data.id,
@@ -90,17 +92,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         readingsThisYear,
         readingsToday,
         lastReadingDate: data.last_reading_date,
-        displayName: data.display_name,
         birthName: data.birth_name,
         birthDate: data.birth_date,
         birthPlace: data.birth_place,
         birthTime: data.birth_time,
         gender: data.gender,
-        memberSince: data.member_since,
+        membershipPurchasedAt: data.membership_purchased_at,
       };
     } catch (err) {
       console.error("Error fetching profile:", err);
-      // Return default profile on any error
       return {
         id: userId,
         email: userEmail || "",
@@ -108,20 +108,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         readingsThisYear: 0,
         readingsToday: 0,
         lastReadingDate: null,
-        displayName: undefined,
-        birthName: undefined,
-        birthDate: undefined,
-        birthPlace: undefined,
-        birthTime: undefined,
-        gender: undefined,
-        memberSince: undefined,
       };
     }
   };
 
   const refreshProfile = async () => {
     if (user) {
-      const newProfile = await fetchProfile(user.id);
+      const newProfile = await fetchProfile(user.id, user.email || undefined);
       if (newProfile) {
         setProfile(newProfile);
       }
@@ -174,27 +167,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ): Promise<boolean> => {
     if (!user || !profile) return false;
 
-    const today = new Date().toISOString().split("T")[0];
     const currentYear = new Date().getFullYear();
 
     // Check if allowed
     if (profile.accountType === "guest") {
       if (profile.readingsThisYear >= 7) {
-        return false; // Exceeded yearly limit
+        return false;
       }
     } else {
-      // Member - check daily limit
       if (profile.readingsToday >= 1) {
-        return false; // Already did reading today
+        return false;
       }
     }
 
-    // Record the reading
+    // Record the reading - column is "cards" not "cards_data"
     const { error: readingError } = await supabase.from("readings").insert({
       user_id: user.id,
       spread_type: spreadType,
       spread_name: spreadName,
-      cards_data: cardsData,
+      cards: cardsData,
     });
 
     if (readingError) {
@@ -202,22 +193,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    // Update profile counters
-    const lastReadingDate = profile.lastReadingDate?.split("T")[0];
-    const yearResetDate = profile.lastReadingDate?.split("-")[0];
-
-    const newReadingsToday = lastReadingDate === today ? profile.readingsToday + 1 : 1;
-    const newReadingsThisYear = yearResetDate === String(currentYear) 
-      ? profile.readingsThisYear + 1 
-      : 1;
-
+    // Update profile counters using correct column names
     const { error: updateError } = await supabase
       .from("profiles")
       .update({
-        readings_today: newReadingsToday,
-        readings_this_year: newReadingsThisYear,
-        last_reading_date: new Date().toISOString(),
-        year_reset_date: `${currentYear}-01-01`,
+        readings_this_year: profile.readingsThisYear + 1,
+        last_reading_date: new Date().toISOString().split("T")[0],
+        year_started: currentYear,
       })
       .eq("id", user.id);
 
@@ -225,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Error updating profile:", updateError);
     }
 
-    // Refresh profile
+    // Refresh profile to get accurate counts from DB
     await refreshProfile();
     return true;
   };

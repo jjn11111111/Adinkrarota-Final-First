@@ -1,6 +1,7 @@
 import { generateText } from "ai";
 import { drawCardsWithPolarity } from "@/lib/card-data";
 import { getGuidebookEntry } from "@/lib/guidebook-data";
+import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 30;
 
@@ -17,6 +18,13 @@ Do NOT include any greeting, signature, or card name in your response. Just the 
 
 export async function POST(req: Request) {
   try {
+    // Auth check - prevent unauthorized AI usage
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return Response.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     // Draw a single card for the day
     const [drawnCard] = drawCardsWithPolarity(1);
     const guidebook = getGuidebookEntry(drawnCard.id);

@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Navigation } from "@/components/navigation";
 import { SpreadBuilder, type CustomSpread } from "@/components/spread-builder";
 import { CardReading } from "@/components/card-reading";
+import { ReadingGate } from "@/components/reading-gate";
+import { ParallaxStarfield, CosmicOrbs } from "@/components/parallax-layers";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "adinkrarota-custom-spreads";
 
@@ -12,7 +16,6 @@ export default function SpreadBuilderPage() {
   const [activeSpread, setActiveSpread] = useState<CustomSpread | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load spreads from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -25,7 +28,6 @@ export default function SpreadBuilderPage() {
     setIsLoaded(true);
   }, []);
 
-  // Save spreads to localStorage when they change
   useEffect(() => {
     if (isLoaded) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(customSpreads));
@@ -48,43 +50,62 @@ export default function SpreadBuilderPage() {
     setCustomSpreads((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const handleUseSpread = (spread: CustomSpread) => {
-    setActiveSpread(spread);
-  };
-
-  const handleBackToBuilder = () => {
-    setActiveSpread(null);
-  };
-
   if (!isLoaded) {
     return (
-      <div className="min-h-screen cosmic-bg">
-        <Navigation />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-muted-foreground font-serif">Loading...</div>
-        </div>
+      <div className="min-h-screen cosmic-bg flex items-center justify-center">
+        <div className="text-muted-foreground font-serif">Loading...</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen cosmic-bg">
-      <Navigation />
-      <main className="pt-20 pb-12 px-6">
-        {activeSpread ? (
-          <CardReading
-            customSpread={activeSpread}
-            onBackToBuilder={handleBackToBuilder}
-          />
-        ) : (
-          <SpreadBuilder
-            existingSpreads={customSpreads}
-            onSave={handleSaveSpread}
-            onDeleteSpread={handleDeleteSpread}
-            onUseSpread={handleUseSpread}
-          />
-        )}
-      </main>
+      <ParallaxStarfield />
+      <CosmicOrbs />
+
+      <div className="relative z-10">
+        <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm border-b border-border">
+          <div className="max-w-6xl mx-auto px-6 py-3 flex items-center gap-4">
+            <Button asChild variant="ghost" size="sm" className="gap-2">
+              <Link href="/portal">
+                <ArrowLeft className="w-4 h-4" />
+                Portal
+              </Link>
+            </Button>
+            <h1 className="text-lg font-bold text-gold-gradient">
+              {activeSpread ? "Custom Reading" : "Spread Builder"}
+            </h1>
+            {activeSpread && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveSpread(null)}
+                className="ml-auto"
+              >
+                Back to Builder
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="pt-8 px-6">
+          <ReadingGate spreadType="custom">
+            {activeSpread ? (
+              <CardReading
+                customSpread={activeSpread}
+                onBackToBuilder={() => setActiveSpread(null)}
+              />
+            ) : (
+              <SpreadBuilder
+                existingSpreads={customSpreads}
+                onSave={handleSaveSpread}
+                onDeleteSpread={handleDeleteSpread}
+                onUseSpread={(spread) => setActiveSpread(spread)}
+              />
+            )}
+          </ReadingGate>
+        </div>
+      </div>
     </div>
   );
 }

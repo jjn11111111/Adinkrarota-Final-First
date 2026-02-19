@@ -39,7 +39,14 @@ export async function getUserAccess(): Promise<UserAccess> {
     };
   }
 
-  const accountType = (user.user_metadata?.account_type as AccountType) || "guest";
+  // Get account type from profile (DB is source of truth, not user_metadata)
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("account_type")
+    .eq("id", user.id)
+    .single();
+
+  const accountType = (profileData?.account_type as AccountType) || (user.user_metadata?.account_type as AccountType) || "guest";
 
   // Get profile for additional data
   const { data: profile } = await supabase

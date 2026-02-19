@@ -22,14 +22,15 @@ export async function POST(request: Request) {
   try {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     
-    if (webhookSecret) {
-      // Production: verify signature
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } else {
-      // Development: parse without verification (NOT for production)
-      console.warn("STRIPE_WEBHOOK_SECRET not set - skipping signature verification");
-      event = JSON.parse(body) as Stripe.Event;
+    if (!webhookSecret) {
+      console.error("STRIPE_WEBHOOK_SECRET is not set");
+      return NextResponse.json(
+        { error: "Webhook secret not configured" },
+        { status: 500 }
+      );
     }
+
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
     console.error("Webhook signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
@@ -44,12 +45,13 @@ export async function POST(request: Request) {
 
     if (userId && session.payment_status === "paid") {
       try {
-        // Update user profile to member
+        // Update user profile to member with correct column names
         const { error } = await supabaseAdmin
           .from("profiles")
           .update({
             account_type: "member",
-            membership_date: new Date().toISOString(),
+            membership_purchased_at: new Date().toISOString(),
+            stripe_payment_id: session.payment_intent as string || null,
           })
           .eq("id", userId);
 

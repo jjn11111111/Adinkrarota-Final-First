@@ -1,5 +1,6 @@
 import { convertToModelMessages, streamText, UIMessage } from "ai";
 import { UNIVERSAL_WISDOM_SYSTEM_PROMPT, SPREAD_BUILDER_ASSISTANT_PROMPT } from "@/lib/ai-wisdom-prompt";
+import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 60;
 
@@ -26,6 +27,13 @@ const MODEL_MAP: Record<string, string> = {
 
 export async function POST(req: Request) {
   try {
+    // Auth check - prevent unauthorized AI usage
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return Response.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const {
       messages,
       modelId,
