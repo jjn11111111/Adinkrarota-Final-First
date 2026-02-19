@@ -5,7 +5,7 @@ import React from "react"
 import { motion } from "framer-motion";
 import { Lock, Sparkles, User, Crown, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "./safe-auth-provider";
+import { useAuth } from "./auth-provider";
 import Link from "next/link";
 
 interface ReadingGateProps {

@@ -8,7 +8,7 @@ const nextConfig = {
   },
   // Force clean rebuild by adding a unique config key
   env: {
-    CONFIG_VERSION: 'v4-safe-auth',
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://nvemsxgytadvdfscfssm.supabase.co',
   },
 }
 

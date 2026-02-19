@@ -5,7 +5,7 @@ import { Menu, X, Sparkles, User, LogOut, Crown } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AISettingsModal } from "./ai-settings-modal";
-import { useAuth } from "./safe-auth-provider";
+import { useAuth } from "./auth-provider";
 import Link from "next/link";
 
 type View = "home" | "gallery" | "reading" | "guidebook" | "spread-builder";

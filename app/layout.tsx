@@ -5,7 +5,7 @@ import { Bebas_Neue, Oswald } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { Cinzel, Cormorant } from 'next/font/google'
-import { SafeAuthProvider } from '@/components/safe-auth-provider'
+import { AuthProvider } from '@/components/auth-provider'
 
 const bebasNeue = Bebas_Neue({ 
   subsets: ["latin"],
@@ -66,9 +66,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${bebasNeue.variable} ${oswald.variable} ${cinzel.variable} ${cormorant.variable} font-sans antialiased`}>
-        <SafeAuthProvider>
+        <AuthProvider>
           {children}
-        </SafeAuthProvider>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>
