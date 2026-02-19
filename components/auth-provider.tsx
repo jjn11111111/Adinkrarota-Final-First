@@ -1,4 +1,5 @@
 "use client";
+/* v2 - null-safe supabase client handling */
 
 import { createContext, useContext, useEffect, useState, useMemo, type ReactNode } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";

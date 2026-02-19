@@ -1,3 +1,4 @@
+/* v2 - graceful null return, no throw */
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 

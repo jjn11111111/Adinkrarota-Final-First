@@ -1,3 +1,4 @@
+/* cache-bust-v2 */
 import React from "react"
 import type { Metadata, Viewport } from 'next'
 import { Bebas_Neue, Oswald } from 'next/font/google'
