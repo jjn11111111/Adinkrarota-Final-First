@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createContext, useContext, useEffect, useState, useMemo, type ReactNode } from "react";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 export type AccountType = "guest" | "member";
@@ -26,6 +26,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isConfigured: boolean;
   canPerformReading: boolean;
   remainingReadings: number | "unlimited";
   readingMessage: string;
@@ -40,9 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
+  const configured = isSupabaseConfigured();
+  const supabase = useMemo(() => configured ? createClient() : null, [configured]);
 
   const fetchProfile = async (userId: string, userEmail?: string) => {
+    if (!supabase) return null;
     try {
       // Fetch profile data
       const { data, error } = await supabase
@@ -124,6 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       setIsLoading(true);
+
+      if (!supabase) {
+        setIsLoading(false);
+        return;
+      }
       
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       setUser(currentUser);
@@ -137,6 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initAuth();
+
+    if (!supabase) return;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -155,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (supabase) await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
   };
@@ -165,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     spreadName: string,
     cardsData: unknown
   ): Promise<boolean> => {
-    if (!user || !profile) return false;
+    if (!user || !profile || !supabase) return false;
 
     const currentYear = new Date().getFullYear();
 
@@ -253,6 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         isLoading,
         isAuthenticated: !!user,
+        isConfigured: configured,
         canPerformReading,
         remainingReadings,
         readingMessage,
