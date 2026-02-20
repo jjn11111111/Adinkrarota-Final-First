@@ -8,7 +8,7 @@ import { PRODUCTS, GUEST_YEARLY_READINGS, DATA_PLEDGE } from "@/lib/products";
 import { useMouseParallax } from "@/hooks/use-parallax";
 
 export default function PricingPage() {
-  const product = PRODUCTS.find((p) => p.id === "lifetime-membership");
+  const product = PRODUCTS.find((p) => p.id === "monthly-membership");
   const mousePosition = useMouseParallax({ strength: 20, easing: 0.04 });
 
   const guestFeatures = [
@@ -82,7 +82,7 @@ export default function PricingPage() {
             Membership
           </h1>
           <p className="text-muted-foreground font-serif text-lg max-w-2xl mx-auto">
-            Unlock the full wisdom of the Adinkrarota deck with a one-time offering
+            Unlock the full wisdom of the Adinkrarota deck with a monthly subscription
           </p>
         </motion.div>
 
@@ -179,8 +179,8 @@ export default function PricingPage() {
             </div>
 
             <div className="mb-6">
-              <span className="text-4xl font-bold text-primary">$9.99</span>
-              <span className="text-muted-foreground ml-2">one-time</span>
+              <span className="text-4xl font-bold text-primary">$2.22</span>
+              <span className="text-muted-foreground ml-2">/month</span>
             </div>
 
             <p className="text-muted-foreground mb-6 font-serif">

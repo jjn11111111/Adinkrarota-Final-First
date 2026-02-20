@@ -18,10 +18,10 @@ const stripePromise = loadStripe(
 export default function MembershipCheckoutPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const product = PRODUCTS.find((p) => p.id === "lifetime-membership");
+  const product = PRODUCTS.find((p) => p.id === "monthly-membership");
 
   const fetchClientSecret = useCallback(async () => {
-    const result = await createCheckoutSession("lifetime-membership");
+    const result = await createCheckoutSession("monthly-membership");
     if (result.error) {
       setError(result.error);
       return "";
@@ -61,7 +61,7 @@ export default function MembershipCheckoutPage() {
             Complete Your Membership
           </h1>
           <p className="text-muted-foreground font-serif mb-4">
-            One-time payment for lifetime access
+            Monthly subscription for full access
           </p>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto">
             Thank you for choosing to support Adinkrarota. Your membership helps us continue 
@@ -85,8 +85,8 @@ export default function MembershipCheckoutPage() {
               </div>
 
               <div className="mb-6">
-                <span className="text-4xl font-bold text-primary">$9.99</span>
-                <span className="text-muted-foreground ml-2">one-time</span>
+                <span className="text-4xl font-bold text-primary">$2.22</span>
+                <span className="text-muted-foreground ml-2">/month</span>
               </div>
 
               <p className="text-muted-foreground mb-6 font-serif">
