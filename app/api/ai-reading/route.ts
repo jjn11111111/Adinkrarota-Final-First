@@ -9,24 +9,24 @@ import { UNIVERSAL_WISDOM_SYSTEM_PROMPT, SPREAD_BUILDER_ASSISTANT_PROMPT } from 
 export const maxDuration = 60;
 
 // Default model for Vercel AI Gateway (zero config)
-const DEFAULT_MODEL = "anthropic/claude-sonnet-4-20250514";
+const DEFAULT_MODEL = anthropic("claude-sonnet-4-20250514");
 
 // Model mapping for Vercel AI Gateway format
-const MODEL_MAP: Record<string, string> = {
+const MODEL_MAP: Record<string, any> = {
   // OpenAI
-  "openai/gpt-4o": "openai/gpt-4o",
-  "openai/gpt-4o-mini": "openai/gpt-4o-mini",
-  "openai/gpt-4-turbo": "openai/gpt-4-turbo",
+  "openai/gpt-4o": openai("gpt-4o"),
+  "openai/gpt-4o-mini": openai("gpt-4o-mini"),
+  "openai/gpt-4-turbo": openai("gpt-4-turbo"),
   // Anthropic
-  "anthropic/claude-sonnet-4-5": "anthropic/claude-sonnet-4-20250514",
-  "anthropic/claude-3-5-sonnet-20241022": "anthropic/claude-3-5-sonnet-20241022",
-  "anthropic/claude-3-haiku-20240307": "anthropic/claude-3-haiku-20240307",
+  "anthropic/claude-sonnet-4-5": anthropic("claude-sonnet-4-20250514"),
+  "anthropic/claude-3-5-sonnet-20241022": anthropic("claude-3-5-sonnet-20241022"),
+  "anthropic/claude-3-haiku-20240307": anthropic("claude-3-haiku-20240307"),
   // Groq (via gateway)
-  "groq/llama-3.3-70b-versatile": "groq/llama-3.3-70b-versatile",
-  "groq/mixtral-8x7b-32768": "groq/mixtral-8x7b-32768",
+  "groq/llama-3.3-70b-versatile": groq("llama-3.3-70b-versatile"),
+  "groq/mixtral-8x7b-32768": groq("mixtral-8x7b-32768"),
   // xAI (via gateway)
-  "xai/grok-2-1212": "xai/grok-2-1212",
-  "xai/grok-beta": "xai/grok-beta",
+  "xai/grok-2-1212": xai("grok-2-1212"),
+  "xai/grok-beta": xai("grok-beta"),
 };
 
 export async function POST(req: Request) {
