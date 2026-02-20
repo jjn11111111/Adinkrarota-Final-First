@@ -11,6 +11,10 @@ const supabaseAdmin = supabaseUrl && supabaseServiceKey
   : null;
 
 export async function POST(request: Request) {
+  if (!isStripeConfigured() || !stripe || !supabaseAdmin) {
+    return NextResponse.json({ error: "Not configured" }, { status: 503 });
+  }
+
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
 
