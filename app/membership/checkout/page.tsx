@@ -9,6 +9,7 @@ import {
 import { motion } from "framer-motion";
 import { createCheckoutSession } from "@/app/actions/stripe";
 import { PRODUCTS } from "@/lib/products";
+import { PAYMENT_UNAVAILABLE_MESSAGE } from "@/lib/auth-copy";
 import { Sparkles, Shield, Star, Check } from "lucide-react";
 
 // Only load Stripe if configured
@@ -32,7 +33,7 @@ export default function MembershipCheckoutPage() {
 
   useEffect(() => {
     if (!stripePromise) {
-      setError("Payment processing is not configured. Please configure Stripe.");
+      setError(PAYMENT_UNAVAILABLE_MESSAGE);
       return;
     }
     

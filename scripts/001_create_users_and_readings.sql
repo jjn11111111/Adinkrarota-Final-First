@@ -184,6 +184,7 @@ create or replace function public.check_reading_allowance(user_uuid uuid)
 returns jsonb
 language plpgsql
 security definer
+set search_path = public
 as $$
 declare
   profile_record record;
@@ -233,6 +234,7 @@ create or replace function public.record_reading(user_uuid uuid)
 returns jsonb
 language plpgsql
 security definer
+set search_path = public
 as $$
 declare
   allowance jsonb;

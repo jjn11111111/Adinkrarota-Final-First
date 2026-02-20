@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { AUTH_UNAVAILABLE_MESSAGE } from "@/lib/auth-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,7 +90,7 @@ function RegisterContent() {
 
     const supabase = createClient();
     if (!supabase) {
-      setError("Registration is not available. Please configure Supabase.");
+      setError(AUTH_UNAVAILABLE_MESSAGE);
       setLoading(false);
       return;
     }

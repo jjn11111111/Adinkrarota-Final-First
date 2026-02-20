@@ -4,11 +4,11 @@ import { stripe, isStripeConfigured } from "@/lib/stripe";
 import { PRODUCTS } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
 import { getBaseUrl } from "@/lib/site-config";
+import { PAYMENT_UNAVAILABLE_MESSAGE } from "@/lib/auth-copy";
 
 export async function createCheckoutSession(productId: string) {
-  // Check if Stripe is configured
   if (!isStripeConfigured() || !stripe) {
-    return { error: "Payment processing is not available. Please configure Stripe." };
+    return { error: PAYMENT_UNAVAILABLE_MESSAGE };
   }
 
   // Find product in our secure catalog
@@ -73,7 +73,7 @@ export async function createCheckoutSession(productId: string) {
 
 export async function getCheckoutSession(sessionId: string) {
   if (!isStripeConfigured() || !stripe) {
-    return { error: "Payment processing is not available. Please configure Stripe." };
+    return { error: PAYMENT_UNAVAILABLE_MESSAGE };
   }
 
   try {

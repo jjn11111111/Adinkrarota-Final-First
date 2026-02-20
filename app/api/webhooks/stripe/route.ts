@@ -13,11 +13,11 @@ const supabaseAdmin = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABA
 
 export async function POST(request: Request) {
   if (!isStripeConfigured() || !stripe) {
-    return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }
 
   if (!supabaseAdmin) {
-    return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }
 
   const body = await request.text();

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { AUTH_UNAVAILABLE_MESSAGE } from "@/lib/auth-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +30,7 @@ export default function LoginPage() {
     
     const supabase = createClient();
     if (!supabase) {
-      setError("Authentication is not available. Please configure Supabase.");
+      setError(AUTH_UNAVAILABLE_MESSAGE);
       return;
     }
     
@@ -62,7 +63,7 @@ export default function LoginPage() {
 
     const supabase = createClient();
     if (!supabase) {
-      setError("Authentication is not available. Please configure Supabase.");
+      setError(AUTH_UNAVAILABLE_MESSAGE);
       setLoading(false);
       return;
     }
