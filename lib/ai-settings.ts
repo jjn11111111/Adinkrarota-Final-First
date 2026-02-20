@@ -44,23 +44,32 @@ const STORAGE_KEY = "adinkrarota-ai-settings";
 
 export function getAISettings(): AISettings | null {
   if (typeof window === "undefined") return null;
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return null;
   try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return null;
     return JSON.parse(stored);
-  } catch {
+  } catch (e) {
+    console.error("Failed to load AI settings:", e);
     return null;
   }
 }
 
 export function saveAISettings(settings: AISettings): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  } catch (e) {
+    console.error("Failed to save AI settings:", e);
+  }
 }
 
 export function clearAISettings(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(STORAGE_KEY);
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {
+    console.error("Failed to clear AI settings:", e);
+  }
 }
 
 export function getModelById(modelId: string): AIModel | undefined {
