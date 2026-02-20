@@ -80,7 +80,7 @@ export function ReadingGate({ children, spreadType = "single" }: ReadingGateProp
               <div className="flex items-center gap-3 mb-2">
                 <Crown className="w-5 h-5 text-primary" />
                 <span className="font-semibold text-foreground">Member Access</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">$9.99 lifetime</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">$2.22/month</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Daily readings, all spreads, AI Oracle, reading journal
@@ -131,7 +131,7 @@ export function ReadingGate({ children, spreadType = "single" }: ReadingGateProp
 
           <div className="p-4 rounded-xl bg-primary/10 border border-primary/30 mb-6">
             <p className="text-sm text-foreground font-medium mb-2">
-              Upgrade to Member for $9.99 (one-time)
+              Upgrade to Member for $2.22/month
             </p>
             <ul className="text-sm text-muted-foreground text-left space-y-1">
               <li>- Daily readings (vs. 7/year)</li>
@@ -180,7 +180,7 @@ export function ReadingGate({ children, spreadType = "single" }: ReadingGateProp
                 Want more guidance?
               </p>
               <p className="text-sm text-muted-foreground">
-                Upgrade to Member for daily readings at just $9.99 (one-time payment).
+                Upgrade to Member for daily readings at just $2.22/month.
               </p>
             </div>
           )}

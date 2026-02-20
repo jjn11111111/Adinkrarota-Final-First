@@ -1,4 +1,5 @@
 import { generateText } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
 import { drawCardsWithPolarity } from "@/lib/card-data";
 import { getGuidebookEntry } from "@/lib/guidebook-data";
 
@@ -32,7 +33,7 @@ ${guidebook?.fullDescription ? `Full Description: ${guidebook.fullDescription}` 
 `;
 
     const result = await generateText({
-      model: "anthropic/claude-sonnet-4-20250514",
+      model: anthropic("claude-sonnet-4-20250514"),
       system: DAILY_WISDOM_PROMPT,
       prompt: cardContext,
       maxOutputTokens: 200,
@@ -44,7 +45,7 @@ ${guidebook?.fullDescription ? `Full Description: ${guidebook.fullDescription}` 
       card: {
         id: drawnCard.id,
         name: drawnCard.name,
-        image: drawnCard.image,
+        image: drawnCard.imageUrl || `/images/cards/${drawnCard.id}.jpeg`,
         polarity: drawnCard.polarity,
         adinkraSymbol: drawnCard.adinkraSymbol,
         polarityKeywords: drawnCard.polarityKeywords,

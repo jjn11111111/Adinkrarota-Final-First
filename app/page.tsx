@@ -2,7 +2,7 @@
 
 // ADINKRAROTA - Tarot + Adinkra Portal
 import { useState, useRef, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Navigation } from "@/components/navigation";
 import { HeroSection } from "@/components/hero-section";
@@ -27,7 +27,6 @@ const PATH_TO_VIEW: Record<string, View> = {
 
 export default function AdinkrarotaApp() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [currentView, setCurrentView] = useState<View>("home");
   const contentRef = useRef<HTMLDivElement>(null);
   
@@ -348,6 +347,9 @@ export default function AdinkrarotaApp() {
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-sm text-muted-foreground font-serif">
             ADINKRAROTA — Where ancestral wisdom, geometry, and mathematical truth converge
+          </p>
+          <p className="text-xs text-muted-foreground/60 mt-2 font-serif">
+            Honoring the Akan people of Ghana and Cote d{"'"}Ivoire, whose Adinkra symbols encode the universe{"'"}s error-correcting wisdom
           </p>
         </div>
       </footer>

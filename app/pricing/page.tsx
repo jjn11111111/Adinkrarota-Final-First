@@ -82,7 +82,7 @@ export default function PricingPage() {
             Membership
           </h1>
           <p className="text-muted-foreground font-serif text-lg max-w-2xl mx-auto">
-            Unlock the full wisdom of the Adinkrarota deck with a monthly subscription
+            Unlock the full wisdom of the Adinkrarota deck with monthly access
           </p>
         </motion.div>
 
@@ -180,7 +180,7 @@ export default function PricingPage() {
 
             <div className="mb-6">
               <span className="text-4xl font-bold text-primary">$2.22</span>
-              <span className="text-muted-foreground ml-2">/month</span>
+              <span className="text-muted-foreground ml-2">per month</span>
             </div>
 
             <p className="text-muted-foreground mb-6 font-serif">

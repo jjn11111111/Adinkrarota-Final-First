@@ -115,8 +115,8 @@ function RegisterSuccessContent() {
                 <span className="font-semibold text-foreground">Membership Awaits</span>
               </div>
               <p className="text-sm text-muted-foreground text-center">
-                After verifying your email, you will complete your $9.99 one-time payment 
-                for lifetime access to all premium features.
+                After verifying your email, you will complete your $2.22/month subscription 
+                for full access to all premium features. Cancel anytime.
               </p>
             </motion.div>
           ) : (

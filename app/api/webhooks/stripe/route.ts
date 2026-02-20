@@ -4,15 +4,20 @@ import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 
 // Create admin client for webhook (bypasses RLS) - only if configured
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAdmin = supabaseUrl && supabaseServiceKey
-  ? createClient(supabaseUrl, supabaseServiceKey)
+const supabaseAdmin = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
   : null;
 
 export async function POST(request: Request) {
-  if (!isStripeConfigured() || !stripe || !supabaseAdmin) {
-    return NextResponse.json({ error: "Not configured" }, { status: 503 });
+  if (!isStripeConfigured() || !stripe) {
+    return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
+  }
+
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
   }
 
   const body = await request.text();
@@ -40,21 +45,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // Handle subscription checkout completed
+  // Handle subscription events
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const userId = session.metadata?.userId || session.subscription_data?.metadata?.userId;
+
+    // Get user ID from metadata
+    const userId = session.metadata?.userId;
     const subscriptionId = session.subscription as string;
 
-    if (userId && session.payment_status === "paid") {
+    if (userId && session.payment_status === "paid" && subscriptionId) {
       try {
+        // Update user profile to member
         const { error } = await supabaseAdmin
           .from("profiles")
           .update({
             account_type: "member",
             membership_purchased_at: new Date().toISOString(),
             stripe_customer_id: session.customer as string || null,
-            stripe_payment_id: subscriptionId || null,
+            stripe_payment_id: subscriptionId, // Store subscription ID instead of payment intent
             updated_at: new Date().toISOString(),
           })
           .eq("id", userId);
@@ -62,7 +70,7 @@ export async function POST(request: Request) {
         if (error) {
           console.error("Error updating profile:", error);
         } else {
-          console.log(`User ${userId} upgraded to member via subscription ${subscriptionId}`);
+          console.log(`User ${userId} subscribed to membership`);
         }
       } catch (err) {
         console.error("Webhook handler error:", err);
@@ -73,51 +81,72 @@ export async function POST(request: Request) {
   // Handle subscription renewal
   if (event.type === "invoice.payment_succeeded") {
     const invoice = event.data.object as Stripe.Invoice;
-    const customerId = invoice.customer as string;
+    // Invoice.subscription can be a string (ID) or Subscription object
+    // Using type assertion as Stripe types may not expose this property directly
+    const subscription = (invoice as any).subscription;
+    const subscriptionId = typeof subscription === "string" 
+      ? subscription 
+      : subscription?.id || null;
 
-    if (customerId) {
-      try {
-        // Ensure user stays as member on successful renewal
-        const { error } = await supabaseAdmin
-          .from("profiles")
-          .update({
-            account_type: "member",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("stripe_customer_id", customerId);
-
-        if (error) {
-          console.error("Error updating profile on renewal:", error);
-        }
-      } catch (err) {
-        console.error("Renewal handler error:", err);
-      }
+    if (subscriptionId && invoice.status === "paid") {
+      // Subscription renewed successfully - ensure user remains a member
+      // The subscription is active, so user should already be a member
+      // This is mainly for logging and ensuring status is correct
+      console.log(`Subscription ${subscriptionId} renewed successfully`);
     }
   }
 
-  // Handle subscription cancellation
-  if (event.type === "customer.subscription.deleted") {
-    const subscription = event.data.object as Stripe.Subscription;
-    const customerId = subscription.customer as string;
+  // Handle subscription cancellation or failure
+  if (event.type === "customer.subscription.deleted" || event.type === "invoice.payment_failed") {
+    let subscriptionId: string | null = null;
+    let customerId: string | null = null;
 
-    if (customerId) {
+    if (event.type === "customer.subscription.deleted") {
+      const subscription = event.data.object as Stripe.Subscription;
+      subscriptionId = subscription.id;
+      customerId = typeof subscription.customer === "string" 
+        ? subscription.customer 
+        : subscription.customer?.id || null;
+    } else {
+      // invoice.payment_failed
+      const invoice = event.data.object as Stripe.Invoice;
+      const subscription = (invoice as any).subscription;
+      subscriptionId = typeof subscription === "string" 
+        ? subscription 
+        : subscription?.id || null;
+      const customer = (invoice as any).customer;
+      customerId = typeof customer === "string"
+        ? customer
+        : customer?.id || null;
+    }
+
+    if (subscriptionId) {
       try {
-        // Downgrade user to guest on cancellation
-        const { error } = await supabaseAdmin
-          .from("profiles")
-          .update({
-            account_type: "guest",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("stripe_customer_id", customerId);
-
-        if (error) {
-          console.error("Error downgrading profile:", error);
+        // Find user by subscription ID or customer ID
+        let query = supabaseAdmin.from("profiles").select("id");
+        
+        if (customerId) {
+          query = query.eq("stripe_customer_id", customerId);
         } else {
-          console.log(`Customer ${customerId} downgraded to guest after subscription cancellation`);
+          query = query.eq("stripe_payment_id", subscriptionId);
+        }
+
+        const { data: profiles } = await query;
+
+        if (profiles && profiles.length > 0) {
+          // Downgrade to guest
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              account_type: "guest",
+              updated_at: new Date().toISOString(),
+            })
+            .in("id", profiles.map(p => p.id));
+
+          console.log(`Users downgraded to guest due to subscription ${subscriptionId} cancellation/failure`);
         }
       } catch (err) {
-        console.error("Cancellation handler error:", err);
+        console.error("Error handling subscription cancellation:", err);
       }
     }
   }

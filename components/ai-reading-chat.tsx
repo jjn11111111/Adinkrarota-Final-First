@@ -93,7 +93,15 @@ export function AIReadingChat({
     if (cards.length === 0) return "";
 
     // Get guidebook entries for each card
-    const guidebookEntries = cards.map(card => getGuidebookEntry(card.id));
+    const guidebookEntries = cards.map(card => {
+      const entry = getGuidebookEntry(card.id);
+      return entry ? {
+        lightAspect: entry.lightAspect,
+        shadowAspect: entry.shadowAspect,
+        fullDescription: entry.fullDescription,
+        inReadings: entry.inReadings,
+      } : null;
+    });
 
     // Use the enhanced context builder from the wisdom prompt
     return getReadingContext(

@@ -11,9 +11,10 @@ import { createCheckoutSession } from "@/app/actions/stripe";
 import { PRODUCTS } from "@/lib/products";
 import { Sparkles, Shield, Star, Check } from "lucide-react";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
+// Only load Stripe if configured
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
 
 export default function MembershipCheckoutPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -30,6 +31,11 @@ export default function MembershipCheckoutPage() {
   }, []);
 
   useEffect(() => {
+    if (!stripePromise) {
+      setError("Payment processing is not configured. Please configure Stripe.");
+      return;
+    }
+    
     fetchClientSecret().then((secret) => {
       if (secret) {
         setClientSecret(secret);
@@ -61,7 +67,7 @@ export default function MembershipCheckoutPage() {
             Complete Your Membership
           </h1>
           <p className="text-muted-foreground font-serif mb-4">
-            Monthly subscription for full access
+            Monthly subscription - cancel anytime
           </p>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto">
             Thank you for choosing to support Adinkrarota. Your membership helps us continue 
@@ -86,7 +92,7 @@ export default function MembershipCheckoutPage() {
 
               <div className="mb-6">
                 <span className="text-4xl font-bold text-primary">$2.22</span>
-                <span className="text-muted-foreground ml-2">/month</span>
+                <span className="text-muted-foreground ml-2">per month</span>
               </div>
 
               <p className="text-muted-foreground mb-6 font-serif">
@@ -131,7 +137,7 @@ export default function MembershipCheckoutPage() {
                   Please try again or contact support.
                 </p>
               </div>
-            ) : clientSecret ? (
+            ) : clientSecret && stripePromise ? (
               <EmbeddedCheckoutProvider
                 stripe={stripePromise}
                 options={{ clientSecret }}

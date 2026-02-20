@@ -24,17 +24,24 @@ function SuccessContent() {
 
       const result = await getCheckoutSession(sessionId);
 
-      if (result.error || result.session?.payment_status !== "paid") {
+      // For subscriptions, check if session is completed and has subscription
+      const isSubscription = result.session?.mode === "subscription";
+      const isPaid = result.session?.payment_status === "paid" || 
+                     (isSubscription && result.session?.subscription);
+
+      if (result.error || !isPaid) {
         setStatus("error");
         return;
       }
 
-      // Update user to full member
+      // The webhook will handle the profile update, but we can refresh here
+      // Update user metadata for immediate UI update
       const supabase = createClient();
       if (!supabase) {
         setStatus("error");
         return;
       }
+      
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
@@ -45,12 +52,8 @@ function SuccessContent() {
           },
         });
 
-        // Update profile with correct column names
-        await supabase.from("profiles").update({
-          account_type: "member",
-          membership_purchased_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }).eq("id", user.id);
+        // Refresh profile - webhook should have updated it, but refresh to be sure
+        // The webhook handles the actual profile update with subscription ID
       }
 
       setStatus("success");
@@ -135,14 +138,15 @@ function SuccessContent() {
             <div className="flex items-center justify-center gap-2 mb-2">
               <Star className="w-5 h-5 text-primary" />
               <span className="text-foreground font-serif text-lg">
-                Welcome to Lifetime Membership
+                Welcome to Monthly Membership
               </span>
               <Star className="w-5 h-5 text-primary" />
             </div>
 
             <p className="text-muted-foreground mb-6">
               Your commitment to this journey means everything. You now have 
-              unlimited access to the full wisdom of the Adinkrarota deck.
+              full access to the wisdom of the Adinkrarota deck. Your subscription 
+              will renew monthly, and you can cancel anytime.
             </p>
 
             {/* What's Unlocked */}
@@ -153,7 +157,7 @@ function SuccessContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div className="flex items-start gap-2">
                   <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">Daily readings (1 per day, forever)</span>
+                  <span className="text-muted-foreground">Daily readings (1 per day)</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
@@ -173,7 +177,7 @@ function SuccessContent() {
                 </div>
                 <div className="flex items-start gap-2">
                   <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">All future features included</span>
+                  <span className="text-muted-foreground">Cancel anytime</span>
                 </div>
               </div>
             </div>

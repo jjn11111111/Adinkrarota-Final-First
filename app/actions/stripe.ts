@@ -6,8 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getBaseUrl } from "@/lib/site-config";
 
 export async function createCheckoutSession(productId: string) {
+  // Check if Stripe is configured
   if (!isStripeConfigured() || !stripe) {
-    return { error: "Payment processing is not available." };
+    return { error: "Payment processing is not available. Please configure Stripe." };
   }
 
   // Find product in our secure catalog
@@ -19,9 +20,6 @@ export async function createCheckoutSession(productId: string) {
 
   // Get the current user
   const supabase = await createClient();
-  if (!supabase) {
-    return { error: "Authentication is not configured" };
-  }
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -29,6 +27,8 @@ export async function createCheckoutSession(productId: string) {
   }
 
   try {
+    // Create Stripe Price for subscription (if it doesn't exist, create it)
+    // For monthly subscription, we'll create a price object
     const session = await stripe.checkout.sessions.create({
       ui_mode: "embedded",
       payment_method_types: ["card"],
@@ -51,11 +51,15 @@ export async function createCheckoutSession(productId: string) {
       mode: "subscription",
       allow_promotion_codes: true,
       return_url: `${getBaseUrl()}/membership/success?session_id={CHECKOUT_SESSION_ID}`,
+      metadata: {
+        userId: user.id,
+        productId: product.id,
+        userEmail: user.email || "",
+      },
       subscription_data: {
         metadata: {
           userId: user.id,
           productId: product.id,
-          userEmail: user.email || "",
         },
       },
     });
@@ -68,6 +72,10 @@ export async function createCheckoutSession(productId: string) {
 }
 
 export async function getCheckoutSession(sessionId: string) {
+  if (!isStripeConfigured() || !stripe) {
+    return { error: "Payment processing is not available. Please configure Stripe." };
+  }
+
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     return { session };

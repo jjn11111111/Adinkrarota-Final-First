@@ -26,9 +26,11 @@ export default function WelcomePage() {
     async function loadUser() {
       const supabase = createClient();
       if (!supabase) {
-        router.push("/auth/login");
+        // Supabase not configured - redirect to home
+        router.push("/");
         return;
       }
+      
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -168,12 +170,12 @@ export default function WelcomePage() {
             {!isMember && (
               <div className="pt-4 border-t border-border mt-4">
                 <p className="text-sm text-muted-foreground mb-3">
-                  Want unlimited access? Upgrade to Lifetime Membership
+                  Want unlimited access? Upgrade to Monthly Membership
                 </p>
                 <Button asChild variant="secondary" className="w-full gap-2">
                   <Link href="/membership/checkout">
                     <Star className="w-4 h-4" />
-                    Become a Member - $9.99 one-time
+                    Become a Member - $2.22/month
                   </Link>
                 </Button>
               </div>

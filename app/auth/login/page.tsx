@@ -27,13 +27,13 @@ export default function LoginPage() {
       return;
     }
     
-    setResendStatus("sending");
     const supabase = createClient();
     if (!supabase) {
-      setError("Authentication is not configured");
-      setResendStatus("idle");
+      setError("Authentication is not available. Please configure Supabase.");
       return;
     }
+    
+    setResendStatus("sending");
     
     const { getBaseUrl } = await import("@/lib/site-config");
     const redirectUrl = `${getBaseUrl()}/auth/callback`;
@@ -62,7 +62,7 @@ export default function LoginPage() {
 
     const supabase = createClient();
     if (!supabase) {
-      setError("Authentication is not configured");
+      setError("Authentication is not available. Please configure Supabase.");
       setLoading(false);
       return;
     }
