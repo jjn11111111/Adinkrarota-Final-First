@@ -36,9 +36,11 @@ export function DailyWisdom() {
 
   // Check for cached wisdom on mount
   useEffect(() => {
-    const cached = localStorage.getItem(STORAGE_KEY);
-    if (cached) {
-      try {
+    if (typeof window === "undefined") return;
+    
+    try {
+      const cached = localStorage.getItem(STORAGE_KEY);
+      if (cached) {
         const parsed = JSON.parse(cached) as DailyWisdomData;
         const generatedDate = new Date(parsed.generatedAt);
         const now = new Date();
@@ -49,9 +51,9 @@ export function DailyWisdom() {
           setLoading(false);
           return;
         }
-      } catch {
-        // Invalid cache, will fetch fresh
       }
+    } catch (e) {
+      console.error("Failed to load cached wisdom:", e);
     }
     
     // No valid cache, fetch fresh wisdom
@@ -75,7 +77,11 @@ export function DailyWisdom() {
       setWisdom(data);
       
       // Cache the wisdom
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error("Failed to cache daily wisdom:", e);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
