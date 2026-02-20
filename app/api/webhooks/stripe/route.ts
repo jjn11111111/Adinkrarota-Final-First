@@ -40,23 +40,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // Handle the checkout.session.completed event
+  // Handle subscription checkout completed
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-
-    // Get user ID from metadata
-    const userId = session.metadata?.userId;
+    const userId = session.metadata?.userId || session.subscription_data?.metadata?.userId;
+    const subscriptionId = session.subscription as string;
 
     if (userId && session.payment_status === "paid") {
       try {
-        // Update user profile to member using correct column names
         const { error } = await supabaseAdmin
           .from("profiles")
           .update({
             account_type: "member",
             membership_purchased_at: new Date().toISOString(),
             stripe_customer_id: session.customer as string || null,
-            stripe_payment_id: session.payment_intent as string || null,
+            stripe_payment_id: subscriptionId || null,
             updated_at: new Date().toISOString(),
           })
           .eq("id", userId);
@@ -64,10 +62,62 @@ export async function POST(request: Request) {
         if (error) {
           console.error("Error updating profile:", error);
         } else {
-          console.log(`User ${userId} upgraded to member`);
+          console.log(`User ${userId} upgraded to member via subscription ${subscriptionId}`);
         }
       } catch (err) {
         console.error("Webhook handler error:", err);
+      }
+    }
+  }
+
+  // Handle subscription renewal
+  if (event.type === "invoice.payment_succeeded") {
+    const invoice = event.data.object as Stripe.Invoice;
+    const customerId = invoice.customer as string;
+
+    if (customerId) {
+      try {
+        // Ensure user stays as member on successful renewal
+        const { error } = await supabaseAdmin
+          .from("profiles")
+          .update({
+            account_type: "member",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("stripe_customer_id", customerId);
+
+        if (error) {
+          console.error("Error updating profile on renewal:", error);
+        }
+      } catch (err) {
+        console.error("Renewal handler error:", err);
+      }
+    }
+  }
+
+  // Handle subscription cancellation
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as Stripe.Subscription;
+    const customerId = subscription.customer as string;
+
+    if (customerId) {
+      try {
+        // Downgrade user to guest on cancellation
+        const { error } = await supabaseAdmin
+          .from("profiles")
+          .update({
+            account_type: "guest",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("stripe_customer_id", customerId);
+
+        if (error) {
+          console.error("Error downgrading profile:", error);
+        } else {
+          console.log(`Customer ${customerId} downgraded to guest after subscription cancellation`);
+        }
+      } catch (err) {
+        console.error("Cancellation handler error:", err);
       }
     }
   }
