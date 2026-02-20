@@ -1,14 +1,8 @@
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// Singleton pattern - reuse the same client instance
 let client: SupabaseClient | null = null
 
-/**
- * Creates a Supabase browser client.
- * Returns null if Supabase is not configured (env vars missing).
- * The app works gracefully without Supabase.
- */
 export function createClient(): SupabaseClient | null {
   if (client) return client
 
