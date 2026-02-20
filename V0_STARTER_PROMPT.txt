@@ -1,0 +1,29 @@
+I have a Next.js app with these requirements:
+
+ARCHITECTURE:
+- Unified SPA: app/page.tsx handles all views (home, gallery, reading, guidebook, spread-builder)
+- Route pages re-export main app: export { default } from '../page'
+- URL sync: PATH_TO_VIEW mapping + popstate listener
+- Navigation updates URL: router.push(path, { scroll: false })
+
+AUTHENTICATION:
+- Supabase is optional - app works without it
+- Always check: const supabase = createClient(); if (!supabase) return;
+- AuthProvider handles missing Supabase gracefully
+
+PAYMENTS:
+- Monthly subscription: $2.22/month (NOT lifetime)
+- Product ID: "monthly-membership"
+- Stripe mode: "subscription" (NOT "payment")
+- Webhook handles: checkout.session.completed, invoice.payment_succeeded, customer.subscription.deleted
+
+STORAGE:
+- localStorage: Always check typeof window === "undefined" first
+- SSR-safe: Wrap all browser API access
+
+AI:
+- Import providers: import { anthropic } from '@ai-sdk/anthropic'
+- Use provider functions: anthropic('model-name')
+- NOT model strings: "anthropic/model-name"
+
+Please maintain these patterns in all changes.

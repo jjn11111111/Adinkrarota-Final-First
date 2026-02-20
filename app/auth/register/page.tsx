@@ -88,6 +88,11 @@ function RegisterContent() {
     }
 
     const supabase = createClient();
+    if (!supabase) {
+      setError("Registration is not available. Please configure Supabase.");
+      setLoading(false);
+      return;
+    }
 
     const { getBaseUrl } = await import("@/lib/site-config");
     const redirectUrl = `${getBaseUrl()}/auth/callback`;
@@ -190,7 +195,7 @@ function RegisterContent() {
             className="flex-1 gap-2"
           >
             <Star className="w-4 h-4" />
-            Member - $9.99
+            Member - $2.22/month
           </Button>
         </div>
 
@@ -218,11 +223,11 @@ function RegisterContent() {
             </ul>
           </div>
           <div className={`p-4 rounded-xl border ${isMembership ? "bg-primary/5 border-primary/30" : "bg-card border-border"}`}>
-            <h3 className="font-semibold text-sm mb-2">Lifetime Member</h3>
+            <h3 className="font-semibold text-sm mb-2">Monthly Member</h3>
             <ul className="text-xs text-muted-foreground space-y-1">
               <li className="flex items-center gap-1">
                 <Check className="w-3 h-3 text-primary" />
-                Daily readings forever
+                Daily readings (1 per day)
               </li>
               <li className="flex items-center gap-1">
                 <Check className="w-3 h-3 text-primary" />

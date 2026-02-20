@@ -65,6 +65,11 @@ export default function PortalPage() {
     async function fetchReadings() {
       if (!user) return;
       const supabase = createClient();
+      if (!supabase) {
+        setLoadingReadings(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from("readings")
         .select("*")
@@ -85,6 +90,8 @@ export default function PortalPage() {
 
   const toggleFavorite = async (readingId: string, currentState: boolean) => {
     const supabase = createClient();
+    if (!supabase) return;
+    
     const { error } = await supabase
       .from("readings")
       .update({ is_favorited: !currentState })
@@ -101,6 +108,8 @@ export default function PortalPage() {
 
   const deleteReading = async (readingId: string) => {
     const supabase = createClient();
+    if (!supabase) return;
+    
     const { error } = await supabase
       .from("readings")
       .delete()
@@ -202,7 +211,7 @@ export default function PortalPage() {
                     {isMember ? (
                       <>
                         <Star className="w-3 h-3" />
-                        Lifetime Member
+                        Member
                       </>
                     ) : (
                       <>
@@ -458,16 +467,16 @@ export default function PortalPage() {
           >
             <Crown className="w-8 h-8 text-primary mx-auto mb-3" />
             <h3 className="text-lg font-bold text-foreground mb-2">
-              Unlock More with Lifetime Membership
+              Unlock More with Monthly Membership
             </h3>
             <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
               Daily readings, Celtic Cross spread, AI Oracle, reading journal, custom spreads,
-              and birth chart integration -- all for a one-time payment.
+              and birth chart integration -- all for $2.22/month. Cancel anytime.
             </p>
             <Link href="/membership/checkout">
               <Button className="gap-2">
                 <Star className="w-4 h-4" />
-                Become a Member - $9.99
+                Become a Member - $2.22/month
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>

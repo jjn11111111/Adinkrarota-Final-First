@@ -28,3 +28,28 @@ Continue building your app on:
 2. Deploy your chats from the v0 interface
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
+
+## Architecture & Integration
+
+This project uses a **unified SPA architecture** with proper URL routing. See:
+
+- **[V0_INTEGRATION_GUIDE.md](./V0_INTEGRATION_GUIDE.md)** - Complete guide for integrating fixes with V0
+- **[.v0-preserve-patterns.md](./.v0-preserve-patterns.md)** - Quick reference for preserving critical patterns
+
+### Key Architectural Features
+
+- ✅ Unified SPA structure (single source of truth)
+- ✅ Bookmarkable URLs with proper routing
+- ✅ SSR-safe localStorage operations
+- ✅ Proper AI SDK provider configuration
+- ✅ Browser navigation support (back/forward buttons)
+
+### Quick V0 Prompts
+
+When working with V0, use these prompts to maintain compatibility:
+
+```
+"Maintain unified SPA architecture - route pages should re-export app/page.tsx"
+"Always check typeof window before accessing localStorage"
+"Import AI providers explicitly: import { anthropic } from '@ai-sdk/anthropic'"
+```
