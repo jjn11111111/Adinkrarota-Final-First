@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 export type AccountType = "guest" | "member";
@@ -42,9 +42,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
+  const configured = isSupabaseConfigured();
+  const supabase = configured ? createClient() : null;
 
   const fetchProfile = useCallback(async (userId: string, userEmail?: string): Promise<UserProfile> => {
+    if (!supabase) {
+      return {
+        id: userId,
+        email: userEmail || "",
+        accountType: "guest",
+        readingsThisYear: 0,
+        lastReadingDate: null,
+        yearStarted: null,
+      };
+    }
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -107,6 +118,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, fetchProfile]);
 
   useEffect(() => {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
     const initAuth = async () => {
       setIsLoading(true);
       
@@ -141,7 +157,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
     setProfile(null);
   };
@@ -153,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     cardsData: unknown,
     question?: string
   ): Promise<string | false> => {
-    if (!user || !profile) return false;
+    if (!user || !profile || !supabase) return false;
 
     const today = new Date().toISOString().split("T")[0];
     const currentYear = new Date().getFullYear();
