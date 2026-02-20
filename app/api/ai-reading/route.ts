@@ -1,4 +1,9 @@
 import { convertToModelMessages, streamText, UIMessage } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
+import { groq } from "@ai-sdk/groq";
+import { xai } from "@ai-sdk/xai";
 import { UNIVERSAL_WISDOM_SYSTEM_PROMPT, SPREAD_BUILDER_ASSISTANT_PROMPT } from "@/lib/ai-wisdom-prompt";
 
 export const maxDuration = 60;
