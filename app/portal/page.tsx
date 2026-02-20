@@ -65,6 +65,7 @@ export default function PortalPage() {
     async function fetchReadings() {
       if (!user) return;
       const supabase = createClient();
+      if (!supabase) return;
       const { data, error } = await supabase
         .from("readings")
         .select("*")
@@ -85,6 +86,7 @@ export default function PortalPage() {
 
   const toggleFavorite = async (readingId: string, currentState: boolean) => {
     const supabase = createClient();
+    if (!supabase) return;
     const { error } = await supabase
       .from("readings")
       .update({ is_favorited: !currentState })
@@ -101,6 +103,7 @@ export default function PortalPage() {
 
   const deleteReading = async (readingId: string) => {
     const supabase = createClient();
+    if (!supabase) return;
     const { error } = await supabase
       .from("readings")
       .delete()

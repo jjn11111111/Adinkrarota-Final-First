@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 export type AccountType = "guest" | "member";
@@ -42,8 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const configured = isSupabaseConfigured();
-  const supabase = configured ? createClient() : null;
+  const supabase = createClient();
 
   const fetchProfile = useCallback(async (userId: string, userEmail?: string): Promise<UserProfile> => {
     if (!supabase) {

@@ -88,6 +88,11 @@ function RegisterContent() {
     }
 
     const supabase = createClient();
+    if (!supabase) {
+      setError("Authentication is not configured");
+      setLoading(false);
+      return;
+    }
 
     const { getBaseUrl } = await import("@/lib/site-config");
     const redirectUrl = `${getBaseUrl()}/auth/callback`;

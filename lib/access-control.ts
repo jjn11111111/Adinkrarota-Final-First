@@ -26,6 +26,16 @@ export interface UserAccess {
 
 export async function getUserAccess(): Promise<UserAccess> {
   const supabase = createClient();
+  if (!supabase) {
+    return {
+      isAuthenticated: false,
+      accountType: null,
+      features: [],
+      readingsRemaining: 0,
+      canDoReading: false,
+      profile: null,
+    };
+  }
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

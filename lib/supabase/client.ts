@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 // Singleton pattern to prevent multiple GoTrueClient instances
 let client: SupabaseClient | null = null
 
-export function createClient() {
+export function createClient(): SupabaseClient | null {
   if (client) {
     return client
   }
@@ -13,9 +13,7 @@ export function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      'Supabase is not configured. Please connect Supabase from the integrations panel.'
-    )
+    return null
   }
 
   client = createBrowserClient(supabaseUrl, supabaseAnonKey)

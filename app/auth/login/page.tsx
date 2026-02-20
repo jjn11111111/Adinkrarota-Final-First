@@ -29,6 +29,11 @@ export default function LoginPage() {
     
     setResendStatus("sending");
     const supabase = createClient();
+    if (!supabase) {
+      setError("Authentication is not configured");
+      setResendStatus("idle");
+      return;
+    }
     
     const { getBaseUrl } = await import("@/lib/site-config");
     const redirectUrl = `${getBaseUrl()}/auth/callback`;
@@ -56,6 +61,11 @@ export default function LoginPage() {
     setError(null);
 
     const supabase = createClient();
+    if (!supabase) {
+      setError("Authentication is not configured");
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,

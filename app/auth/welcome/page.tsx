@@ -25,6 +25,10 @@ export default function WelcomePage() {
   useEffect(() => {
     async function loadUser() {
       const supabase = createClient();
+      if (!supabase) {
+        router.push("/auth/login");
+        return;
+      }
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
