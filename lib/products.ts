@@ -9,10 +9,10 @@ export interface Product {
 // Adinkrarota Economy Offerings
 export const PRODUCTS: Product[] = [
   {
-    id: "lifetime-membership",
-    name: "Lifetime Membership",
-    description: "Eternal access to the Adinkrarota Oracle - a one-time offering",
-    priceInCents: 999, // $9.99
+    id: "monthly-membership",
+    name: "Monthly Membership",
+    description: "Access to the Adinkrarota Oracle - a monthly subscription",
+    priceInCents: 222, // $2.22/month
     features: [
       "Daily single card readings (unlimited)",
       "Access to all extended spreads (Celtic Cross, 5+ cards)",

@@ -1,11 +1,15 @@
 "use server";
 
-import { stripe } from "@/lib/stripe";
+import { stripe, isStripeConfigured } from "@/lib/stripe";
 import { PRODUCTS } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
 import { getBaseUrl } from "@/lib/site-config";
 
 export async function createCheckoutSession(productId: string) {
+  if (!isStripeConfigured() || !stripe) {
+    return { error: "Payment processing is not available." };
+  }
+
   // Find product in our secure catalog
   const product = PRODUCTS.find((p) => p.id === productId);
   
@@ -37,17 +41,22 @@ export async function createCheckoutSession(productId: string) {
               description: product.description,
             },
             unit_amount: product.priceInCents,
+            recurring: {
+              interval: "month",
+            },
           },
           quantity: 1,
         },
       ],
-      mode: "payment",
+      mode: "subscription",
       allow_promotion_codes: true,
       return_url: `${getBaseUrl()}/membership/success?session_id={CHECKOUT_SESSION_ID}`,
-      metadata: {
-        userId: user.id,
-        productId: product.id,
-        userEmail: user.email || "",
+      subscription_data: {
+        metadata: {
+          userId: user.id,
+          productId: product.id,
+          userEmail: user.email || "",
+        },
       },
     });
 
