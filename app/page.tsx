@@ -2,6 +2,7 @@
 
 // ADINKRAROTA - Tarot + Adinkra Portal
 import { useState, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Navigation } from "@/components/navigation";
 import { HeroSection } from "@/components/hero-section";
@@ -15,7 +16,18 @@ type View = "home" | "gallery" | "reading" | "guidebook" | "spread-builder";
 
 const STORAGE_KEY = "adinkrarota-custom-spreads";
 
+// Map URL paths to views
+const PATH_TO_VIEW: Record<string, View> = {
+  "/": "home",
+  "/gallery": "gallery",
+  "/reading": "reading",
+  "/guidebook": "guidebook",
+  "/spread-builder": "spread-builder",
+};
+
 export default function AdinkrarotaApp() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentView, setCurrentView] = useState<View>("home");
   const contentRef = useRef<HTMLDivElement>(null);
   
@@ -24,23 +36,51 @@ export default function AdinkrarotaApp() {
   const [activeSpread, setActiveSpread] = useState<CustomSpread | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load spreads from localStorage on mount
+  // Sync view with URL on mount and when URL changes
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setCustomSpreads(JSON.parse(stored));
-      } catch (e) {
-        console.error("Failed to load custom spreads:", e);
-      }
-    }
-    setIsLoaded(true);
+    if (typeof window === "undefined") return;
+    
+    const updateViewFromPath = () => {
+      const path = window.location.pathname;
+      const viewFromPath = PATH_TO_VIEW[path] || "home";
+      setCurrentView(viewFromPath);
+    };
+    
+    // Initial sync
+    updateViewFromPath();
+    
+    // Listen for browser back/forward navigation
+    window.addEventListener("popstate", updateViewFromPath);
+    
+    return () => {
+      window.removeEventListener("popstate", updateViewFromPath);
+    };
   }, []);
 
-  // Save spreads to localStorage when they change
+  // Load spreads from localStorage on mount (client-side only)
   useEffect(() => {
-    if (isLoaded) {
+    if (typeof window === "undefined") return;
+    
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setCustomSpreads(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error("Failed to load custom spreads:", e);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save spreads to localStorage when they change (client-side only)
+  useEffect(() => {
+    if (!isLoaded || typeof window === "undefined") return;
+    
+    try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(customSpreads));
+    } catch (e) {
+      console.error("Failed to save custom spreads:", e);
     }
   }, [customSpreads, isLoaded]);
 
@@ -71,8 +111,17 @@ export default function AdinkrarotaApp() {
   const handleNavigate = (view: View) => {
     setCurrentView(view);
     setActiveSpread(null); // Reset active spread when navigating
-    // Scroll to top when navigating
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    
+    // Update URL to match view (without page reload)
+    const path = view === "home" ? "/" : `/${view}`;
+    if (typeof window !== "undefined" && window.location.pathname !== path) {
+      router.push(path, { scroll: false });
+    }
+    
+    // Scroll to top when navigating (client-side only)
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   return (
@@ -299,9 +348,6 @@ export default function AdinkrarotaApp() {
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-sm text-muted-foreground font-serif">
             ADINKRAROTA — Where ancestral wisdom, geometry, and mathematical truth converge
-          </p>
-          <p className="text-xs text-muted-foreground/60 mt-2 font-serif">
-            Honoring the Akan people of Ghana and Cote d{"'"}Ivoire, whose Adinkra symbols encode the universe{"'"}s error-correcting wisdom
           </p>
         </div>
       </footer>
