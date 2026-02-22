@@ -47,6 +47,7 @@ After any change, ensure: route pages still re-export app/page, no new throws fr
 | Webhooks | Handle subscription lifecycle; store subscription ID in stripe_payment_id | app/api/webhooks/stripe/route.ts |
 | AI | Provider imports + provider("model-id") | app/api/ai-reading/route.ts, app/api/daily-wisdom/route.ts |
 | SSR | Guard localStorage and window | app/page.tsx, components using storage |
+| Proxy | Use proxy.ts (export function proxy), NOT middleware.ts | proxy.ts, lib/supabase/middleware.ts |
 | Types | DrawnCard.imageUrl; Invoice via (invoice as any).subscription; UserProfile.email; guidebookEntries shape | daily-wisdom route, stripe webhook, access-control, navigation, ai-reading-chat |
 
 ---
