@@ -6,11 +6,12 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  // Check if Supabase is configured
+  // Check if Supabase is configured (valid HTTP(S) URL required)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const isValidUrl = supabaseUrl && (supabaseUrl.startsWith("http://") || supabaseUrl.startsWith("https://"))
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!isValidUrl || !supabaseAnonKey) {
     // Supabase not configured - allow public routes, block protected routes
     const protectedPaths = ['/portal', '/membership/checkout', '/membership/success'];
     const isProtectedPath = protectedPaths.some(path => 

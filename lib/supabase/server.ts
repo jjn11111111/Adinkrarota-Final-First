@@ -9,8 +9,9 @@ import { cookies } from 'next/headers'
 export async function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const isValidUrl = supabaseUrl && (supabaseUrl.startsWith("http://") || supabaseUrl.startsWith("https://"))
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!isValidUrl || !supabaseAnonKey) {
     return null
   }
 

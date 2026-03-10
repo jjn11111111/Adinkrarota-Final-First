@@ -1,6 +1,10 @@
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+function isValidSupabaseUrl(url: string | undefined): boolean {
+  return !!url && (url.startsWith("http://") || url.startsWith("https://"))
+}
+
 // Singleton pattern to prevent multiple GoTrueClient instances
 let client: SupabaseClient | null = null
 
@@ -12,19 +16,18 @@ export function createClient(): SupabaseClient | null {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // Return null instead of throwing - allows app to work without Supabase
-    // Components should check isSupabaseConfigured() before calling createClient()
+  if (!isValidSupabaseUrl(supabaseUrl) || !supabaseAnonKey) {
     return null
   }
 
-  client = createBrowserClient(supabaseUrl, supabaseAnonKey)
-  return client
+  try {
+    client = createBrowserClient(supabaseUrl, supabaseAnonKey)
+    return client
+  } catch {
+    return null
+  }
 }
 
 export function isSupabaseConfigured(): boolean {
-  return !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  return isValidSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL) && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 }
