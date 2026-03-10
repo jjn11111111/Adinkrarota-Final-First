@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
 import { stripe, isStripeConfigured } from "@/lib/stripe";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 
-// Create admin client for webhook (bypasses RLS) - only if configured
-const supabaseAdmin = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    )
-  : null;
+function getSupabaseAdmin(): SupabaseClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key || !url.startsWith("http")) return null;
+  try {
+    return createClient(url, key);
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(request: Request) {
   if (!isStripeConfigured() || !stripe) {
     return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }
 
+  const supabaseAdmin = getSupabaseAdmin();
   if (!supabaseAdmin) {
     return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }
