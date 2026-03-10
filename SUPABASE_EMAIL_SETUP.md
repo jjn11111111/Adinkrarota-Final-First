@@ -1,6 +1,17 @@
 # Supabase Email / Confirmation Setup
 
-If users don't receive the registration confirmation email, check these settings.
+If users don't receive the registration confirmation email, or resend says "unavailable", check these in order.
+
+## 0. Vercel environment variables (most common cause)
+
+In **Vercel → Project → Settings → Environment Variables**, ensure these are set for **Production** (and Preview if needed):
+
+| Variable | Required |
+|---------|----------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes |
+
+Without these, registration, login, and email resend will not work. Redeploy after adding/updating env vars.
 
 ## 1. Supabase Dashboard → Authentication → Providers → Email
 

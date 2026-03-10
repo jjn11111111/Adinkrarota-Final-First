@@ -4,7 +4,8 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { getBaseUrl } from "@/lib/site-config";
 import { AUTH_UNAVAILABLE_MESSAGE } from "@/lib/auth-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,7 @@ function RegisterSuccessContent() {
   const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [resendError, setResendError] = useState<string | null>(null);
 
-  const handleResendConfirmation = async () => {
+  const handleResendConfirmation = () => {
     const emailToUse = email.trim();
     if (!emailToUse) {
       setResendError("Please enter your email address");
@@ -35,21 +36,21 @@ function RegisterSuccessContent() {
     setResendStatus("sending");
     setResendError(null);
 
-    const { getBaseUrl } = await import("@/lib/site-config");
     const redirectUrl = `${getBaseUrl()}/auth/callback`;
-
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: emailToUse,
-      options: { emailRedirectTo: redirectUrl },
-    });
-
-    if (error) {
-      setResendError(error.message);
-      setResendStatus("error");
-    } else {
-      setResendStatus("sent");
-    }
+    supabase.auth
+      .resend({
+        type: "signup",
+        email: emailToUse,
+        options: { emailRedirectTo: redirectUrl },
+      })
+      .then(({ error }) => {
+        if (error) {
+          setResendError(error.message);
+          setResendStatus("error");
+        } else {
+          setResendStatus("sent");
+        }
+      });
   };
 
   return (
@@ -208,29 +209,37 @@ function RegisterSuccessContent() {
               <p className="text-sm text-muted-foreground mb-3">
                 Did not receive the confirmation email?
               </p>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="resend-email" className="text-xs">Your email</Label>
-                <Input
-                  id="resend-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-9"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResendConfirmation}
-                  disabled={resendStatus === "sending"}
-                  className="w-full"
-                >
-                  {resendStatus === "sending" ? "Sending..." : resendStatus === "sent" ? "Email sent! Check your inbox" : "Resend confirmation email"}
-                </Button>
-                {resendError && <p className="text-xs text-destructive">{resendError}</p>}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">Check your spam or promotions folder</p>
+              {!isSupabaseConfigured() ? (
+                <p className="text-sm text-amber-600 dark:text-amber-500">
+                  Resend is unavailable — authentication is not configured for this deployment. Add Supabase env vars (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY) in Vercel.
+                </p>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="resend-email" className="text-xs">Your email</Label>
+                    <Input
+                      id="resend-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="h-9"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleResendConfirmation}
+                      disabled={resendStatus === "sending"}
+                      className="w-full"
+                    >
+                      {resendStatus === "sending" ? "Sending..." : resendStatus === "sent" ? "Email sent! Check your inbox" : "Resend confirmation email"}
+                    </Button>
+                    {resendError && <p className="text-xs text-destructive">{resendError}</p>}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Check your spam or promotions folder</p>
+                </>
+              )}
             </div>
           </motion.div>
         </div>

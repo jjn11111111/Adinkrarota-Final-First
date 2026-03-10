@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -126,14 +126,27 @@ export function AIReadingChat({
     );
   };
 
+  // Ref for current request body - prepareSendMessagesRequest needs latest values (avoids stale closure)
+  const requestBodyRef = useRef({ modelId: DEFAULT_MODEL_ID, readingContext: "" });
+  requestBodyRef.current = {
+    modelId: aiSettings?.modelId || DEFAULT_MODEL_ID,
+    readingContext: buildReadingContext(),
+  };
+
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/ai-reading",
+        prepareSendMessagesRequest: ({ body, ...opts }) => ({
+          ...opts,
+          body: { ...body, ...requestBodyRef.current },
+        }),
+      }),
+    [] // Ref provides current values; transport never needs recreation
+  );
+
   const { messages, sendMessage, status, setMessages } = useChat({
-    transport: new DefaultChatTransport({
-      api: "/api/ai-reading",
-      body: {
-        modelId: aiSettings?.modelId || DEFAULT_MODEL_ID,
-        readingContext: buildReadingContext(),
-      },
-    }),
+    transport,
   });
 
   // Scroll to bottom when new messages arrive

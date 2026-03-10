@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { getBaseUrl } from "@/lib/site-config";
 import { AUTH_UNAVAILABLE_MESSAGE } from "@/lib/auth-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,38 +23,37 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
 
-  const handleResendConfirmation = async () => {
+  const handleResendConfirmation = () => {
     if (!email) {
       setError("Please enter your email address first");
       return;
     }
-    
+
     const supabase = createClient();
     if (!supabase) {
       setError(AUTH_UNAVAILABLE_MESSAGE);
       return;
     }
-    
+
     setResendStatus("sending");
-    
-    const { getBaseUrl } = await import("@/lib/site-config");
+
+    // Defer to next tick so UI can paint "Sending..." before async work (fixes INP)
     const redirectUrl = `${getBaseUrl()}/auth/callback`;
-    
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email,
-      options: {
-        emailRedirectTo: redirectUrl,
-      },
-    });
-    
-    if (error) {
-      setError(error.message);
-      setResendStatus("idle");
-    } else {
-      setResendStatus("sent");
-      setError(null);
-    }
+    supabase.auth
+      .resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: redirectUrl },
+      })
+      .then(({ error }) => {
+        if (error) {
+          setError(error.message);
+          setResendStatus("idle");
+        } else {
+          setResendStatus("sent");
+          setError(null);
+        }
+      });
   };
 
   const handleLogin = async (e: React.FormEvent) => {
