@@ -1,15 +1,56 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
+import { AUTH_UNAVAILABLE_MESSAGE } from "@/lib/auth-copy";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { CheckCircle, Mail, Star, Sparkles, BookOpen, Shield, Heart } from "lucide-react";
 
 function RegisterSuccessContent() {
   const searchParams = useSearchParams();
   const isMembership = searchParams.get("membership") === "true";
+  const emailFromUrl = searchParams.get("email") ?? "";
+  const [email, setEmail] = useState(emailFromUrl);
+  const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [resendError, setResendError] = useState<string | null>(null);
+
+  const handleResendConfirmation = async () => {
+    const emailToUse = email.trim();
+    if (!emailToUse) {
+      setResendError("Please enter your email address");
+      return;
+    }
+
+    const supabase = createClient();
+    if (!supabase) {
+      setResendError(AUTH_UNAVAILABLE_MESSAGE);
+      return;
+    }
+
+    setResendStatus("sending");
+    setResendError(null);
+
+    const { getBaseUrl } = await import("@/lib/site-config");
+    const redirectUrl = `${getBaseUrl()}/auth/callback`;
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: emailToUse,
+      options: { emailRedirectTo: redirectUrl },
+    });
+
+    if (error) {
+      setResendError(error.message);
+      setResendStatus("error");
+    } else {
+      setResendStatus("sent");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
@@ -162,12 +203,35 @@ function RegisterSuccessContent() {
               </Link>
             </Button>
 
-            <p className="text-xs text-muted-foreground text-center">
-              Did not receive the email? Check your spam folder or{" "}
-              <Link href="/auth/register" className="text-primary hover:underline">
-                try registering again
-              </Link>
-            </p>
+            {/* Resend confirmation - for users who didn't receive the email */}
+            <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border">
+              <p className="text-sm text-muted-foreground mb-3">
+                Did not receive the confirmation email?
+              </p>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="resend-email" className="text-xs">Your email</Label>
+                <Input
+                  id="resend-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-9"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResendConfirmation}
+                  disabled={resendStatus === "sending"}
+                  className="w-full"
+                >
+                  {resendStatus === "sending" ? "Sending..." : resendStatus === "sent" ? "Email sent! Check your inbox" : "Resend confirmation email"}
+                </Button>
+                {resendError && <p className="text-xs text-destructive">{resendError}</p>}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Check your spam or promotions folder</p>
+            </div>
           </motion.div>
         </div>
 

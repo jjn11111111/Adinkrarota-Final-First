@@ -19,5 +19,5 @@ export function getBaseUrl(): string {
   }
 
   // Hardcoded production fallback
-  return "https://v0-conversation-context-review-5m3rqt7tl-re-connect0.vercel.app";
+  return "https://v0-conversation-context-review.vercel.app";
 }

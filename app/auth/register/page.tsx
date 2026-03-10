@@ -127,11 +127,12 @@ function RegisterContent() {
       return;
     }
 
-    // Redirect based on account type
+    // Redirect based on account type (pass email for resend confirmation)
+    const emailParam = `email=${encodeURIComponent(email)}`;
     if (isMembership) {
-      router.push("/auth/register-success?membership=true");
+      router.push(`/auth/register-success?membership=true&${emailParam}`);
     } else {
-      router.push("/auth/register-success");
+      router.push(`/auth/register-success?${emailParam}`);
     }
   };
 
