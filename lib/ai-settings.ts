@@ -4,7 +4,7 @@ export interface AIModel {
   description: string;
 }
 
-// All models work via Vercel AI Gateway - no API keys needed
+// All models work via Vercel AI Gateway. On Vercel, no API keys needed (OIDC). Locally, set AI_GATEWAY_API_KEY in .env.local.
 export const AI_MODELS: AIModel[] = [
   {
     id: "anthropic/claude-sonnet-4-5",

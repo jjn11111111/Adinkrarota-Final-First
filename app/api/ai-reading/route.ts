@@ -1,33 +1,23 @@
-import { convertToModelMessages, streamText, UIMessage } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
-import { openai } from "@ai-sdk/openai";
-import { google } from "@ai-sdk/google";
-import { groq } from "@ai-sdk/groq";
-import { xai } from "@ai-sdk/xai";
+import { convertToModelMessages, gateway, streamText, UIMessage } from "ai";
 import { UNIVERSAL_WISDOM_SYSTEM_PROMPT, SPREAD_BUILDER_ASSISTANT_PROMPT } from "@/lib/ai-wisdom-prompt";
 
 export const maxDuration = 60;
 
-// Default model for Vercel AI Gateway (zero config)
-const DEFAULT_MODEL = anthropic("claude-sonnet-4-20250514");
-
-// Model mapping for Vercel AI Gateway format
-const MODEL_MAP: Record<string, any> = {
-  // OpenAI
-  "openai/gpt-4o": openai("gpt-4o"),
-  "openai/gpt-4o-mini": openai("gpt-4o-mini"),
-  "openai/gpt-4-turbo": openai("gpt-4-turbo"),
-  // Anthropic
-  "anthropic/claude-sonnet-4-5": anthropic("claude-sonnet-4-20250514"),
-  "anthropic/claude-3-5-sonnet-20241022": anthropic("claude-3-5-sonnet-20241022"),
-  "anthropic/claude-3-haiku-20240307": anthropic("claude-3-haiku-20240307"),
-  // Groq (via gateway)
-  "groq/llama-3.3-70b-versatile": groq("llama-3.3-70b-versatile"),
-  "groq/mixtral-8x7b-32768": groq("mixtral-8x7b-32768"),
-  // xAI (via gateway)
-  "xai/grok-2-1212": xai("grok-2-1212"),
-  "xai/grok-beta": xai("grok-beta"),
-};
+// Use Vercel AI Gateway model strings (creator/model format)
+// Works on Vercel with OIDC; locally requires AI_GATEWAY_API_KEY in .env.local
+const DEFAULT_MODEL_ID = "anthropic/claude-sonnet-4-5";
+const VALID_MODEL_IDS = new Set([
+  "openai/gpt-4o",
+  "openai/gpt-4o-mini",
+  "openai/gpt-4-turbo",
+  "anthropic/claude-sonnet-4-5",
+  "anthropic/claude-3-5-sonnet-20241022",
+  "anthropic/claude-3-haiku-20240307",
+  "groq/llama-3.3-70b-versatile",
+  "groq/mixtral-8x7b-32768",
+  "xai/grok-2-1212",
+  "xai/grok-beta",
+]);
 
 export async function POST(req: Request) {
   try {
@@ -41,8 +31,10 @@ export async function POST(req: Request) {
       readingContext?: string;
     } = await req.json();
 
-    // Use Vercel AI Gateway - resolve model ID or use default
-    const model = modelId ? (MODEL_MAP[modelId] || modelId) : DEFAULT_MODEL;
+    const resolvedModelId = modelId && VALID_MODEL_IDS.has(modelId)
+      ? modelId
+      : DEFAULT_MODEL_ID;
+    const model = gateway(resolvedModelId);
 
     // Determine which system prompt to use based on context
     const isSpreadBuilder = readingContext?.includes("SPREAD_BUILDER_MODE");
@@ -66,10 +58,13 @@ export async function POST(req: Request) {
     return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error("AI Reading Error:", error);
+    const message = error instanceof Error ? error.message : "Failed to process request";
+    const isAuthError = /api[_-]?key|unauthorized|401|403/i.test(message);
     return Response.json(
       {
-        error:
-          error instanceof Error ? error.message : "Failed to process request",
+        error: isAuthError
+          ? "AI is not configured. Add AI_GATEWAY_API_KEY to your environment (or deploy on Vercel for automatic setup)."
+          : message,
       },
       { status: 500 }
     );

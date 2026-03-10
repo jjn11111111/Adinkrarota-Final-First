@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -131,14 +131,19 @@ export function SpreadBuilder({
   }, []);
 
   // AI Chat for spread suggestions
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/ai-reading",
+        body: {
+          modelId: aiSettings?.modelId || DEFAULT_MODEL_ID,
+          readingContext: "SPREAD_BUILDER_MODE\n\nYou are helping the user create a custom tarot spread. Suggest position names, descriptions, and thematic coherence. Keep suggestions concise and meaningful.",
+        },
+      }),
+    [aiSettings?.modelId]
+  );
   const { messages, sendMessage, status, setMessages } = useChat({
-    transport: new DefaultChatTransport({
-      api: "/api/ai-reading",
-      body: {
-        modelId: aiSettings?.modelId || DEFAULT_MODEL_ID,
-        readingContext: "SPREAD_BUILDER_MODE\n\nYou are helping the user create a custom tarot spread. Suggest position names, descriptions, and thematic coherence. Keep suggestions concise and meaningful.",
-      },
-    }),
+    transport,
   });
 
   // Scroll AI messages

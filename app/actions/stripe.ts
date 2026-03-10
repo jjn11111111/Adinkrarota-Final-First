@@ -20,6 +20,9 @@ export async function createCheckoutSession(productId: string) {
 
   // Get the current user
   const supabase = await createClient();
+  if (!supabase) {
+    return { error: "Please sign in to continue" };
+  }
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

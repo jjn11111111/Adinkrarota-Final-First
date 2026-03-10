@@ -69,10 +69,12 @@ export function AISettingsModal({
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         throw new Error(data.error || "Connection failed");
       }
 
+      // Consume the stream so the connection completes
+      await response.text();
       setTestStatus("success");
     } catch (error) {
       setTestError(error instanceof Error ? error.message : "Connection failed");

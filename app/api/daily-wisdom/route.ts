@@ -1,5 +1,4 @@
-import { generateText } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { generateText, gateway } from "ai";
 import { drawCardsWithPolarity } from "@/lib/card-data";
 import { getGuidebookEntry } from "@/lib/guidebook-data";
 
@@ -33,7 +32,7 @@ ${guidebook?.fullDescription ? `Full Description: ${guidebook.fullDescription}` 
 `;
 
     const result = await generateText({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: gateway("anthropic/claude-sonnet-4-5"),
       system: DAILY_WISDOM_PROMPT,
       prompt: cardContext,
       maxOutputTokens: 200,
@@ -55,8 +54,14 @@ ${guidebook?.fullDescription ? `Full Description: ${guidebook.fullDescription}` 
     });
   } catch (error) {
     console.error("Daily Wisdom Error:", error);
+    const message = error instanceof Error ? error.message : "Failed to generate wisdom";
+    const isAuthError = /api[_-]?key|unauthorized|401|403/i.test(message);
     return Response.json(
-      { error: error instanceof Error ? error.message : "Failed to generate wisdom" },
+      {
+        error: isAuthError
+          ? "AI is not configured. Add AI_GATEWAY_API_KEY to your environment (or deploy on Vercel for automatic setup)."
+          : message,
+      },
       { status: 500 }
     );
   }
