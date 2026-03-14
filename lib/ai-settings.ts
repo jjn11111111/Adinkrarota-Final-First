@@ -12,6 +12,11 @@ export const AI_MODELS: AIModel[] = [
     description: "Anthropic's most capable model for nuanced interpretations",
   },
   {
+    id: "anthropic/claude-sonnet-4.6",
+    name: "Claude Sonnet 4.6",
+    description: "Anthropic Claude Sonnet 4.6 via AI Gateway",
+  },
+  {
     id: "openai/gpt-4o",
     name: "GPT-4o",
     description: "OpenAI's flagship multimodal model",

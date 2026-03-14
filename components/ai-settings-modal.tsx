@@ -107,8 +107,8 @@ export function AISettingsModal({
                 <Sparkles className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-foreground">AI Collaborator</h2>
-                <p className="text-sm text-muted-foreground">Powered by Vercel AI Gateway</p>
+                <h2 className="text-xl font-bold text-foreground">AI Settings</h2>
+                <p className="text-sm text-muted-foreground">Choose model & test connection — used by AI Collaborator in readings</p>
               </div>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose}>
@@ -118,6 +118,18 @@ export function AISettingsModal({
 
           {/* Content */}
           <div className="p-6 space-y-6">
+            {/* How to use - reduce confusion */}
+            <div className="p-4 rounded-lg bg-muted/50 border border-border">
+              <h4 className="text-sm font-semibold text-foreground mb-2">How to use AI</h4>
+              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>Go to <strong className="text-foreground">Reading</strong></li>
+                <li>Choose a spread and draw your cards</li>
+                <li>Tap <strong className="text-foreground">AI Insight</strong> in the toolbar above your cards</li>
+                <li>The AI Collaborator chat opens — ask for interpretations there</li>
+              </ol>
+              <p className="text-xs text-muted-foreground mt-2">This screen only sets your preferred model. The actual chat is inside the Reading view.</p>
+            </div>
+
             {/* Zero Config Banner */}
             <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
               <div className="flex items-center gap-2 text-primary mb-2">

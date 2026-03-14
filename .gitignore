@@ -26,3 +26,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# Pineal Vision assets (separate project - do not commit to Adinkrarota)
+stereo11.jpg

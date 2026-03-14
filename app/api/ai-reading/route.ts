@@ -11,6 +11,7 @@ const VALID_MODEL_IDS = new Set([
   "openai/gpt-4o-mini",
   "openai/gpt-4-turbo",
   "anthropic/claude-sonnet-4-5",
+  "anthropic/claude-sonnet-4.6",
   "anthropic/claude-3-5-sonnet-20241022",
   "anthropic/claude-3-haiku-20240307",
   "groq/llama-3.3-70b-versatile",

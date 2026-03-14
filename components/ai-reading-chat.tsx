@@ -217,11 +217,9 @@ export function AIReadingChat({
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-sm">AI Collaborator</h3>
-                {aiSettings?.enabled && selectedModel && (
-                  <p className="text-xs text-muted-foreground">
-                    {selectedModel.name}
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground">
+                  {aiSettings?.enabled && selectedModel ? `${selectedModel.name} — chat about your spread` : "Chat about your reading"}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-1">

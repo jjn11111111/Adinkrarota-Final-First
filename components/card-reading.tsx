@@ -286,6 +286,7 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
                   variant={hasAIConfigured ? "default" : "outline"}
                   onClick={() => setShowAIChat(true)}
                   className={hasAIConfigured ? "gap-2" : "gap-2 bg-transparent"}
+                  title="Open AI Collaborator to get interpretations of this spread"
                 >
                   <MessageCircle className="w-4 h-4" />
                   AI Insight
@@ -293,6 +294,11 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
               </>
             )}
           </div>
+          {drawnCards.length > 0 && hasAIConfigured && !showAIChat && (
+            <p className="text-xs text-muted-foreground mt-2 text-center sm:text-left">
+              Tap <strong className="text-foreground">AI Insight</strong> above to chat with AI about this spread — this is the only place to get interpretations.
+            </p>
+          )}
         </div>
 
         {/* Drawing Animation */}

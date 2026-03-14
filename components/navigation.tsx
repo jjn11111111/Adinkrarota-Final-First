@@ -103,9 +103,10 @@ export function Navigation({ currentView, onNavigate }: NavigationProps) {
             size="sm"
             onClick={() => setShowAISettings(true)}
             className="ml-2 gap-2 text-muted-foreground hover:text-primary"
+            title="AI model & connection settings (use AI Insight during a reading to chat)"
           >
             <Sparkles className="w-4 h-4" />
-            <span className="hidden lg:inline">AI</span>
+            <span className="hidden lg:inline">AI Settings</span>
           </Button>
         </div>
 
@@ -205,6 +206,7 @@ export function Navigation({ currentView, onNavigate }: NavigationProps) {
                 setIsMobileMenuOpen(false);
               }}
               className="block w-full text-left px-4 py-2 rounded-md font-serif text-muted-foreground hover:bg-accent"
+              title="Choose AI model (use AI Insight in Reading to chat)"
             >
               <Sparkles className="w-4 h-4 inline mr-2" />
               AI Settings
