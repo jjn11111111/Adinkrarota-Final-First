@@ -130,15 +130,18 @@ export function AISettingsModal({
               <p className="text-xs text-muted-foreground mt-2">This screen only sets your preferred model. The actual chat is inside the Reading view.</p>
             </div>
 
-            {/* Zero Config Banner */}
-            <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-              <div className="flex items-center gap-2 text-primary mb-2">
-                <Zap className="w-5 h-5" />
-                <span className="font-semibold">No API Key Required</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                AI interpretations work instantly. Choose your preferred model below and start receiving personalized wisdom.
-              </p>
+            {/* AI not working? */}
+            <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600" />
+                AI not working?
+              </h4>
+              <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                <li><strong className="text-foreground">Vercel:</strong> Add <code className="bg-muted px-1 rounded">AI_GATEWAY_API_KEY</code> in Project → Settings → Environment Variables.</li>
+                <li>Create the key in <a href="https://vercel.com/docs/ai-gateway" target="_blank" rel="noopener noreferrer" className="text-primary underline">Vercel AI Gateway</a> — copy it when created (shown only once).</li>
+                <li><strong className="text-foreground">Local:</strong> Add <code className="bg-muted px-1 rounded">AI_GATEWAY_API_KEY</code> to <code className="bg-muted px-1 rounded">.env.local</code>.</li>
+                <li>Click <strong className="text-foreground">Test Connection</strong> below to confirm.</li>
+              </ol>
             </div>
 
             {/* Model Selection */}

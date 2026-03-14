@@ -49,7 +49,10 @@ export function AIReadingChat({
   const [isExpanded, setIsExpanded] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [apiError, setApiError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const setApiErrorRef = useRef(setApiError);
+  setApiErrorRef.current = setApiError;
 
   // Function to save AI interpretation to database
   const saveInterpretation = async () => {
@@ -137,6 +140,28 @@ export function AIReadingChat({
     () =>
       new DefaultChatTransport({
         api: "/api/ai-reading",
+        fetch: async (input, init) => {
+          try {
+            const res = await fetch(input, init);
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              const msg = typeof (data as { error?: string })?.error === "string"
+                ? (data as { error: string }).error
+                : res.statusText || "Request failed";
+              setApiErrorRef.current(msg);
+              throw new Error(msg);
+            }
+            setApiErrorRef.current(null);
+            return res;
+          } catch (e) {
+            // Rethrow if we already set apiError (from !res.ok branch)
+            if (e instanceof Error && /AI_GATEWAY|not configured|Unauthorized|Request failed/i.test(e.message))
+              throw e;
+            const msg = "Network or timeout error. Check AI_GATEWAY_API_KEY and try again.";
+            setApiErrorRef.current(msg);
+            throw new Error(msg);
+          }
+        },
         prepareSendMessagesRequest: ({ body, ...opts }) => ({
           ...opts,
           body: { ...body, ...requestBodyRef.current },
@@ -145,7 +170,7 @@ export function AIReadingChat({
     [] // Ref provides current values; transport never needs recreation
   );
 
-  const { messages, sendMessage, status, setMessages } = useChat({
+  const { messages, sendMessage, status, setMessages, error } = useChat({
     transport,
   });
 
@@ -183,12 +208,14 @@ export function AIReadingChat({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || status !== "ready" || !aiSettings?.enabled) return;
+    setApiError(null);
     sendMessage({ text: inputValue });
     setInputValue("");
   };
 
   const handleQuickPrompt = (prompt: string) => {
     if (status !== "ready" || !aiSettings?.enabled) return;
+    setApiError(null);
     sendMessage({ text: prompt });
   };
 
@@ -292,6 +319,21 @@ export function AIReadingChat({
             </div>
           ) : (
             <>
+              {/* API error banner - show when SDK reports error or our fetch got !res.ok */}
+              {(error || apiError) && (
+                <div className="mx-4 mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex flex-col gap-2">
+                  <p className="text-sm text-destructive font-medium">AI request failed</p>
+                  <p className="text-xs text-muted-foreground">
+                    {apiError ?? (typeof error === "object" && error !== null && "message" in error
+                      ? String((error as { message?: string }).message)
+                      : String(error))}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Add <code className="bg-muted px-1 rounded">AI_GATEWAY_API_KEY</code> in Vercel (Project → Settings → Environment Variables) or in <code className="bg-muted px-1 rounded">.env.local</code> for local. See AI Settings → Test Connection.
+                  </p>
+                </div>
+              )}
+
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.length === 0 ? (
