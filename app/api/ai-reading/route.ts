@@ -22,15 +22,11 @@ const VALID_MODEL_IDS = new Set([
 
 export async function POST(req: Request) {
   try {
-    const {
-      messages,
-      modelId,
-      readingContext,
-    }: {
-      messages: UIMessage[];
-      modelId?: string;
-      readingContext?: string;
-    } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const rawMessages = body?.messages;
+    const messages: UIMessage[] = Array.isArray(rawMessages) ? rawMessages : [];
+    const modelId = body?.modelId;
+    const readingContext = body?.readingContext;
 
     const resolvedModelId = modelId && VALID_MODEL_IDS.has(modelId)
       ? modelId
@@ -47,10 +43,22 @@ export async function POST(req: Request) {
       systemMessage += `\n\n${readingContext}`;
     }
 
+    let modelMessages: Awaited<ReturnType<typeof convertToModelMessages>>;
+    try {
+      modelMessages = await convertToModelMessages(messages);
+    } catch (convertErr) {
+      console.error("AI Reading convertToModelMessages Error:", convertErr);
+      return Response.json(
+        { error: "Invalid message format. Please try again." },
+        { status: 400 }
+      );
+    }
+    const messagesForModel = Array.from(modelMessages ?? []);
+
     const result = streamText({
       model,
       system: systemMessage,
-      messages: await convertToModelMessages(messages),
+      messages: messagesForModel,
       maxOutputTokens: 2500,
       temperature: 0.8,
       abortSignal: req.signal,
