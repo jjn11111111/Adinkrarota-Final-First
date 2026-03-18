@@ -32,13 +32,19 @@ export const AI_MODELS: AIModel[] = [
     description: "Open source model with fast inference via Groq",
   },
   {
+    id: "xai/grok-3-mini",
+    name: "Grok 3 Mini",
+    description: "xAI Grok 3 Mini via Vercel AI Gateway",
+  },
+  {
     id: "xai/grok-2-1212",
     name: "Grok 2",
     description: "xAI's conversational model",
   },
 ];
 
-export const DEFAULT_MODEL_ID = "anthropic/claude-sonnet-4-5";
+// Default to Grok 3 Mini since xAI is configured and tested
+export const DEFAULT_MODEL_ID = "xai/grok-3-mini";
 
 export interface AISettings {
   enabled: boolean;

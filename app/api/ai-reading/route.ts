@@ -5,7 +5,8 @@ export const maxDuration = 60;
 
 // Use Vercel AI Gateway model strings (creator/model format)
 // Works on Vercel with OIDC; locally requires AI_GATEWAY_API_KEY in .env.local
-const DEFAULT_MODEL_ID = "anthropic/claude-sonnet-4-5";
+// Default to Grok 3 Mini since xAI is configured and tested
+const DEFAULT_MODEL_ID = "xai/grok-3-mini";
 const VALID_MODEL_IDS = new Set([
   "openai/gpt-4o",
   "openai/gpt-4o-mini",
@@ -16,6 +17,7 @@ const VALID_MODEL_IDS = new Set([
   "anthropic/claude-3-haiku-20240307",
   "groq/llama-3.3-70b-versatile",
   "groq/mixtral-8x7b-32768",
+  "xai/grok-3-mini",
   "xai/grok-2-1212",
   "xai/grok-beta",
 ]);
