@@ -104,6 +104,7 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
   const [showCardPicker, setShowCardPicker] = useState(false);
   const [hasAIConfigured, setHasAIConfigured] = useState(false);
   const [autoInterpret, setAutoInterpret] = useState(false);
+  const [aiDismissedForSpread, setAIDismissedForSpread] = useState(false);
 
   // Check if AI is configured on mount
   useEffect(() => {
@@ -114,14 +115,14 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
   // Auto-open AI chat when all cards are revealed
   useEffect(() => {
     const allRevealed = drawnCards.length > 0 && revealedIndices.size === drawnCards.length;
-    if (allRevealed && hasAIConfigured && !showAIChat) {
+    if (allRevealed && hasAIConfigured && !showAIChat && !aiDismissedForSpread) {
       const timer = setTimeout(() => {
         setAutoInterpret(true);
         setShowAIChat(true);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [drawnCards.length, revealedIndices.size, hasAIConfigured, showAIChat]);
+  }, [drawnCards.length, revealedIndices.size, hasAIConfigured, showAIChat, aiDismissedForSpread]);
 
   // Get spread config - use custom spread if provided, otherwise use built-in
   const spread = customSpread && spreadType === "custom"
@@ -137,6 +138,7 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
   const drawCards = useCallback(() => {
     setIsDrawing(true);
     setRevealedIndices(new Set());
+    setAIDismissedForSpread(false);
     
     setTimeout(() => {
       const cards = drawCardsWithPolarity(spread.positions.length);
@@ -156,12 +158,16 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
   const reset = () => {
     setDrawnCards([]);
     setRevealedIndices(new Set());
+    setShowAIChat(false);
+    setAutoInterpret(false);
+    setAIDismissedForSpread(false);
   };
 
   const handleManualSelection = (cards: DrawnCard[]) => {
     setDrawnCards(cards);
     setRevealedIndices(new Set(cards.map((_, i) => i)));
     setShowCardPicker(false);
+    setAIDismissedForSpread(false);
   };
 
   // Determine if this spread type requires membership
@@ -205,6 +211,7 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
                       onClick={() => {
                         setSpreadType(type);
                         reset();
+                        setAIDismissedForSpread(false);
                       }}
                       className={spreadType === type ? "font-serif" : "font-serif bg-transparent"}
                     >
@@ -401,6 +408,7 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
           onClose={() => {
             setShowAIChat(false);
             setAutoInterpret(false);
+            setAIDismissedForSpread(true);
           }}
           autoInterpret={autoInterpret}
         />
