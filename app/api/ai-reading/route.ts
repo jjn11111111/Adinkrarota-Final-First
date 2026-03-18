@@ -23,42 +23,50 @@ const VALID_MODEL_IDS = new Set([
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const rawMessages = body?.messages;
-    const messages: UIMessage[] = Array.isArray(rawMessages) ? rawMessages : [];
-    const modelId = body?.modelId;
-    const readingContext = body?.readingContext;
+    const rawMessages = body?.messages as UIMessage[] | undefined;
+    const modelId = body?.modelId as string | undefined;
+    const readingContext = body?.readingContext as string | undefined;
 
-    const resolvedModelId = modelId && VALID_MODEL_IDS.has(modelId)
-      ? modelId
-      : DEFAULT_MODEL_ID;
+    const resolvedModelId =
+      modelId && VALID_MODEL_IDS.has(modelId) ? modelId : DEFAULT_MODEL_ID;
     const model = gateway(resolvedModelId);
 
     // Determine which system prompt to use based on context
     const isSpreadBuilder = readingContext?.includes("SPREAD_BUILDER_MODE");
-    let systemMessage = isSpreadBuilder 
-      ? SPREAD_BUILDER_ASSISTANT_PROMPT 
+    let systemMessage = isSpreadBuilder
+      ? SPREAD_BUILDER_ASSISTANT_PROMPT
       : UNIVERSAL_WISDOM_SYSTEM_PROMPT;
-    
+
     if (readingContext) {
       systemMessage += `\n\n${readingContext}`;
     }
 
-    let modelMessages: Awaited<ReturnType<typeof convertToModelMessages>>;
-    try {
-      modelMessages = await convertToModelMessages(messages);
-    } catch (convertErr) {
-      console.error("AI Reading convertToModelMessages Error:", convertErr);
+    // For robustness, derive a single prompt from the latest user message
+    let userText = "";
+    if (Array.isArray(rawMessages) && rawMessages.length > 0) {
+      const userMessages = rawMessages.filter((m) => m.role === "user");
+      const lastUser = userMessages[userMessages.length - 1];
+      if (lastUser && Array.isArray(lastUser.parts)) {
+        userText = lastUser.parts
+          .filter((p: any) => p?.type === "text" && typeof p.text === "string")
+          .map((p: any) => p.text)
+          .join("\n\n")
+          .trim();
+      }
+    }
+
+    if (!userText) {
       return Response.json(
-        { error: "Invalid message format. Please try again." },
+        { error: "Invalid prompt: messages must not be empty." },
         { status: 400 }
       );
     }
-    const messagesForModel = Array.from(modelMessages ?? []);
+
+    const prompt = `${systemMessage}\n\nUser question:\n${userText}`;
 
     const result = streamText({
       model,
-      system: systemMessage,
-      messages: messagesForModel,
+      prompt,
       maxOutputTokens: 2500,
       temperature: 0.8,
       abortSignal: req.signal,
@@ -67,7 +75,8 @@ export async function POST(req: Request) {
     return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error("AI Reading Error:", error);
-    const message = error instanceof Error ? error.message : "Failed to process request";
+    const message =
+      error instanceof Error ? error.message : "Failed to process request";
     const isAuthError = /api[_-]?key|unauthorized|401|403/i.test(message);
     return Response.json(
       {
