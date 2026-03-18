@@ -1,4 +1,5 @@
-import { generateText, gateway } from "ai";
+import { generateText } from "ai";
+import { groq } from "@ai-sdk/groq";
 import { drawCardsWithPolarity } from "@/lib/card-data";
 import { getGuidebookEntry } from "@/lib/guidebook-data";
 
@@ -32,7 +33,7 @@ ${guidebook?.fullDescription ? `Full Description: ${guidebook.fullDescription}` 
 `;
 
     const result = await generateText({
-      model: gateway("anthropic/claude-sonnet-4-5"),
+      model: groq("llama-3.3-70b-versatile"),
       system: DAILY_WISDOM_PROMPT,
       prompt: cardContext,
       maxOutputTokens: 200,
@@ -55,7 +56,9 @@ ${guidebook?.fullDescription ? `Full Description: ${guidebook.fullDescription}` 
   } catch (error) {
     console.error("Daily Wisdom Error:", error);
     const message = error instanceof Error ? error.message : "Failed to generate wisdom";
-    const isAuthError = /api[_-]?key|unauthorized|401|403/i.test(message);
+    const isAuthError = /api[_-]?key|unauthorized|401|403|GROQ_API_KEY/i.test(
+      message,
+    );
     return Response.json(
       {
         error: isAuthError

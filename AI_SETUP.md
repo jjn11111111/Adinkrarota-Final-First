@@ -6,28 +6,35 @@
 2. **Test connection** – In the AI settings modal, click "Test Connection". If it fails, see below.
 3. **Request body fix** – The app now sends `modelId` and `readingContext` on every request (fixes stale body).
 
-## Environment
+## Environment (Groq – free-friendly)
 
 ### Local development
 
 Add to `.env.local`:
 
+```bash
+GROQ_API_KEY=your_groq_api_key_here
 ```
-AI_GATEWAY_API_KEY=your_key_here
-```
 
-Get a key from [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) or your AI provider.
+Create a free account at [groq.com](https://groq.com), generate an API key, and paste it here.
 
-### Vercel (production)
+### Vercel (production / preview)
 
-- **Option A:** Add `AI_GATEWAY_API_KEY` in Vercel → Project → Settings → Environment Variables.
-- **Option B:** Use [Vercel AI SDK integration](https://vercel.com/docs/ai-sdk) (OIDC) – no key needed when the integration is enabled.
+In your Vercel project:
+
+1. Go to **Settings → Environment Variables**.
+2. Add:
+
+   - **Name:** `GROQ_API_KEY`  
+   - **Value:** your Groq API key  
+   - **Environments:** Preview + Production
+
+3. Redeploy the project.
 
 ## Models supported
 
-All models go through the Vercel AI Gateway. Supported IDs:
+The app now talks **directly to Groq** (no Vercel Gateway required).
 
-- `anthropic/claude-sonnet-4-5` (default)
-- `openai/gpt-4o`, `openai/gpt-4o-mini`
-- `groq/llama-3.3-70b-versatile`
-- `xai/grok-2-1212`
+Supported ID:
+
+- `groq/llama-3.3-70b-versatile` (default)

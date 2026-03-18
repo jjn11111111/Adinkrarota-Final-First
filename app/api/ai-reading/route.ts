@@ -1,12 +1,12 @@
-import { convertToModelMessages, gateway, streamText, UIMessage } from "ai";
+import { streamText, UIMessage } from "ai";
+import { groq } from "@ai-sdk/groq";
 import { UNIVERSAL_WISDOM_SYSTEM_PROMPT, SPREAD_BUILDER_ASSISTANT_PROMPT } from "@/lib/ai-wisdom-prompt";
 
 export const maxDuration = 60;
 
-// Use Vercel AI Gateway model strings (creator/model format)
-// Works on Vercel with OIDC; locally requires AI_GATEWAY_API_KEY in .env.local
-// Default to Grok 3 Mini since xAI is configured and tested
-const DEFAULT_MODEL_ID = "xai/grok-3-mini";
+// Use direct provider models (no Vercel Gateway).
+// Default to Groq Llama 3.3 70B via GROQ_API_KEY.
+const DEFAULT_MODEL_ID = "groq/llama-3.3-70b-versatile";
 const VALID_MODEL_IDS = new Set([
   "openai/gpt-4o",
   "openai/gpt-4o-mini",
@@ -17,9 +17,6 @@ const VALID_MODEL_IDS = new Set([
   "anthropic/claude-3-haiku-20240307",
   "groq/llama-3.3-70b-versatile",
   "groq/mixtral-8x7b-32768",
-  "xai/grok-3-mini",
-  "xai/grok-2-1212",
-  "xai/grok-beta",
 ]);
 
 export async function POST(req: Request) {
@@ -31,7 +28,12 @@ export async function POST(req: Request) {
 
     const resolvedModelId =
       modelId && VALID_MODEL_IDS.has(modelId) ? modelId : DEFAULT_MODEL_ID;
-    const model = gateway(resolvedModelId);
+
+    // Map our string ids to concrete Groq models (only Groq is free/direct now)
+    const model =
+      resolvedModelId === "groq/llama-3.3-70b-versatile"
+        ? groq("llama-3.3-70b-versatile")
+        : groq("llama-3.3-70b-versatile");
 
     // Determine which system prompt to use based on context
     const isSpreadBuilder = readingContext?.includes("SPREAD_BUILDER_MODE");
@@ -79,7 +81,9 @@ export async function POST(req: Request) {
     console.error("AI Reading Error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to process request";
-    const isAuthError = /api[_-]?key|unauthorized|401|403/i.test(message);
+    const isAuthError = /api[_-]?key|unauthorized|401|403|GROQ_API_KEY/i.test(
+      message,
+    );
     return Response.json(
       {
         error: isAuthError

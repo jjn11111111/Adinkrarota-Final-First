@@ -4,47 +4,18 @@ export interface AIModel {
   description: string;
 }
 
-// All models work via Vercel AI Gateway. On Vercel, no API keys needed (OIDC). Locally, set AI_GATEWAY_API_KEY in .env.local.
+// Models are served directly via provider APIs.
+// Default setup uses Groq (free tier) via GROQ_API_KEY.
 export const AI_MODELS: AIModel[] = [
   {
-    id: "anthropic/claude-sonnet-4-5",
-    name: "Claude Sonnet 4.5",
-    description: "Anthropic's most capable model for nuanced interpretations",
-  },
-  {
-    id: "anthropic/claude-sonnet-4.6",
-    name: "Claude Sonnet 4.6",
-    description: "Anthropic Claude Sonnet 4.6 via AI Gateway",
-  },
-  {
-    id: "openai/gpt-4o",
-    name: "GPT-4o",
-    description: "OpenAI's flagship multimodal model",
-  },
-  {
-    id: "openai/gpt-4o-mini",
-    name: "GPT-4o Mini",
-    description: "Fast and efficient for quick readings",
-  },
-  {
     id: "groq/llama-3.3-70b-versatile",
-    name: "Llama 3.3 70B",
-    description: "Open source model with fast inference via Groq",
-  },
-  {
-    id: "xai/grok-3-mini",
-    name: "Grok 3 Mini",
-    description: "xAI Grok 3 Mini via Vercel AI Gateway",
-  },
-  {
-    id: "xai/grok-2-1212",
-    name: "Grok 2",
-    description: "xAI's conversational model",
+    name: "Llama 3.3 70B (Groq)",
+    description: "Fast, high-quality open model served from Groq's free tier",
   },
 ];
 
-// Default to Grok 3 Mini since xAI is configured and tested
-export const DEFAULT_MODEL_ID = "xai/grok-3-mini";
+// Default to Groq Llama 3.3 70B (free tier friendly)
+export const DEFAULT_MODEL_ID = "groq/llama-3.3-70b-versatile";
 
 export interface AISettings {
   enabled: boolean;
