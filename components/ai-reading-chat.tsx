@@ -207,14 +207,14 @@ export function AIReadingChat({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || status !== "ready" || !aiSettings?.enabled) return;
+    if (!inputValue.trim() || !aiSettings?.enabled) return;
     setApiError(null);
     sendMessage({ text: inputValue });
     setInputValue("");
   };
 
   const handleQuickPrompt = (prompt: string) => {
-    if (status !== "ready" || !aiSettings?.enabled) return;
+    if (!aiSettings?.enabled) return;
     setApiError(null);
     sendMessage({ text: prompt });
   };
@@ -449,12 +449,12 @@ export function AIReadingChat({
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Ask about your reading..."
-                    disabled={status !== "ready"}
+                    disabled={!aiSettings?.enabled}
                     className="flex-1 p-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   />
                   <Button
                     type="submit"
-                    disabled={!inputValue.trim() || status !== "ready"}
+                    disabled={!inputValue.trim() || !aiSettings?.enabled}
                     className="px-4"
                   >
                     <Send className="w-4 h-4" />
