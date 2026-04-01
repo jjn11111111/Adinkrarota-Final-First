@@ -155,9 +155,9 @@ export function AIReadingChat({
             return res;
           } catch (e) {
             // Rethrow if we already set apiError (from !res.ok branch)
-            if (e instanceof Error && /AI_GATEWAY|not configured|Unauthorized|Request failed/i.test(e.message))
+            if (e instanceof Error && /GROQ|not configured|Unauthorized|Request failed|Network/i.test(e.message))
               throw e;
-            const msg = "Network or timeout error. Check AI_GATEWAY_API_KEY and try again.";
+            const msg = "Network or timeout error. Check GROQ_API_KEY and try again.";
             setApiErrorRef.current(msg);
             throw new Error(msg);
           }
@@ -207,14 +207,14 @@ export function AIReadingChat({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || !aiSettings?.enabled) return;
+    if (!inputValue.trim() || !aiSettings?.enabled || status !== "ready") return;
     setApiError(null);
     sendMessage({ text: inputValue });
     setInputValue("");
   };
 
   const handleQuickPrompt = (prompt: string) => {
-    if (!aiSettings?.enabled) return;
+    if (!aiSettings?.enabled || status !== "ready") return;
     setApiError(null);
     sendMessage({ text: prompt });
   };
@@ -329,7 +329,7 @@ export function AIReadingChat({
                       : String(error))}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Add <code className="bg-muted px-1 rounded">AI_GATEWAY_API_KEY</code> in Vercel (Project → Settings → Environment Variables) or in <code className="bg-muted px-1 rounded">.env.local</code> for local. See AI Settings → Test Connection.
+                    Add <code className="bg-muted px-1 rounded">GROQ_API_KEY</code> on the server (Vercel env or <code className="bg-muted px-1 rounded">.env.local</code>). See AI Settings → Test Connection.
                   </p>
                 </div>
               )}
@@ -449,12 +449,12 @@ export function AIReadingChat({
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Ask about your reading..."
-                    disabled={!aiSettings?.enabled}
+                    disabled={!aiSettings?.enabled || status !== "ready"}
                     className="flex-1 p-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   />
                   <Button
                     type="submit"
-                    disabled={!inputValue.trim() || !aiSettings?.enabled}
+                    disabled={!inputValue.trim() || !aiSettings?.enabled || status !== "ready"}
                     className="px-4"
                   >
                     <Send className="w-4 h-4" />

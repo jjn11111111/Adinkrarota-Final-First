@@ -1,21 +1,22 @@
+import {
+  DEFAULT_GROQ_MODEL_ID,
+  GROQ_CHAT_MODELS,
+} from "@/lib/ai-groq";
+
 export interface AIModel {
   id: string;
   name: string;
   description: string;
 }
 
-// Models are served directly via provider APIs.
-// Default setup uses Groq (free tier) via GROQ_API_KEY.
-export const AI_MODELS: AIModel[] = [
-  {
-    id: "groq/llama-3.3-70b-versatile",
-    name: "Llama 3.3 70B (Groq)",
-    description: "Fast, high-quality open model served from Groq's free tier",
-  },
-];
+// Groq models — server needs `GROQ_API_KEY` (see AI Settings modal).
+export const AI_MODELS: AIModel[] = GROQ_CHAT_MODELS.map((m) => ({
+  id: m.id,
+  name: m.name,
+  description: m.description,
+}));
 
-// Default to Groq Llama 3.3 70B (free tier friendly)
-export const DEFAULT_MODEL_ID = "groq/llama-3.3-70b-versatile";
+export const DEFAULT_MODEL_ID = DEFAULT_GROQ_MODEL_ID;
 
 export interface AISettings {
   enabled: boolean;
@@ -29,7 +30,11 @@ export function getAISettings(): AISettings | null {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return null;
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored) as AISettings;
+    if (!AI_MODELS.some((m) => m.id === parsed.modelId)) {
+      parsed.modelId = DEFAULT_MODEL_ID;
+    }
+    return parsed;
   } catch (e) {
     console.error("Failed to load AI settings:", e);
     return null;

@@ -1,23 +1,9 @@
-import { streamText, UIMessage } from "ai";
-import { groq } from "@ai-sdk/groq";
+import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { UNIVERSAL_WISDOM_SYSTEM_PROMPT, SPREAD_BUILDER_ASSISTANT_PROMPT } from "@/lib/ai-wisdom-prompt";
+import { GROQ_ENV_HINT } from "@/lib/ai-groq";
+import { groqLanguageModel } from "@/lib/ai-groq-server";
 
 export const maxDuration = 60;
-
-// Use direct provider models (no Vercel Gateway).
-// Default to Groq Llama 3.3 70B via GROQ_API_KEY.
-const DEFAULT_MODEL_ID = "groq/llama-3.3-70b-versatile";
-const VALID_MODEL_IDS = new Set([
-  "openai/gpt-4o",
-  "openai/gpt-4o-mini",
-  "openai/gpt-4-turbo",
-  "anthropic/claude-sonnet-4-5",
-  "anthropic/claude-sonnet-4.6",
-  "anthropic/claude-3-5-sonnet-20241022",
-  "anthropic/claude-3-haiku-20240307",
-  "groq/llama-3.3-70b-versatile",
-  "groq/mixtral-8x7b-32768",
-]);
 
 export async function POST(req: Request) {
   try {
@@ -26,16 +12,14 @@ export async function POST(req: Request) {
     const modelId = body?.modelId as string | undefined;
     const readingContext = body?.readingContext as string | undefined;
 
-    const resolvedModelId =
-      modelId && VALID_MODEL_IDS.has(modelId) ? modelId : DEFAULT_MODEL_ID;
+    if (!Array.isArray(rawMessages) || rawMessages.length === 0) {
+      return Response.json(
+        { error: "Invalid prompt: messages must not be empty." },
+        { status: 400 },
+      );
+    }
 
-    // Map our string ids to concrete Groq models (only Groq is free/direct now)
-    const model =
-      resolvedModelId === "groq/llama-3.3-70b-versatile"
-        ? groq("llama-3.3-70b-versatile")
-        : groq("llama-3.3-70b-versatile");
-
-    // Determine which system prompt to use based on context
+    // Determine system prompt (reading / spread-builder context)
     const isSpreadBuilder = readingContext?.includes("SPREAD_BUILDER_MODE");
     let systemMessage = isSpreadBuilder
       ? SPREAD_BUILDER_ASSISTANT_PROMPT
@@ -45,32 +29,19 @@ export async function POST(req: Request) {
       systemMessage += `\n\n${readingContext}`;
     }
 
-    // For robustness, derive a single prompt from the latest user message
-    let userText = "";
-    if (Array.isArray(rawMessages) && rawMessages.length > 0) {
-      const userMessages = rawMessages.filter((m) => m.role === "user");
-      const lastUser = userMessages[userMessages.length - 1];
-      if (lastUser && Array.isArray(lastUser.parts)) {
-        userText = lastUser.parts
-          .filter((p: any) => p?.type === "text" && typeof p.text === "string")
-          .map((p: any) => p.text)
-          .join("\n\n")
-          .trim();
-      }
-    }
+    const modelMessages = await convertToModelMessages(rawMessages);
 
-    if (!userText) {
+    if (modelMessages.length === 0) {
       return Response.json(
-        { error: "Invalid prompt: messages must not be empty." },
-        { status: 400 }
+        { error: "Invalid prompt: could not convert messages." },
+        { status: 400 },
       );
     }
 
-    const prompt = `${systemMessage}\n\nUser question:\n${userText}`;
-
     const result = streamText({
-      model,
-      prompt,
+      model: groqLanguageModel(modelId),
+      system: systemMessage,
+      messages: modelMessages,
       maxOutputTokens: 2500,
       temperature: 0.8,
       abortSignal: req.signal,
@@ -81,16 +52,16 @@ export async function POST(req: Request) {
     console.error("AI Reading Error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to process request";
-    const isAuthError = /api[_-]?key|unauthorized|401|403|GROQ_API_KEY/i.test(
+    const isAuthError = /api[_-]?key|unauthorized|401|403|GROQ|groq/i.test(
       message,
     );
     return Response.json(
       {
         error: isAuthError
-          ? "AI is not configured. Add AI_GATEWAY_API_KEY to your environment (or deploy on Vercel for automatic setup)."
+          ? `AI is not configured. ${GROQ_ENV_HINT}`
           : message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

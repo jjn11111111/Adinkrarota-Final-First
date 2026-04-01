@@ -1,7 +1,8 @@
 import { generateText } from "ai";
-import { groq } from "@ai-sdk/groq";
 import { drawCardsWithPolarity } from "@/lib/card-data";
 import { getGuidebookEntry } from "@/lib/guidebook-data";
+import { GROQ_ENV_HINT } from "@/lib/ai-groq";
+import { groqDailyWisdomModel } from "@/lib/ai-groq-server";
 
 export const maxDuration = 30;
 
@@ -18,10 +19,9 @@ Do NOT include any greeting, signature, or card name in your response. Just the 
 
 export async function POST(req: Request) {
   try {
-    // Draw a single card for the day
     const [drawnCard] = drawCardsWithPolarity(1);
     const guidebook = getGuidebookEntry(drawnCard.id);
-    
+
     const cardContext = `
 Card: ${drawnCard.name}
 Polarity: ${drawnCard.polarity === "reversed" ? "Shadow (Reversed)" : "Light (Upright)"}
@@ -33,7 +33,7 @@ ${guidebook?.fullDescription ? `Full Description: ${guidebook.fullDescription}` 
 `;
 
     const result = await generateText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: groqDailyWisdomModel(),
       system: DAILY_WISDOM_PROMPT,
       prompt: cardContext,
       maxOutputTokens: 200,
@@ -55,17 +55,18 @@ ${guidebook?.fullDescription ? `Full Description: ${guidebook.fullDescription}` 
     });
   } catch (error) {
     console.error("Daily Wisdom Error:", error);
-    const message = error instanceof Error ? error.message : "Failed to generate wisdom";
-    const isAuthError = /api[_-]?key|unauthorized|401|403|GROQ_API_KEY/i.test(
+    const message =
+      error instanceof Error ? error.message : "Failed to generate wisdom";
+    const isAuthError = /api[_-]?key|unauthorized|401|403|GROQ|groq/i.test(
       message,
     );
     return Response.json(
       {
         error: isAuthError
-          ? "AI is not configured. Add AI_GATEWAY_API_KEY to your environment (or deploy on Vercel for automatic setup)."
+          ? `AI is not configured. ${GROQ_ENV_HINT}`
           : message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

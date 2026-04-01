@@ -10,11 +10,11 @@ export function CosmicOrbs() {
   const scrollOffset = useScrollParallax({ speed: 0.2 });
 
   const orbs = [
-    { size: 400, x: "15%", y: "20%", color: "primary", depth: 0.3, blur: 60 },
-    { size: 300, x: "75%", y: "30%", color: "accent", depth: 0.5, blur: 50 },
-    { size: 500, x: "60%", y: "70%", color: "primary", depth: 0.2, blur: 80 },
-    { size: 250, x: "25%", y: "75%", color: "accent", depth: 0.6, blur: 40 },
-    { size: 350, x: "85%", y: "80%", color: "primary", depth: 0.4, blur: 55 },
+    { size: 400, x: "15%", y: "20%", color: "ruby", depth: 0.3, blur: 70 },
+    { size: 300, x: "75%", y: "30%", color: "sapphire", depth: 0.5, blur: 58 },
+    { size: 500, x: "60%", y: "70%", color: "amethyst", depth: 0.2, blur: 88 },
+    { size: 250, x: "25%", y: "75%", color: "emerald", depth: 0.6, blur: 48 },
+    { size: 350, x: "85%", y: "80%", color: "ruby", depth: 0.4, blur: 62 },
   ];
 
   return (
@@ -28,9 +28,14 @@ export function CosmicOrbs() {
             height: orb.size,
             left: orb.x,
             top: orb.y,
-            background: orb.color === "primary" 
-              ? "radial-gradient(circle, rgba(233, 30, 140, 0.15) 0%, transparent 70%)"
-              : "radial-gradient(circle, rgba(0, 184, 148, 0.12) 0%, transparent 70%)",
+            background:
+              orb.color === "ruby"
+                ? "radial-gradient(circle, rgba(196, 60, 92, 0.22) 0%, rgba(120, 40, 70, 0.06) 45%, transparent 72%)"
+                : orb.color === "sapphire"
+                  ? "radial-gradient(circle, rgba(65, 85, 175, 0.2) 0%, rgba(40, 55, 120, 0.08) 45%, transparent 72%)"
+                  : orb.color === "emerald"
+                    ? "radial-gradient(circle, rgba(42, 143, 114, 0.18) 0%, rgba(25, 90, 75, 0.06) 45%, transparent 72%)"
+                    : "radial-gradient(circle, rgba(123, 75, 189, 0.2) 0%, rgba(70, 45, 120, 0.07) 45%, transparent 72%)",
             filter: `blur(${orb.blur}px)`,
             transform: `translate(${mousePosition.x * orb.depth}px, ${mousePosition.y * orb.depth + scrollOffset * orb.depth}px)`,
             transition: "transform 0.1s linear",
@@ -91,11 +96,15 @@ export function ParallaxStarfield() {
         star.style.width = `${size}px`;
         star.style.height = `${size}px`;
         star.style.borderRadius = "50%";
-        star.style.background = Math.random() > 0.7 
-          ? "rgba(233, 30, 140, 0.8)" 
-          : Math.random() > 0.5 
-            ? "rgba(0, 184, 148, 0.6)"
-            : "#fff";
+        const roll = Math.random();
+        star.style.background =
+          roll > 0.78
+            ? "rgba(232, 196, 104, 0.95)"
+            : roll > 0.58
+              ? "rgba(196, 60, 92, 0.85)"
+              : roll > 0.36
+                ? "rgba(140, 175, 255, 0.75)"
+                : "rgba(236, 232, 248, 0.9)";
         star.style.opacity = String(layer.opacity);
         star.style.animation = `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite`;
         star.style.animationDelay = `${Math.random() * 3}s`;

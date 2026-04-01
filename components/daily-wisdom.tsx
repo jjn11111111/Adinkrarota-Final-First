@@ -69,11 +69,14 @@ export function DailyWisdom() {
         method: "POST",
       });
       
-      if (!response.ok) {
-        throw new Error("Failed to fetch wisdom");
-      }
-      
       const data = await response.json();
+      if (!response.ok) {
+        const msg =
+          typeof data?.error === "string"
+            ? data.error
+            : "Could not load daily wisdom";
+        throw new Error(msg);
+      }
       setWisdom(data);
       
       // Cache the wisdom
