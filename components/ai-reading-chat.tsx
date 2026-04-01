@@ -230,7 +230,7 @@ export function AIReadingChat({
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          className={`fixed z-40 bg-card border border-border rounded-xl shadow-2xl overflow-hidden flex flex-col ${
+          className={`fixed z-40 bg-card/95 border border-primary/20 rounded-xl shadow-2xl overflow-hidden flex flex-col font-reading backdrop-blur-md ring-1 ring-primary/10 ${
             isExpanded
               ? "inset-4 md:inset-8"
               : "bottom-4 right-4 w-[95vw] max-w-md h-[70vh] max-h-[600px]"

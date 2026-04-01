@@ -30,7 +30,14 @@ const cormorant = Cormorant({ // Declaring Cormorant font
   variable: "--font-cormorant"
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'ADINKRAROTA | Fusion of Tarot & Adinkra',
   description: 'An immersive journey through the fusion of traditional Tarot archetypes and West African Adinkra symbols. Explore 78 cards of cosmic wisdom.',
   generator: 'v0.app',

@@ -98,10 +98,10 @@ export function AISettingsModal({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-card border border-border rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+          className="bg-card/95 border border-primary/20 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl backdrop-blur-md font-reading ring-1 ring-primary/10"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-border">
+          <div className="flex items-center justify-between p-6 border-b border-border/80">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-primary" />
@@ -150,6 +150,10 @@ export function AISettingsModal({
                   <strong className="text-foreground">Local:</strong> Put <code className="bg-muted px-1 rounded">GROQ_API_KEY=...</code> in <code className="bg-muted px-1 rounded">.env.local</code>.
                 </li>
                 <li>Click <strong className="text-foreground">Test Connection</strong> below to confirm.</li>
+                <li>
+                  <strong className="text-foreground">Browser “Not secure” / warnings:</strong> Always open the site with{" "}
+                  <code className="bg-muted px-1 rounded">https://</code> (use the URL from your Vercel deployment). Clear the site’s data in Chrome if an old HTTP bookmark triggers warnings.
+                </li>
               </ol>
             </div>
 
