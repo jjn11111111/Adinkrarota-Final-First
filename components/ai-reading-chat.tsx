@@ -175,9 +175,14 @@ export function AIReadingChat({
             throw e instanceof Error ? e : new Error(raw);
           }
         },
-        prepareSendMessagesRequest: ({ body, ...opts }) => ({
-          ...opts,
-          body: { ...body, ...requestBodyRef.current },
+        // AI SDK v6 only JSON-stringifies `body`; `messages` must live inside it.
+        prepareSendMessagesRequest: ({ body, messages }) => ({
+          body: {
+            ...body,
+            messages,
+            modelId: requestBodyRef.current.modelId,
+            readingContext: requestBodyRef.current.readingContext,
+          },
         }),
       }),
     [] // Ref provides current values; transport never needs recreation
@@ -322,8 +327,9 @@ export function AIReadingChat({
                 Enable AI Interpretations
               </h3>
               <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-                Get personalized interpretations powered by advanced AI models.
-                No API key required.
+                Interpretations use Groq on the server. Your deploy needs{" "}
+                <code className="text-xs bg-muted px-1 rounded">GROQ_API_KEY</code>{" "}
+                set in Vercel or <code className="text-xs bg-muted px-1 rounded">.env.local</code>.
               </p>
               <Button onClick={() => setShowSettings(true)} className="gap-2">
                 <Sparkles className="w-4 h-4" />
@@ -341,9 +347,13 @@ export function AIReadingChat({
                       ? String((error as { message?: string }).message)
                       : String(error))}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    Add <code className="bg-muted px-1 rounded">GROQ_API_KEY</code> on the server (Vercel env or <code className="bg-muted px-1 rounded">.env.local</code>). See AI Settings → Test Connection.
-                  </p>
+                  {/groq|not configured|could not reach|503|401|403/i.test(
+                    `${apiError ?? ""}${error != null ? String(error) : ""}`,
+                  ) && (
+                    <p className="text-xs text-muted-foreground">
+                      Add <code className="bg-muted px-1 rounded">GROQ_API_KEY</code> on the server (Vercel env or <code className="bg-muted px-1 rounded">.env.local</code>). See AI Settings → Test Connection.
+                    </p>
+                  )}
                 </div>
               )}
 
