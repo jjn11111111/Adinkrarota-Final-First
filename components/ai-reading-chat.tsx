@@ -144,22 +144,35 @@ export function AIReadingChat({
           try {
             const res = await fetch(input, init);
             if (!res.ok) {
-              const data = await res.json().catch(() => ({}));
-              const msg = typeof (data as { error?: string })?.error === "string"
-                ? (data as { error: string }).error
-                : res.statusText || "Request failed";
+              const text = await res.text();
+              let msg = res.statusText || `Request failed (${res.status})`;
+              try {
+                const data = JSON.parse(text) as { error?: string };
+                if (typeof data?.error === "string") msg = data.error;
+              } catch {
+                if (text?.trim()) msg = text.slice(0, 280);
+              }
               setApiErrorRef.current(msg);
               throw new Error(msg);
             }
             setApiErrorRef.current(null);
             return res;
           } catch (e) {
-            // Rethrow if we already set apiError (from !res.ok branch)
-            if (e instanceof Error && /GROQ|not configured|Unauthorized|Request failed|Network/i.test(e.message))
-              throw e;
-            const msg = "Network or timeout error. Check GROQ_API_KEY and try again.";
-            setApiErrorRef.current(msg);
-            throw new Error(msg);
+            const raw = e instanceof Error ? e.message : String(e);
+            const lower = raw.toLowerCase();
+            if (
+              lower.includes("failed to fetch") ||
+              lower.includes("load failed") ||
+              lower.includes("networkerror") ||
+              (e instanceof Error && e.name === "AbortError")
+            ) {
+              const hint =
+                "Could not reach the AI service. Try: set GROQ_API_KEY in Vercel → Environment Variables for this project → Redeploy; disable ad blockers; check your connection.";
+              setApiErrorRef.current(hint);
+              throw new Error(hint);
+            }
+            setApiErrorRef.current(raw);
+            throw e instanceof Error ? e : new Error(raw);
           }
         },
         prepareSendMessagesRequest: ({ body, ...opts }) => ({

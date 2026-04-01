@@ -6,6 +6,10 @@ import {
   resolveGroqApiModelId,
 } from "@/lib/ai-groq";
 
+export function isGroqConfigured(): boolean {
+  return Boolean(process.env.GROQ_API_KEY?.trim());
+}
+
 export function groqLanguageModel(appModelId: string | undefined) {
   return groq(resolveGroqApiModelId(appModelId));
 }

@@ -2,7 +2,7 @@ import { generateText } from "ai";
 import { drawCardsWithPolarity } from "@/lib/card-data";
 import { getGuidebookEntry } from "@/lib/guidebook-data";
 import { GROQ_ENV_HINT } from "@/lib/ai-groq";
-import { groqDailyWisdomModel } from "@/lib/ai-groq-server";
+import { groqDailyWisdomModel, isGroqConfigured } from "@/lib/ai-groq-server";
 
 export const maxDuration = 30;
 
@@ -19,6 +19,13 @@ Do NOT include any greeting, signature, or card name in your response. Just the 
 
 export async function POST(req: Request) {
   try {
+    if (!isGroqConfigured()) {
+      return Response.json(
+        { error: `AI is not configured. ${GROQ_ENV_HINT}` },
+        { status: 503 },
+      );
+    }
+
     const [drawnCard] = drawCardsWithPolarity(1);
     const guidebook = getGuidebookEntry(drawnCard.id);
 

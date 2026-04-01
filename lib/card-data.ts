@@ -1126,14 +1126,14 @@ export const suitInfo: Record<CardSuit, { name: string; element: string; color: 
   cups: {
     name: "Cups",
     element: "Water",
-    color: "#0077b6",
+    color: "#7b8cce",
     description: "Emotions, relationships, intuition, and the subconscious"
   },
-swords: {
-  name: "Swords",
-  element: "Air",
-  color: "#4a5568",
-  description: "Intellect, thoughts, communication, and conflict"
+  swords: {
+    name: "Swords",
+    element: "Air",
+    color: "#a8b4d4",
+    description: "Intellect, thoughts, communication, and conflict"
   },
   pentacles: {
     name: "Pentacles",
