@@ -1,7 +1,11 @@
 import { generateText } from "ai";
 import { drawCardsWithPolarity } from "@/lib/card-data";
 import { getGuidebookEntry } from "@/lib/guidebook-data";
-import { GROQ_ENV_HINT } from "@/lib/ai-groq";
+import {
+  GROQ_ENV_HINT,
+  GROQ_INVALID_KEY_HINT,
+  isGroqInvalidApiKeyMessage,
+} from "@/lib/ai-groq";
 import { groqDailyWisdomModel, isGroqConfigured } from "@/lib/ai-groq-server";
 
 export const maxDuration = 30;
@@ -64,16 +68,14 @@ ${guidebook?.fullDescription ? `Full Description: ${guidebook.fullDescription}` 
     console.error("Daily Wisdom Error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to generate wisdom";
-    const isAuthError = /api[_-]?key|unauthorized|401|403|GROQ|groq/i.test(
-      message,
-    );
-    return Response.json(
-      {
-        error: isAuthError
-          ? `AI is not configured. ${GROQ_ENV_HINT}`
-          : message,
-      },
-      { status: 500 },
-    );
+
+    if (isGroqInvalidApiKeyMessage(message)) {
+      return Response.json(
+        { error: `Invalid Groq API key. ${GROQ_INVALID_KEY_HINT}` },
+        { status: 401 },
+      );
+    }
+
+    return Response.json({ error: message }, { status: 500 });
   }
 }

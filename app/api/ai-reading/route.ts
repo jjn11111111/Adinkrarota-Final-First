@@ -1,6 +1,10 @@
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { UNIVERSAL_WISDOM_SYSTEM_PROMPT, SPREAD_BUILDER_ASSISTANT_PROMPT } from "@/lib/ai-wisdom-prompt";
-import { GROQ_ENV_HINT } from "@/lib/ai-groq";
+import {
+  GROQ_ENV_HINT,
+  GROQ_INVALID_KEY_HINT,
+  isGroqInvalidApiKeyMessage,
+} from "@/lib/ai-groq";
 import { groqLanguageModel, isGroqConfigured } from "@/lib/ai-groq-server";
 
 export const maxDuration = 60;
@@ -59,12 +63,18 @@ export async function POST(req: Request) {
     console.error("AI Reading Error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to process request";
-    const isAuthError = /api[_-]?key|unauthorized|401|403|GROQ|groq/i.test(
-      message,
-    );
+
+    if (isGroqInvalidApiKeyMessage(message)) {
+      return Response.json(
+        { error: `Invalid Groq API key. ${GROQ_INVALID_KEY_HINT}` },
+        { status: 401 },
+      );
+    }
+
+    const isOtherAuth = /api[_-]?key|groq/i.test(message);
     return Response.json(
       {
-        error: isAuthError
+        error: isOtherAuth
           ? `AI is not configured. ${GROQ_ENV_HINT}`
           : message,
       },

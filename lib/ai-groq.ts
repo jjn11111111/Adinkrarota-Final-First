@@ -34,6 +34,25 @@ export function resolveGroqApiModelId(appModelId: string | undefined): string {
 /** Daily wisdom uses one fixed model for consistency */
 export const GROQ_DAILY_WISDOM_MODEL_ID = "llama-3.3-70b-versatile" as const;
 
-/** Shown when GROQ_API_KEY is missing or invalid */
+/** Shown when GROQ_API_KEY is not set */
 export const GROQ_ENV_HINT =
   "Set GROQ_API_KEY in Vercel (Project → Settings → Environment Variables) or in .env.local for local dev. Create a key at https://console.groq.com/keys";
+
+/** Groq accepted a request but rejected the key (wrong, revoked, or typo/extra spaces). */
+export const GROQ_INVALID_KEY_HINT =
+  "Groq rejected this API key. Open https://console.groq.com/keys, create a new key, paste it into Vercel → your project → Settings → Environment Variables → GROQ_API_KEY (no quotes or spaces). Save, then Redeploy. If you use Preview deployments, add the variable for Preview too.";
+
+/** Detect Groq/auth failures that mean the key is bad, not that the app is offline. */
+export function isGroqInvalidApiKeyMessage(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    m.includes("invalid api") ||
+    m.includes("invalid_api_key") ||
+    m.includes("incorrect api key") ||
+    m.includes("api key provided") ||
+    m.includes("unauthorized") ||
+    m.includes("authentication") ||
+    /\b401\b/.test(m) ||
+    /\b403\b/.test(m)
+  );
+}

@@ -130,7 +130,9 @@ export function DailyWisdom() {
             <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <p className="font-reading text-sm leading-relaxed text-muted-foreground normal-case">
+          {error}
+        </p>
       </div>
     );
   }
