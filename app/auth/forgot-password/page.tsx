@@ -8,7 +8,6 @@ import { getBaseUrl } from "@/lib/site-config";
 import {
   AUTH_UNAVAILABLE_DEPLOYER_HINT,
   AUTH_UNAVAILABLE_MESSAGE,
-  PASSWORD_RESET_DEPLOYER_HINT,
 } from "@/lib/auth-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,10 +19,12 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [lastRedirectTo, setLastRedirectTo] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setLastRedirectTo(null);
     setLoading(true);
 
     const supabase = createClient();
@@ -35,7 +36,8 @@ export default function ForgotPasswordPage() {
 
     // Must match an entry in Supabase → Auth → URL Configuration → Redirect URLs.
     // Query strings are easy to misconfigure; recovery is detected in /auth/callback via JWT amr.
-    const redirectTo = `${getBaseUrl()}/auth/callback`;
+    const redirectTo = `${getBaseUrl().replace(/\/$/, "")}/auth/callback`;
+    setLastRedirectTo(redirectTo);
 
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email.trim().toLowerCase(),
@@ -126,10 +128,37 @@ export default function ForgotPasswordPage() {
                       {AUTH_UNAVAILABLE_DEPLOYER_HINT}
                     </p>
                   )}
-                  {/recovery email/i.test(error) && (
-                    <p className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2">
-                      {PASSWORD_RESET_DEPLOYER_HINT}
-                    </p>
+                  {/recovery email/i.test(error) && lastRedirectTo && (
+                    <div className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2 space-y-2">
+                      <p>
+                        In Supabase → Authentication → URL Configuration, add this
+                        exact URL under <strong>Redirect URLs</strong> (or use a
+                        wildcard like <code className="text-foreground/90">https://your-domain.com/**</code>
+                        ):
+                      </p>
+                      <code className="block w-full p-2 rounded-md bg-muted text-foreground text-[11px] break-all border border-border">
+                        {lastRedirectTo}
+                      </code>
+                      <p>
+                        Set <strong>Site URL</strong> to your app origin (no path), e.g.{" "}
+                        <code className="text-foreground/90">
+                          {(() => {
+                            try {
+                              return new URL(lastRedirectTo).origin;
+                            } catch {
+                              return "https://your-production-domain";
+                            }
+                          })()}
+                        </code>
+                        .
+                      </p>
+                      <p>
+                        If the first URL is not the site you are using, fix or remove{" "}
+                        <code className="text-foreground/90">NEXT_PUBLIC_BASE_URL</code>{" "}
+                        in Vercel (then redeploy). If URLs are correct, check custom SMTP
+                        under Authentication → Emails.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}

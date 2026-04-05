@@ -10,6 +10,3 @@ export const AUTH_UNAVAILABLE_DEPLOYER_HINT =
 export const PAYMENT_UNAVAILABLE_MESSAGE =
   "Payment processing is temporarily unavailable. Please try again later.";
 
-/** Shown when resetPasswordForEmail fails (often redirect URL or SMTP) */
-export const PASSWORD_RESET_DEPLOYER_HINT =
-  "If you manage this app: In Supabase → Authentication → URL Configuration, add Redirect URL https://YOUR_DOMAIN/auth/callback (wildcard https://YOUR_DOMAIN/** is fine). Set Site URL to your live app URL. If you use custom SMTP, check for send failures there too.";
