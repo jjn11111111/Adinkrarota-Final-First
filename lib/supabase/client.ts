@@ -1,5 +1,6 @@
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { getBrowserAuthCookieOptions } from '@/lib/supabase/auth-cookie-options'
 import {
   getPublicSupabaseConfig,
   isSupabaseConfigured as hasEnv,
@@ -18,15 +19,8 @@ export function createClient(): SupabaseClient | null {
   }
 
   try {
-    const isHttps =
-      typeof window !== "undefined" && window.location.protocol === "https:";
-
     client = createBrowserClient(cfg.url, cfg.anonKey, {
-      cookieOptions: {
-        path: "/",
-        sameSite: "lax",
-        ...(isHttps ? { secure: true } : {}),
-      },
+      cookieOptions: getBrowserAuthCookieOptions(),
       auth: {
         // Only /auth/callback exchanges the PKCE code; avoids races with AuthProvider getUser()
         // and stops /?code= on the home page from running auto URL handling.

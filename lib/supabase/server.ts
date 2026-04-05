@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { getServerAuthCookieOptions } from '@/lib/supabase/auth-cookie-options'
 import { getPublicSupabaseConfig } from '@/lib/supabase/env'
 
 /**
@@ -19,6 +20,7 @@ export async function createClient() {
     cfg.url,
     cfg.anonKey,
     {
+      cookieOptions: getServerAuthCookieOptions(),
       cookies: {
         getAll() {
           return cookieStore.getAll()
