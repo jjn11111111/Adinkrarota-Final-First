@@ -14,6 +14,68 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sparkles, ArrowLeft } from "lucide-react";
 
+function RecoveryEmailHint({ redirectTo }: { redirectTo: string }) {
+  let origin = "";
+  let onVercel = false;
+  try {
+    const u = new URL(redirectTo);
+    origin = u.origin;
+    onVercel = u.hostname.endsWith(".vercel.app");
+  } catch {
+    origin = "";
+  }
+
+  return (
+    <div className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2 space-y-2">
+      <p>
+        Supabase → Authentication → URL Configuration → under{" "}
+        <strong>Redirect URLs</strong>, allow the callback for the site you are
+        on right now:
+      </p>
+      <code className="block w-full p-2 rounded-md bg-muted text-foreground text-[11px] break-all border border-border">
+        {redirectTo}
+      </code>
+      {onVercel && (
+        <>
+          <p>
+            That hostname is a <strong>Vercel preview</strong> (a new URL per
+            deployment). Add this pattern once so every preview can reset
+            passwords (see Supabase docs &quot;Vercel preview URLs&quot;):
+          </p>
+          <code className="block w-full p-2 rounded-md bg-muted text-foreground text-[11px] break-all border border-border">
+            https://*-.vercel.app/**
+          </code>
+          <p>
+            Or open your <strong>production</strong> domain and use Forgot
+            password there so only your stable <code className="text-foreground/90">…vercel.app</code>{" "}
+            callback needs to be listed.
+          </p>
+        </>
+      )}
+      <p>
+        Keep <strong>Site URL</strong> as your main production origin (not a
+        one-off preview), e.g. your canonical{" "}
+        <code className="text-foreground/90">https://…vercel.app</code> or custom
+        domain.
+        {origin ? (
+          <>
+            {" "}
+            The preview origin{" "}
+            <code className="text-foreground/90">{origin}</code> belongs in{" "}
+            <strong>Redirect URLs</strong> only, not as Site URL.
+          </>
+        ) : null}
+      </p>
+      <p>
+        If the callback URL does not match the browser address bar, fix or
+        remove <code className="text-foreground/90">NEXT_PUBLIC_BASE_URL</code>{" "}
+        in Vercel, then redeploy. If URLs are correct, check Authentication →
+        Emails / SMTP.
+      </p>
+    </div>
+  );
+}
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -129,36 +191,7 @@ export default function ForgotPasswordPage() {
                     </p>
                   )}
                   {/recovery email/i.test(error) && lastRedirectTo && (
-                    <div className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2 space-y-2">
-                      <p>
-                        In Supabase → Authentication → URL Configuration, add this
-                        exact URL under <strong>Redirect URLs</strong> (or use a
-                        wildcard like <code className="text-foreground/90">https://your-domain.com/**</code>
-                        ):
-                      </p>
-                      <code className="block w-full p-2 rounded-md bg-muted text-foreground text-[11px] break-all border border-border">
-                        {lastRedirectTo}
-                      </code>
-                      <p>
-                        Set <strong>Site URL</strong> to your app origin (no path), e.g.{" "}
-                        <code className="text-foreground/90">
-                          {(() => {
-                            try {
-                              return new URL(lastRedirectTo).origin;
-                            } catch {
-                              return "https://your-production-domain";
-                            }
-                          })()}
-                        </code>
-                        .
-                      </p>
-                      <p>
-                        If the first URL is not the site you are using, fix or remove{" "}
-                        <code className="text-foreground/90">NEXT_PUBLIC_BASE_URL</code>{" "}
-                        in Vercel (then redeploy). If URLs are correct, check custom SMTP
-                        under Authentication → Emails.
-                      </p>
-                    </div>
+                    <RecoveryEmailHint redirectTo={lastRedirectTo} />
                   )}
                 </div>
               )}
