@@ -1,4 +1,4 @@
-import type { Session, SupabaseClient } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 import { accessTokenHasAmrMethod } from "@/lib/supabase/access-token-amr";
 
 export const EMAIL_OTP_TYPES: Set<string> = new Set([
@@ -10,12 +10,11 @@ export const EMAIL_OTP_TYPES: Set<string> = new Set([
   "email",
 ]);
 
-export async function finalizeAuthRedirectPath(
-  supabase: SupabaseClient,
+export function finalizeAuthRedirectPath(
   next: string,
   session: Session | null | undefined,
   otpTypeHint: string | null,
-): Promise<string | null> {
+): string | null {
   if (!session?.access_token) {
     return null;
   }
@@ -34,9 +33,7 @@ export async function finalizeAuthRedirectPath(
     return "/auth/update-password";
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = session.user;
 
   if (user?.user_metadata?.account_type === "member_pending") {
     return "/membership/checkout";

@@ -13,6 +13,8 @@ import {
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const searchKey = searchParams.toString();
+
   useEffect(() => {
     const run = async () => {
       const oauthError = searchParams.get("error");
@@ -50,12 +52,7 @@ function AuthCallbackContent() {
           return;
         }
 
-        const path = await finalizeAuthRedirectPath(
-          supabase,
-          next,
-          exchanged?.session,
-          null,
-        );
+        const path = finalizeAuthRedirectPath(next, exchanged?.session, null);
         if (!path) {
           router.replace(
             `/auth/error?reason=${encodeURIComponent(
@@ -65,8 +62,11 @@ function AuthCallbackContent() {
           return;
         }
 
-        router.replace(path);
-        router.refresh();
+        window.location.replace(
+          path.startsWith("http")
+            ? path
+            : `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`,
+        );
         return;
       }
 
@@ -83,12 +83,7 @@ function AuthCallbackContent() {
           return;
         }
 
-        const path = await finalizeAuthRedirectPath(
-          supabase,
-          next,
-          data.session,
-          typeParam,
-        );
+        const path = finalizeAuthRedirectPath(next, data.session, typeParam);
         if (!path) {
           router.replace(
             `/auth/error?reason=${encodeURIComponent(
@@ -98,8 +93,11 @@ function AuthCallbackContent() {
           return;
         }
 
-        router.replace(path);
-        router.refresh();
+        window.location.replace(
+          path.startsWith("http")
+            ? path
+            : `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`,
+        );
         return;
       }
 
@@ -113,7 +111,7 @@ function AuthCallbackContent() {
     void run().catch(() => {
       router.replace("/auth/error");
     });
-  }, [router, searchParams]);
+  }, [router, searchKey]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">

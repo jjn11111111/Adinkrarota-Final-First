@@ -123,26 +123,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const skipSyncUserFetch =
+      typeof window !== "undefined" &&
+      window.location.pathname.startsWith("/auth/callback");
+
     const initAuth = async () => {
-      setIsLoading(true);
-
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        setUser(currentUser);
-
-        if (currentUser) {
-          const userProfile = await fetchProfile(
-            currentUser.id,
-            currentUser.email || undefined
-          );
-          setProfile(userProfile);
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-      } finally {
+      if (skipSyncUserFetch) {
+        // Avoid racing PKCE exchange on /auth/callback (getUser + exchange can stall).
         setIsLoading(false);
+      } else {
+        setIsLoading(true);
+
+        try {
+          const {
+            data: { user: currentUser },
+          } = await supabase.auth.getUser();
+          setUser(currentUser);
+
+          if (currentUser) {
+            const userProfile = await fetchProfile(
+              currentUser.id,
+              currentUser.email || undefined
+            );
+            setProfile(userProfile);
+          }
+        } catch (error) {
+          console.error("Auth initialization error:", error);
+        } finally {
+          setIsLoading(false);
+        }
       }
     };
 
