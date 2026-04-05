@@ -114,32 +114,33 @@ alter table public.custom_spreads enable row level security;
 alter table public.featured_spreads enable row level security;
 
 -- Profiles: Users can only see/edit their own profile
+-- (select auth.uid()) avoids per-row re-init; see Supabase lint auth_rls_initplan
 create policy "profiles_select_own" on public.profiles 
-  for select using (auth.uid() = id);
+  for select using ((select auth.uid()) = id);
 create policy "profiles_insert_own" on public.profiles 
-  for insert with check (auth.uid() = id);
+  for insert with check ((select auth.uid()) = id);
 create policy "profiles_update_own" on public.profiles 
-  for update using (auth.uid() = id);
+  for update using ((select auth.uid()) = id);
 
 -- Readings: Users can only see/manage their own readings
 create policy "readings_select_own" on public.readings 
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 create policy "readings_insert_own" on public.readings 
-  for insert with check (auth.uid() = user_id);
+  for insert with check ((select auth.uid()) = user_id);
 create policy "readings_update_own" on public.readings 
-  for update using (auth.uid() = user_id);
+  for update using ((select auth.uid()) = user_id);
 create policy "readings_delete_own" on public.readings 
-  for delete using (auth.uid() = user_id);
+  for delete using ((select auth.uid()) = user_id);
 
 -- Custom spreads: Users can only see/manage their own spreads
 create policy "custom_spreads_select_own" on public.custom_spreads 
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 create policy "custom_spreads_insert_own" on public.custom_spreads 
-  for insert with check (auth.uid() = user_id);
+  for insert with check ((select auth.uid()) = user_id);
 create policy "custom_spreads_update_own" on public.custom_spreads 
-  for update using (auth.uid() = user_id);
+  for update using ((select auth.uid()) = user_id);
 create policy "custom_spreads_delete_own" on public.custom_spreads 
-  for delete using (auth.uid() = user_id);
+  for delete using ((select auth.uid()) = user_id);
 
 -- Featured spreads: Everyone can read, only admins can modify (handled at app level)
 create policy "featured_spreads_select_all" on public.featured_spreads 
