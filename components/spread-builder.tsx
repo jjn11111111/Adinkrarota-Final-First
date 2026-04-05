@@ -142,7 +142,7 @@ export function SpreadBuilder({
       }),
     [aiSettings?.modelId]
   );
-  const { messages, sendMessage, status, setMessages } = useChat({
+  const { messages, sendMessage, status, setMessages, error } = useChat({
     transport,
   });
 
@@ -514,6 +514,12 @@ export function SpreadBuilder({
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
+
+                    {error != null && (
+                      <p className="text-xs text-destructive rounded-md border border-destructive/20 bg-destructive/10 p-2">
+                        {error instanceof Error ? error.message : String(error)}
+                      </p>
+                    )}
 
                     {/* AI Messages */}
                     <div className="max-h-48 overflow-y-auto space-y-2 text-sm">

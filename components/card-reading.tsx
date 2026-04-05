@@ -102,27 +102,36 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
   const [isDrawing, setIsDrawing] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showCardPicker, setShowCardPicker] = useState(false);
-  const [hasAIConfigured, setHasAIConfigured] = useState(false);
+  const [hasAIConfigured, setHasAIConfigured] = useState(
+    () => getAISettings()?.enabled ?? false,
+  );
   const [autoInterpret, setAutoInterpret] = useState(false);
   const [aiDismissedForSpread, setAIDismissedForSpread] = useState(false);
 
-  // Check if AI is configured on mount
-  useEffect(() => {
-    const settings = getAISettings();
-    setHasAIConfigured(settings?.enabled ?? false);
-  }, []);
-
-  // Auto-open AI chat when all cards are revealed
+  // Auto-open AI chat when all cards are revealed (read localStorage each time — avoids stale state)
   useEffect(() => {
     const allRevealed = drawnCards.length > 0 && revealedIndices.size === drawnCards.length;
-    if (allRevealed && hasAIConfigured && !showAIChat && !aiDismissedForSpread) {
+    const aiEnabled = getAISettings()?.enabled ?? false;
+    if (allRevealed && aiEnabled && !showAIChat && !aiDismissedForSpread) {
       const timer = setTimeout(() => {
+        setHasAIConfigured(true);
         setAutoInterpret(true);
         setShowAIChat(true);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [drawnCards.length, revealedIndices.size, hasAIConfigured, showAIChat, aiDismissedForSpread]);
+  }, [drawnCards.length, revealedIndices.size, showAIChat, aiDismissedForSpread]);
+
+  const openAIInsight = () => {
+    const aiEnabled = getAISettings()?.enabled ?? false;
+    setHasAIConfigured(aiEnabled);
+    const allRevealed =
+      drawnCards.length > 0 && revealedIndices.size === drawnCards.length;
+    if (allRevealed && aiEnabled) {
+      setAutoInterpret(true);
+    }
+    setShowAIChat(true);
+  };
 
   // Get spread config - use custom spread if provided, otherwise use built-in
   const spread = customSpread && spreadType === "custom"
@@ -291,7 +300,7 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
                 </Button>
                 <Button
                   variant={hasAIConfigured ? "default" : "outline"}
-                  onClick={() => setShowAIChat(true)}
+                  onClick={openAIInsight}
                   className={hasAIConfigured ? "gap-2" : "gap-2 bg-transparent"}
                   title="Open AI Collaborator to get interpretations of this spread"
                 >
@@ -411,6 +420,7 @@ export function CardReading({ customSpread, onBackToBuilder }: CardReadingProps)
             setAIDismissedForSpread(true);
           }}
           autoInterpret={autoInterpret}
+          onAISettingsChange={(s) => setHasAIConfigured(s?.enabled ?? false)}
         />
 
         {/* Card Picker Modal */}

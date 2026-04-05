@@ -19,11 +19,21 @@ import {
   Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { type AISettings, getAISettings, getModelById, getDefaultSettings, DEFAULT_MODEL_ID } from "@/lib/ai-settings";
+import {
+  type AISettings,
+  getAISettings,
+  getModelById,
+  getDefaultSettings,
+  DEFAULT_MODEL_ID,
+} from "@/lib/ai-settings";
 import { AISettingsModal } from "./ai-settings-modal";
 import type { CardType, DrawnCard } from "@/lib/card-data";
 import { getGuidebookEntry } from "@/lib/guidebook-data";
 import { getReadingContext } from "@/lib/ai-wisdom-prompt";
+import {
+  GROQ_INVALID_KEY_HINT,
+  isGroqInvalidApiKeyMessage,
+} from "@/lib/ai-groq";
 
 interface AIReadingChatProps {
   cards: DrawnCard[];
@@ -33,6 +43,8 @@ interface AIReadingChatProps {
   onClose: () => void;
   autoInterpret?: boolean; // Automatically request interpretation when opened
   readingId?: string; // If provided, allows saving AI interpretation to database
+  /** Notifies parent when user saves or disables AI in settings (keeps Reading page UI in sync). */
+  onAISettingsChange?: (settings: AISettings | null) => void;
 }
 
 export function AIReadingChat({
@@ -43,6 +55,7 @@ export function AIReadingChat({
   onClose,
   autoInterpret = false,
   readingId,
+  onAISettingsChange,
 }: AIReadingChatProps) {
   const [aiSettings, setAISettings] = useState<AISettings | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -130,7 +143,10 @@ export function AIReadingChat({
   };
 
   // Ref for current request body - prepareSendMessagesRequest needs latest values (avoids stale closure)
-  const requestBodyRef = useRef({ modelId: DEFAULT_MODEL_ID, readingContext: "" });
+  const requestBodyRef = useRef<{ modelId: string; readingContext: string }>({
+    modelId: DEFAULT_MODEL_ID,
+    readingContext: "",
+  });
   requestBodyRef.current = {
     modelId: aiSettings?.modelId || DEFAULT_MODEL_ID,
     readingContext: buildReadingContext(),
@@ -152,6 +168,9 @@ export function AIReadingChat({
               } catch {
                 if (text?.trim()) msg = text.slice(0, 280);
               }
+              if (isGroqInvalidApiKeyMessage(msg)) {
+                msg = `Invalid Groq API key. ${GROQ_INVALID_KEY_HINT}`;
+              }
               setApiErrorRef.current(msg);
               throw new Error(msg);
             }
@@ -171,8 +190,11 @@ export function AIReadingChat({
               setApiErrorRef.current(hint);
               throw new Error(hint);
             }
-            setApiErrorRef.current(raw);
-            throw e instanceof Error ? e : new Error(raw);
+            const friendly = isGroqInvalidApiKeyMessage(raw)
+              ? `Invalid Groq API key. ${GROQ_INVALID_KEY_HINT}`
+              : raw;
+            setApiErrorRef.current(friendly);
+            throw e instanceof Error ? new Error(friendly) : new Error(friendly);
           }
         },
         // AI SDK v6 only JSON-stringifies `body`; `messages` must live inside it.
@@ -238,6 +260,23 @@ export function AIReadingChat({
   };
 
   const selectedModel = aiSettings ? getModelById(aiSettings.modelId) : null;
+
+  const aiErrRaw =
+    apiError ??
+    (error && typeof error === "object" && error !== null && "message" in error
+      ? String((error as { message?: string }).message)
+      : error != null
+        ? String(error)
+        : "");
+  const aiErrDetail =
+    aiErrRaw && isGroqInvalidApiKeyMessage(aiErrRaw)
+      ? `Invalid Groq API key. ${GROQ_INVALID_KEY_HINT}`
+      : aiErrRaw;
+  const aiErrCombined = `${apiError ?? ""}${error != null ? String(error) : ""}`;
+  const showGenericGroqHint =
+    Boolean(error || apiError) &&
+    /groq|not configured|could not reach|503|401|403/i.test(aiErrCombined) &&
+    !isGroqInvalidApiKeyMessage(aiErrRaw);
 
   if (!isVisible) return null;
 
@@ -342,15 +381,11 @@ export function AIReadingChat({
               {(error || apiError) && (
                 <div className="mx-4 mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex flex-col gap-2">
                   <p className="text-sm text-destructive font-medium">AI request failed</p>
-                  <p className="text-xs text-muted-foreground">
-                    {apiError ?? (typeof error === "object" && error !== null && "message" in error
-                      ? String((error as { message?: string }).message)
-                      : String(error))}
+                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {aiErrDetail}
                   </p>
-                  {/groq|not configured|could not reach|503|401|403/i.test(
-                    `${apiError ?? ""}${error != null ? String(error) : ""}`,
-                  ) && (
-                    <p className="text-xs text-muted-foreground">
+                  {showGenericGroqHint && (
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                       Add <code className="bg-muted px-1 rounded">GROQ_API_KEY</code> on the server (Vercel env or <code className="bg-muted px-1 rounded">.env.local</code>). See AI Settings → Test Connection.
                     </p>
                   )}
@@ -496,6 +531,7 @@ export function AIReadingChat({
         onSettingsChange={(newSettings) => {
           setAISettings(newSettings);
           setMessages([]);
+          onAISettingsChange?.(newSettings);
         }}
       />
     </>

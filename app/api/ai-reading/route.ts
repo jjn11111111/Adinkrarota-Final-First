@@ -58,7 +58,17 @@ export async function POST(req: Request) {
       abortSignal: req.signal,
     });
 
-    return result.toUIMessageStreamResponse();
+    // Groq auth failures happen when the stream runs, not in the try block above.
+    return result.toUIMessageStreamResponse({
+      onError: (err) => {
+        const message =
+          err instanceof Error ? err.message : String(err);
+        if (isGroqInvalidApiKeyMessage(message)) {
+          return `Invalid Groq API key. ${GROQ_INVALID_KEY_HINT}`;
+        }
+        return message;
+      },
+    });
   } catch (error) {
     console.error("AI Reading Error:", error);
     const message =
