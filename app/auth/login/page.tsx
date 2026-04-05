@@ -29,7 +29,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
 
-  const handleResendConfirmation = () => {
+  const handleResendConfirmation = async () => {
     if (!email) {
       setError("Please enter your email address first");
       return;
