@@ -1,7 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+import { getPublicSupabaseConfig } from "@/lib/supabase/env";
 import { accessTokenHasAmrMethod } from "@/lib/supabase/access-token-amr";
-import type { EmailOtpType, Session } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import type { EmailOtpType, Session, SupabaseClient } from "@supabase/supabase-js";
+import { type NextRequest, NextResponse } from "next/server";
 
 const EMAIL_OTP_TYPES: Set<string> = new Set([
   "signup",
@@ -19,18 +20,36 @@ function errorRedirect(origin: string, message: string) {
   return NextResponse.redirect(`${origin}/auth/error?${qs}`);
 }
 
-async function redirectAfterSession(
-  supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>,
-  origin: string,
+function createSupabaseCallbackClient(
+  request: NextRequest,
+  response: NextResponse,
+) {
+  const cfg = getPublicSupabaseConfig();
+  if (!cfg) {
+    return null;
+  }
+  return createServerClient(cfg.url, cfg.anonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
+      },
+    },
+  });
+}
+
+async function finalizeAuthRedirectPath(
+  supabase: SupabaseClient,
   next: string,
   session: Session | null | undefined,
   otpTypeHint: string | null,
-) {
+): Promise<string | null> {
   if (!session?.access_token) {
-    return errorRedirect(
-      origin,
-      "Could not create a session from this link. Request a new email and try again.",
-    );
+    return null;
   }
 
   const accessToken = session.access_token;
@@ -44,7 +63,7 @@ async function redirectAfterSession(
     next.startsWith("/auth/update-password");
 
   if (isPasswordRecovery) {
-    return NextResponse.redirect(`${origin}/auth/update-password`);
+    return "/auth/update-password";
   }
 
   const {
@@ -52,7 +71,7 @@ async function redirectAfterSession(
   } = await supabase.auth.getUser();
 
   if (user?.user_metadata?.account_type === "member_pending") {
-    return NextResponse.redirect(`${origin}/membership/checkout`);
+    return "/membership/checkout";
   }
 
   const createdAt = user?.created_at ? new Date(user.created_at) : null;
@@ -61,16 +80,17 @@ async function redirectAfterSession(
     createdAt && now.getTime() - createdAt.getTime() < 5 * 60 * 1000;
 
   if (isNewUser) {
-    return NextResponse.redirect(`${origin}/auth/welcome`);
+    return "/auth/welcome";
   }
 
-  return NextResponse.redirect(`${origin}${next}`);
+  return next;
 }
 
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
-  const oauthError = searchParams.get("error");
-  const oauthDescription = searchParams.get("error_description");
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url);
+  const origin = url.origin;
+  const oauthError = url.searchParams.get("error");
+  const oauthDescription = url.searchParams.get("error_description");
   if (oauthError || oauthDescription) {
     const msg =
       oauthDescription?.replace(/\+/g, " ") ||
@@ -79,12 +99,14 @@ export async function GET(request: Request) {
     return errorRedirect(origin, msg);
   }
 
-  const code = searchParams.get("code");
-  const tokenHash = searchParams.get("token_hash");
-  const typeParam = searchParams.get("type");
-  const next = searchParams.get("next") ?? "/portal";
+  const code = url.searchParams.get("code");
+  const tokenHash = url.searchParams.get("token_hash");
+  const typeParam = url.searchParams.get("type");
+  const next = url.searchParams.get("next") ?? "/portal";
 
-  const supabase = await createClient();
+  const redirectResponse = NextResponse.redirect(`${origin}/`, 302);
+  const supabase = createSupabaseCallbackClient(request, redirectResponse);
+
   if (!supabase) {
     return errorRedirect(
       origin,
@@ -100,13 +122,21 @@ export async function GET(request: Request) {
       return errorRedirect(origin, error.message);
     }
 
-    return redirectAfterSession(
+    const path = await finalizeAuthRedirectPath(
       supabase,
-      origin,
       next,
       exchanged?.session,
       null,
     );
+    if (!path) {
+      return errorRedirect(
+        origin,
+        "Could not create a session from this link. Request a new email and try again.",
+      );
+    }
+
+    redirectResponse.headers.set("Location", `${origin}${path}`);
+    return redirectResponse;
   }
 
   if (tokenHash && typeParam && EMAIL_OTP_TYPES.has(typeParam)) {
@@ -119,13 +149,21 @@ export async function GET(request: Request) {
       return errorRedirect(origin, error.message);
     }
 
-    return redirectAfterSession(
+    const path = await finalizeAuthRedirectPath(
       supabase,
-      origin,
       next,
       data.session,
       typeParam,
     );
+    if (!path) {
+      return errorRedirect(
+        origin,
+        "Could not create a session from this link. Request a new email and try again.",
+      );
+    }
+
+    redirectResponse.headers.set("Location", `${origin}${path}`);
+    return redirectResponse;
   }
 
   return errorRedirect(

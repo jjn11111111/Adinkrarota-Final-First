@@ -30,10 +30,27 @@ export default function UpdatePasswordPage() {
       setChecking(false);
       return;
     }
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setHasSession(!!user);
+
+    let cancelled = false;
+
+    (async () => {
+      for (let i = 0; i < 6; i++) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (cancelled) return;
+        if (user) {
+          setHasSession(true);
+          setChecking(false);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      setHasSession(false);
       setChecking(false);
-    });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

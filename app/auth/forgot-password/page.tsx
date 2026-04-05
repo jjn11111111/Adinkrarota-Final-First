@@ -105,9 +105,10 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    // Must match an entry in Supabase → Auth → URL Configuration → Redirect URLs.
-    // Query strings are easy to misconfigure; recovery is detected in /auth/callback via JWT amr.
-    const redirectTo = `${getBaseUrl().replace(/\/$/, "")}/auth/callback`;
+    // Must match Redirect URLs (wildcard https://*-.vercel.app/** covers ?next=...).
+    // next= forces update-password when JWT amr omits recovery (common); amr still used as fallback.
+    const base = getBaseUrl().replace(/\/$/, "");
+    const redirectTo = `${base}/auth/callback?next=${encodeURIComponent("/auth/update-password")}`;
     setLastRedirectTo(redirectTo);
 
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
