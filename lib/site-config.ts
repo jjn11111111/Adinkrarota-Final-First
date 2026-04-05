@@ -2,11 +2,23 @@
 // The NEXT_PUBLIC_BASE_URL env var takes priority, then VERCEL_URL, then the hardcoded production URL
 export function getBaseUrl(): string {
   if (typeof window !== "undefined") {
-    // Client-side: use env var or current origin
-    return (
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      window.location.origin
-    );
+    // Client: never use NEXT_PUBLIC_BASE_URL if it points at another host than this tab.
+    // Preview deploys change hostname every time; a stale BASE_URL breaks auth redirects.
+    const current = window.location.origin;
+    const envRaw = process.env.NEXT_PUBLIC_BASE_URL?.trim();
+    if (envRaw) {
+      try {
+        const envUrl = new URL(
+          envRaw.includes("://") ? envRaw : `https://${envRaw}`
+        );
+        if (envUrl.origin === current) {
+          return envUrl.origin;
+        }
+      } catch {
+        /* use current */
+      }
+    }
+    return current;
   }
 
   // Server-side
