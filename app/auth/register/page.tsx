@@ -6,10 +6,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  createClient,
-  initSupabaseBrowserClient,
-} from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import {
   AUTH_UNAVAILABLE_DEPLOYER_HINT,
   AUTH_UNAVAILABLE_MESSAGE,
@@ -94,7 +91,6 @@ function RegisterContent() {
       return;
     }
 
-    await initSupabaseBrowserClient();
     const supabase = createClient();
     if (!supabase) {
       setError(AUTH_UNAVAILABLE_MESSAGE);

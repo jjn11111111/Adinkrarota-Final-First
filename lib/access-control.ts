@@ -1,7 +1,4 @@
-import {
-  createClient,
-  initSupabaseBrowserClient,
-} from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { 
   type PremiumFeature, 
   GUEST_FEATURES, 
@@ -28,9 +25,6 @@ export interface UserAccess {
 }
 
 export async function getUserAccess(): Promise<UserAccess> {
-  if (typeof window !== "undefined") {
-    await initSupabaseBrowserClient();
-  }
   const supabase = createClient();
   if (!supabase) {
     return {

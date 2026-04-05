@@ -1,13 +1,10 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  createClient,
-  initSupabaseBrowserClient,
-} from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { getBaseUrl } from "@/lib/site-config";
 import { AUTH_UNAVAILABLE_MESSAGE } from "@/lib/auth-copy";
 import { Button } from "@/components/ui/button";
@@ -22,24 +19,14 @@ function RegisterSuccessContent() {
   const [email, setEmail] = useState(emailFromUrl);
   const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [resendError, setResendError] = useState<string | null>(null);
-  const [authChecking, setAuthChecking] = useState(true);
-  const [authAvailable, setAuthAvailable] = useState(false);
 
-  useEffect(() => {
-    initSupabaseBrowserClient().then((c) => {
-      setAuthAvailable(!!c);
-      setAuthChecking(false);
-    });
-  }, []);
-
-  const handleResendConfirmation = async () => {
+  const handleResendConfirmation = () => {
     const emailToUse = email.trim();
     if (!emailToUse) {
       setResendError("Please enter your email address");
       return;
     }
 
-    await initSupabaseBrowserClient();
     const supabase = createClient();
     if (!supabase) {
       setResendError(AUTH_UNAVAILABLE_MESSAGE);
@@ -222,11 +209,9 @@ function RegisterSuccessContent() {
               <p className="text-sm text-muted-foreground mb-3">
                 Did not receive the confirmation email?
               </p>
-              {authChecking ? (
-                <p className="text-sm text-muted-foreground">Checking email service…</p>
-              ) : !authAvailable ? (
+              {!isSupabaseConfigured() ? (
                 <p className="text-sm text-amber-600 dark:text-amber-500">
-                  Resend is unavailable — add Supabase URL and anon key in Vercel (NEXT_PUBLIC_* or SUPABASE_URL + SUPABASE_ANON_KEY), then redeploy.
+                  Resend is unavailable — add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel for Production, then redeploy.
                 </p>
               ) : (
                 <>

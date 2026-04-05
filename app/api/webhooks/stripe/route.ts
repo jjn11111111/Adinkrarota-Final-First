@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { stripe, isStripeConfigured } from "@/lib/stripe";
-import { getServerSupabaseConfig } from "@/lib/supabase/env";
+import { getPublicSupabaseConfig } from "@/lib/supabase/env";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 
 function getSupabaseAdmin(): SupabaseClient | null {
-  const cfg = getServerSupabaseConfig();
+  const cfg = getPublicSupabaseConfig();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!cfg || !key) return null;
   try {

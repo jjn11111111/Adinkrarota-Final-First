@@ -6,10 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  createClient,
-  initSupabaseBrowserClient,
-} from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { getBaseUrl } from "@/lib/site-config";
 import {
   AUTH_UNAVAILABLE_DEPLOYER_HINT,
@@ -29,13 +26,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
 
-  const handleResendConfirmation = async () => {
+  const handleResendConfirmation = () => {
     if (!email) {
       setError("Please enter your email address first");
       return;
     }
 
-    await initSupabaseBrowserClient();
     const supabase = createClient();
     if (!supabase) {
       setError(AUTH_UNAVAILABLE_MESSAGE);
@@ -68,7 +64,6 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    await initSupabaseBrowserClient();
     const supabase = createClient();
     if (!supabase) {
       setError(AUTH_UNAVAILABLE_MESSAGE);

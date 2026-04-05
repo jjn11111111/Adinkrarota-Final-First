@@ -1,10 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
-import {
-  initSupabaseBrowserClient,
-} from "@/lib/supabase/client";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export type AccountType = "guest" | "member";
 
@@ -44,12 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
-  const [clientResolved, setClientResolved] = useState(false);
+
+  const supabase = isSupabaseConfigured() ? createClient() : null;
 
   const fetchProfile = useCallback(async (userId: string, userEmail?: string): Promise<UserProfile> => {
     if (!supabase) {
-      // Supabase not configured - return default guest profile
       return {
         id: userId,
         email: userEmail || "",
@@ -59,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         yearStarted: null,
       };
     }
-    
+
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -79,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
       }
 
-      // Reset yearly count if new year
       const currentYear = new Date().getFullYear();
       const readingsThisYear = data.year_started === currentYear
         ? (data.readings_this_year || 0)
@@ -114,19 +110,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [supabase]);
 
-  useEffect(() => {
-    let cancelled = false;
-    initSupabaseBrowserClient().then((c) => {
-      if (!cancelled) {
-        setSupabase(c);
-        setClientResolved(true);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const refreshProfile = useCallback(async () => {
     if (user) {
       const newProfile = await fetchProfile(user.id, user.email || undefined);
@@ -135,10 +118,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, fetchProfile]);
 
   useEffect(() => {
-    if (!clientResolved) {
-      return;
-    }
-
     if (!supabase) {
       setIsLoading(false);
       return;
@@ -186,7 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [clientResolved, supabase, fetchProfile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const signOut = async () => {
     if (supabase) {
@@ -196,7 +176,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
-  // Record a reading and return the reading ID on success, or false on failure
   const recordReading = async (
     spreadType: string,
     spreadName: string,
@@ -208,20 +187,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const today = new Date().toISOString().split("T")[0];
     const currentYear = new Date().getFullYear();
 
-    // Check if allowed
     if (profile.accountType === "guest") {
       if (profile.readingsThisYear >= 7) {
         return false;
       }
     } else {
-      // Member - check daily limit (1 per day)
       const lastDate = profile.lastReadingDate?.split("T")[0];
       if (lastDate === today) {
         return false;
       }
     }
 
-    // Record the reading in the readings table (column is "cards", not "cards_data")
     const { data: readingData, error: readingError } = await supabase.from("readings").insert({
       user_id: user.id,
       spread_type: spreadType,
@@ -235,7 +211,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    // Update profile counters using actual DB columns
     const newReadingsThisYear = profile.yearStarted === currentYear
       ? profile.readingsThisYear + 1
       : 1;
@@ -254,12 +229,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Error updating profile:", updateError);
     }
 
-    // Refresh profile to get updated counts
     await refreshProfile();
     return readingData?.id || false;
   };
 
-  // Calculate reading permissions based on actual DB schema
   const calculateReadingPermissions = () => {
     if (!profile) {
       return {
@@ -273,7 +246,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const today = new Date().toISOString().split("T")[0];
 
     if (profile.accountType === "guest") {
-      // Guests: 7 readings per year
       const yearlyCount = profile.yearStarted === currentYear
         ? profile.readingsThisYear
         : 0;
@@ -287,7 +259,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     }
 
-    // Member: 1 reading per day
     const lastDate = profile.lastReadingDate?.split("T")[0];
     const canRead = lastDate !== today;
     return {

@@ -5,10 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getCheckoutSession } from "@/app/actions/stripe";
-import {
-  createClient,
-  initSupabaseBrowserClient,
-} from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Sparkles, Star, ArrowRight } from "lucide-react";
 
@@ -39,7 +36,6 @@ function SuccessContent() {
 
       // The webhook will handle the profile update, but we can refresh here
       // Update user metadata for immediate UI update
-      await initSupabaseBrowserClient();
       const supabase = createClient();
       if (!supabase) {
         setStatus("error");

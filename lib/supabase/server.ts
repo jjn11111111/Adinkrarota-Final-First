@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { getServerSupabaseConfig } from '@/lib/supabase/env'
+import { getPublicSupabaseConfig } from '@/lib/supabase/env'
 
 /**
  * Especially important if using Fluid compute: Don't put this client in a
@@ -8,7 +8,7 @@ import { getServerSupabaseConfig } from '@/lib/supabase/env'
  * it.
  */
 export async function createClient() {
-  const cfg = getServerSupabaseConfig()
+  const cfg = getPublicSupabaseConfig()
   if (!cfg) {
     return null
   }

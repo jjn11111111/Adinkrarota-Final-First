@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  createClient,
-  initSupabaseBrowserClient,
-} from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth-provider";
 import { DailyWisdom } from "@/components/daily-wisdom";
 import { Button } from "@/components/ui/button";
@@ -67,7 +64,6 @@ export default function PortalPage() {
   useEffect(() => {
     async function fetchReadings() {
       if (!user) return;
-      await initSupabaseBrowserClient();
       const supabase = createClient();
       if (!supabase) {
         setLoadingReadings(false);
@@ -93,10 +89,9 @@ export default function PortalPage() {
   }, [user, isAuthenticated]);
 
   const toggleFavorite = async (readingId: string, currentState: boolean) => {
-    await initSupabaseBrowserClient();
     const supabase = createClient();
     if (!supabase) return;
-    
+
     const { error } = await supabase
       .from("readings")
       .update({ is_favorited: !currentState })
@@ -112,10 +107,9 @@ export default function PortalPage() {
   };
 
   const deleteReading = async (readingId: string) => {
-    await initSupabaseBrowserClient();
     const supabase = createClient();
     if (!supabase) return;
-    
+
     const { error } = await supabase
       .from("readings")
       .delete()

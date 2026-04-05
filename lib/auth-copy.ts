@@ -5,7 +5,7 @@ export const AUTH_UNAVAILABLE_MESSAGE =
 
 /** Shown under AUTH_UNAVAILABLE when deployer may be viewing the site */
 export const AUTH_UNAVAILABLE_DEPLOYER_HINT =
-  "If you deployed this app: in Vercel, set Supabase URL + anon key for Production (prefer NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, or SUPABASE_URL and SUPABASE_ANON_KEY), then redeploy.";
+  "If you deployed this app: in Vercel → Environment Variables, set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY for Production, then redeploy.";
 
 export const PAYMENT_UNAVAILABLE_MESSAGE =
   "Payment processing is temporarily unavailable. Please try again later.";
