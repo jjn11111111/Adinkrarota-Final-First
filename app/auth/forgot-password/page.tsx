@@ -8,6 +8,7 @@ import { getBaseUrl } from "@/lib/site-config";
 import {
   AUTH_UNAVAILABLE_DEPLOYER_HINT,
   AUTH_UNAVAILABLE_MESSAGE,
+  PASSWORD_RESET_DEPLOYER_HINT,
 } from "@/lib/auth-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,10 +33,12 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    const redirectTo = `${getBaseUrl()}/auth/callback?next=${encodeURIComponent("/auth/update-password")}`;
+    // Must match an entry in Supabase → Auth → URL Configuration → Redirect URLs.
+    // Query strings are easy to misconfigure; recovery is detected in /auth/callback via JWT amr.
+    const redirectTo = `${getBaseUrl()}/auth/callback`;
 
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-      email.trim(),
+      email.trim().toLowerCase(),
       { redirectTo }
     );
 
@@ -121,6 +124,11 @@ export default function ForgotPasswordPage() {
                   {error === AUTH_UNAVAILABLE_MESSAGE && (
                     <p className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2">
                       {AUTH_UNAVAILABLE_DEPLOYER_HINT}
+                    </p>
+                  )}
+                  {/recovery email/i.test(error) && (
+                    <p className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2">
+                      {PASSWORD_RESET_DEPLOYER_HINT}
                     </p>
                   )}
                 </div>

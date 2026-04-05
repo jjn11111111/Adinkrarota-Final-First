@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { accessTokenHasAmrMethod } from "@/lib/supabase/access-token-amr";
 import { NextResponse } from "next/server";
 
 function errorRedirect(origin: string, message: string) {
@@ -31,13 +32,19 @@ export async function GET(request: Request) {
         "Sign-in is not configured on this deployment (missing Supabase environment variables)."
       );
     }
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: exchanged, error } =
+      await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
       return errorRedirect(origin, error.message);
     }
 
+    const accessToken = exchanged?.session?.access_token;
+    const isRecoverySession =
+      !!accessToken && accessTokenHasAmrMethod(accessToken, "recovery");
+
     const isPasswordRecovery =
+      isRecoverySession ||
       next === "/auth/update-password" ||
       next.startsWith("/auth/update-password");
 
