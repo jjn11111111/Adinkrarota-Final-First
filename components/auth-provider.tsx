@@ -1,8 +1,10 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import {
+  initSupabaseBrowserClient,
+} from "@/lib/supabase/client";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 export type AccountType = "guest" | "member";
 
@@ -42,9 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Only create Supabase client if configured - createClient returns null if not configured
-  const supabase = isSupabaseConfigured() ? createClient() : null;
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+  const [clientResolved, setClientResolved] = useState(false);
 
   const fetchProfile = useCallback(async (userId: string, userEmail?: string): Promise<UserProfile> => {
     if (!supabase) {
@@ -113,6 +114,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [supabase]);
 
+  useEffect(() => {
+    let cancelled = false;
+    initSupabaseBrowserClient().then((c) => {
+      if (!cancelled) {
+        setSupabase(c);
+        setClientResolved(true);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const refreshProfile = useCallback(async () => {
     if (user) {
       const newProfile = await fetchProfile(user.id, user.email || undefined);
@@ -121,21 +135,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, fetchProfile]);
 
   useEffect(() => {
+    if (!clientResolved) {
+      return;
+    }
+
     if (!supabase) {
-      // Supabase not configured - skip auth initialization
       setIsLoading(false);
       return;
     }
 
     const initAuth = async () => {
       setIsLoading(true);
-      
+
       try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser();
         setUser(currentUser);
 
         if (currentUser) {
-          const userProfile = await fetchProfile(currentUser.id, currentUser.email || undefined);
+          const userProfile = await fetchProfile(
+            currentUser.id,
+            currentUser.email || undefined
+          );
           setProfile(userProfile);
         }
       } catch (error) {
@@ -145,24 +167,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    initAuth();
+    void initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          const userProfile = await fetchProfile(session.user.id, session.user.email || undefined);
-          setProfile(userProfile);
-        } else {
-          setProfile(null);
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        const userProfile = await fetchProfile(
+          session.user.id,
+          session.user.email || undefined
+        );
+        setProfile(userProfile);
+      } else {
+        setProfile(null);
       }
-    );
+    });
 
     return () => subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [clientResolved, supabase, fetchProfile]);
 
   const signOut = async () => {
     if (supabase) {

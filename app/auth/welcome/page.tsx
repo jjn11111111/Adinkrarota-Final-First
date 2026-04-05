@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { createClient } from "@/lib/supabase/client";
+import {
+  createClient,
+  initSupabaseBrowserClient,
+} from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { 
   Sparkles, 
@@ -24,6 +27,7 @@ export default function WelcomePage() {
 
   useEffect(() => {
     async function loadUser() {
+      await initSupabaseBrowserClient();
       const supabase = createClient();
       if (!supabase) {
         // Supabase not configured - redirect to home

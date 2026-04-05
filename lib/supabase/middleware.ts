@@ -1,17 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getServerSupabaseConfig } from '@/lib/supabase/env'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
 
-  // Check if Supabase is configured (valid HTTP(S) URL required)
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  const isValidUrl = supabaseUrl && (supabaseUrl.startsWith("http://") || supabaseUrl.startsWith("https://"))
+  const cfg = getServerSupabaseConfig()
 
-  if (!isValidUrl || !supabaseAnonKey) {
+  if (!cfg) {
     // Supabase not configured - allow public routes, block protected routes
     const protectedPaths = ['/portal', '/membership/checkout', '/membership/success'];
     const isProtectedPath = protectedPaths.some(path => 
@@ -31,8 +29,8 @@ export async function updateSession(request: NextRequest) {
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
   const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
+    cfg.url,
+    cfg.anonKey,
     {
       cookies: {
         getAll() {

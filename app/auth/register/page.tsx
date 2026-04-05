@@ -6,8 +6,14 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { createClient } from "@/lib/supabase/client";
-import { AUTH_UNAVAILABLE_MESSAGE } from "@/lib/auth-copy";
+import {
+  createClient,
+  initSupabaseBrowserClient,
+} from "@/lib/supabase/client";
+import {
+  AUTH_UNAVAILABLE_DEPLOYER_HINT,
+  AUTH_UNAVAILABLE_MESSAGE,
+} from "@/lib/auth-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,6 +94,7 @@ function RegisterContent() {
       return;
     }
 
+    await initSupabaseBrowserClient();
     const supabase = createClient();
     if (!supabase) {
       setError(AUTH_UNAVAILABLE_MESSAGE);
@@ -430,6 +437,11 @@ function RegisterContent() {
             {error && (
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
                 {error}
+                {error === AUTH_UNAVAILABLE_MESSAGE && (
+                  <p className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2">
+                    {AUTH_UNAVAILABLE_DEPLOYER_HINT}
+                  </p>
+                )}
               </div>
             )}
 

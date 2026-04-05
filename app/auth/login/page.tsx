@@ -6,9 +6,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { createClient } from "@/lib/supabase/client";
+import {
+  createClient,
+  initSupabaseBrowserClient,
+} from "@/lib/supabase/client";
 import { getBaseUrl } from "@/lib/site-config";
-import { AUTH_UNAVAILABLE_MESSAGE } from "@/lib/auth-copy";
+import {
+  AUTH_UNAVAILABLE_DEPLOYER_HINT,
+  AUTH_UNAVAILABLE_MESSAGE,
+} from "@/lib/auth-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +35,7 @@ export default function LoginPage() {
       return;
     }
 
+    await initSupabaseBrowserClient();
     const supabase = createClient();
     if (!supabase) {
       setError(AUTH_UNAVAILABLE_MESSAGE);
@@ -61,6 +68,7 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
+    await initSupabaseBrowserClient();
     const supabase = createClient();
     if (!supabase) {
       setError(AUTH_UNAVAILABLE_MESSAGE);
@@ -160,6 +168,11 @@ export default function LoginPage() {
             {error && (
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
                 {error}
+                {error === AUTH_UNAVAILABLE_MESSAGE && (
+                  <p className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2">
+                    {AUTH_UNAVAILABLE_DEPLOYER_HINT}
+                  </p>
+                )}
                 {error.includes("Email not confirmed") && (
                   <button
                     type="button"
