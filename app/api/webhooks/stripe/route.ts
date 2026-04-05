@@ -34,16 +34,24 @@ export async function POST(request: Request) {
 
   let event: Stripe.Event;
 
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+  const isProd =
+    process.env.VERCEL_ENV === "production" ||
+    process.env.NODE_ENV === "production";
+
   try {
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    
-    if (webhookSecret) {
-      // Production: verify signature
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } else {
-      // Development: parse without verification (NOT for production)
-      console.warn("STRIPE_WEBHOOK_SECRET not set - skipping signature verification");
+    if (!webhookSecret) {
+      if (isProd) {
+        console.error("STRIPE_WEBHOOK_SECRET is required in production");
+        return NextResponse.json(
+          { error: "Server misconfigured" },
+          { status: 500 }
+        );
+      }
+      console.warn("STRIPE_WEBHOOK_SECRET not set - skipping signature verification (dev only)");
       event = JSON.parse(body) as Stripe.Event;
+    } else {
+      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     }
   } catch (err) {
     console.error("Webhook signature verification failed:", err);
@@ -58,7 +66,11 @@ export async function POST(request: Request) {
     const userId = session.metadata?.userId;
     const subscriptionId = session.subscription as string;
 
-    if (userId && session.payment_status === "paid" && subscriptionId) {
+    const paid =
+      session.payment_status === "paid" ||
+      session.payment_status === "no_payment_required";
+
+    if (userId && paid && subscriptionId && session.status === "complete") {
       try {
         // Update user profile to member
         const { error } = await supabaseAdmin

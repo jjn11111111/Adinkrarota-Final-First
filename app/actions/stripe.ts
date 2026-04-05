@@ -79,8 +79,28 @@ export async function getCheckoutSession(sessionId: string) {
     return { error: PAYMENT_UNAVAILABLE_MESSAGE };
   }
 
+  const supabase = await createClient();
+  if (!supabase) {
+    return { error: "Please sign in to continue" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Please sign in to continue" };
+  }
+
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    // Prevent one user from probing another user's checkout sessions
+    const ownerId = session.metadata?.userId;
+    if (!ownerId || ownerId !== user.id) {
+      return { error: "Unauthorized" };
+    }
+
     return { session };
   } catch (error) {
     console.error("Error retrieving session:", error);
