@@ -12,7 +12,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { isAuthError } from "@supabase/supabase-js";
 import { Sparkles, ArrowLeft } from "lucide-react";
+
+function RateLimitHint() {
+  return (
+    <p className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2">
+      This is a normal cooldown so one address can&apos;t be spammed. Wait until
+      the timer ends, then click once. While testing, you can lower{" "}
+      <strong>Authentication → Emails</strong> → minimum seconds between emails to
+      the same user.
+    </p>
+  );
+}
 
 function RecoveryEmailHint({ redirectTo }: { redirectTo: string }) {
   let origin = "";
@@ -119,7 +131,14 @@ export default function ForgotPasswordPage() {
     setLoading(false);
 
     if (resetError) {
-      setError(resetError.message);
+      let msg = resetError.message;
+      if (isAuthError(resetError)) {
+        const bits = [resetError.status, resetError.code].filter(Boolean);
+        if (bits.length) {
+          msg = `${msg} (${bits.join(" · ")})`;
+        }
+      }
+      setError(msg);
       return;
     }
 
@@ -200,9 +219,11 @@ export default function ForgotPasswordPage() {
                       {AUTH_UNAVAILABLE_DEPLOYER_HINT}
                     </p>
                   )}
-                  {/recovery email/i.test(error) && lastRedirectTo && (
-                    <RecoveryEmailHint redirectTo={lastRedirectTo} />
-                  )}
+                  {/security purposes|only request this after|request this after \d+/i.test(
+                    error,
+                  ) && <RateLimitHint />}
+                  {/error sending recovery email/i.test(error) &&
+                    lastRedirectTo && <RecoveryEmailHint redirectTo={lastRedirectTo} />}
                 </div>
               )}
 
