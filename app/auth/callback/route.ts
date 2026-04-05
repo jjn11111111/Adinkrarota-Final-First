@@ -14,6 +14,14 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (!error) {
+      const isPasswordRecovery =
+        next === "/auth/update-password" ||
+        next.startsWith("/auth/update-password");
+
+      if (isPasswordRecovery) {
+        return NextResponse.redirect(`${origin}/auth/update-password`);
+      }
+
       // Check if user needs to complete membership payment
       const { data: { user } } = await supabase.auth.getUser();
       
