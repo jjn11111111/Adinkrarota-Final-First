@@ -18,8 +18,22 @@ export function createClient(): SupabaseClient | null {
   }
 
   try {
-    client = createBrowserClient(cfg.url, cfg.anonKey)
-    return client
+    const isHttps =
+      typeof window !== "undefined" && window.location.protocol === "https:";
+
+    client = createBrowserClient(cfg.url, cfg.anonKey, {
+      cookieOptions: {
+        path: "/",
+        sameSite: "lax",
+        ...(isHttps ? { secure: true } : {}),
+      },
+      auth: {
+        // Only /auth/callback exchanges the PKCE code; avoids races with AuthProvider getUser()
+        // and stops /?code= on the home page from running auto URL handling.
+        detectSessionInUrl: false,
+      },
+    });
+    return client;
   } catch {
     return null
   }
