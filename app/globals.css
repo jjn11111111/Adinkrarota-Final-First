@@ -146,8 +146,8 @@
 /* Readable body copy (Bebas Neue is display-only; use this for modals & long text) */
 @layer utilities {
   .font-reading {
-    font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
-    letter-spacing: 0.01em;
+    font-family: var(--font-jost), "Jost", ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0.02em;
     font-weight: 400;
   }
 }

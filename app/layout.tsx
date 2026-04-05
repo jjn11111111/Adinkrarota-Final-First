@@ -1,9 +1,8 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
-import { Bebas_Neue, Oswald } from 'next/font/google'
+import { Bebas_Neue, Jost, Oswald } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-import { Cinzel, Cormorant } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
 
 const bebasNeue = Bebas_Neue({ 
@@ -18,16 +17,11 @@ const oswald = Oswald({
   variable: "--font-oswald"
 });
 
-const cinzel = Cinzel({ // Declaring Cinzel font
+/** Geometric sans for long-form / AI panels — mid-century tone without serif script */
+const jost = Jost({
   subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-cinzel"
-});
-
-const cormorant = Cormorant({ // Declaring Cormorant font
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-cormorant"
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-jost",
 });
 
 const siteUrl =
@@ -71,7 +65,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${bebasNeue.variable} ${oswald.variable} ${cinzel.variable} ${cormorant.variable} font-sans antialiased`}>
+      <body className={`${bebasNeue.variable} ${oswald.variable} ${jost.variable} font-sans antialiased`}>
         <AuthProvider>
           {children}
         </AuthProvider>
