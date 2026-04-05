@@ -27,10 +27,23 @@ function RecoveryEmailHint({ redirectTo }: { redirectTo: string }) {
 
   return (
     <div className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2 space-y-2">
+      <p className="text-foreground/95 font-medium">
+        Custom SMTP (Resend, SendGrid, etc.) — check this first
+      </p>
       <p>
-        Supabase → Authentication → URL Configuration → under{" "}
-        <strong>Redirect URLs</strong>, allow the callback for the site you are
-        on right now:
+        Auth logs often show{" "}
+        <code className="text-foreground/90">535 Authentication credentials invalid</code>
+        : wrong SMTP password (e.g. paste a fresh Resend API key as the
+        password; user <code className="text-foreground/90">resend</code>), or a
+        &quot;From&quot; address your provider does not allow. Fix under{" "}
+        <strong>Authentication → Emails</strong> (SMTP), save, then try again.
+      </p>
+      <p className="text-foreground/95 font-medium pt-2">
+        Redirect URLs (if SMTP is already working)
+      </p>
+      <p>
+        Authentication → URL Configuration → <strong>Redirect URLs</strong> —
+        allow the callback for this tab:
       </p>
       <code className="block w-full p-2 rounded-md bg-muted text-foreground text-[11px] break-all border border-border">
         {redirectTo}
@@ -38,39 +51,35 @@ function RecoveryEmailHint({ redirectTo }: { redirectTo: string }) {
       {onVercel && (
         <>
           <p>
-            That hostname is a <strong>Vercel preview</strong> (a new URL per
-            deployment). Add this pattern once so every preview can reset
-            passwords (see Supabase docs &quot;Vercel preview URLs&quot;):
+            <strong>Vercel preview</strong> hostnames change each deploy. Add
+            (copy exactly — <code className="text-foreground/90">*</code> then{" "}
+            <code className="text-foreground/90">-.</code> then{" "}
+            <code className="text-foreground/90">vercel.app/**</code>):
           </p>
-          <code className="block w-full p-2 rounded-md bg-muted text-foreground text-[11px] break-all border border-border">
+          <code className="block w-full p-2 rounded-md bg-muted text-foreground text-[11px] break-all border border-border tracking-wide">
             https://*-.vercel.app/**
           </code>
           <p>
-            Or open your <strong>production</strong> domain and use Forgot
-            password there so only your stable <code className="text-foreground/90">…vercel.app</code>{" "}
-            callback needs to be listed.
+            Or use Forgot password on your stable <strong>production</strong>{" "}
+            URL only.
           </p>
         </>
       )}
       <p>
-        Keep <strong>Site URL</strong> as your main production origin (not a
-        one-off preview), e.g. your canonical{" "}
-        <code className="text-foreground/90">https://…vercel.app</code> or custom
-        domain.
+        Keep <strong>Site URL</strong> as your main production origin; put
+        preview origins in <strong>Redirect URLs</strong> only.
         {origin ? (
           <>
             {" "}
-            The preview origin{" "}
-            <code className="text-foreground/90">{origin}</code> belongs in{" "}
-            <strong>Redirect URLs</strong> only, not as Site URL.
+            Example preview origin:{" "}
+            <code className="text-foreground/90">{origin}</code>.
           </>
         ) : null}
       </p>
       <p>
-        If the callback URL does not match the browser address bar, fix or
-        remove <code className="text-foreground/90">NEXT_PUBLIC_BASE_URL</code>{" "}
-        in Vercel, then redeploy. If URLs are correct, check Authentication →
-        Emails / SMTP.
+        If the callback URL here does not match the address bar, fix or remove{" "}
+        <code className="text-foreground/90">NEXT_PUBLIC_BASE_URL</code> in
+        Vercel and redeploy.
       </p>
     </div>
   );
