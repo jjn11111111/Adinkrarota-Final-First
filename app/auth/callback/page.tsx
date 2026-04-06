@@ -8,7 +8,10 @@ import {
   EMAIL_OTP_TYPES,
   finalizeAuthRedirectPath,
 } from "@/lib/auth/post-auth-redirect";
-import { createAuthCallbackClient } from "@/lib/supabase/client";
+import {
+  createAuthCallbackClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase/client";
 
 function safeNext(raw: string | null): string {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/portal";
@@ -36,12 +39,42 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Fetch aborted (Strict Mode remount, navigation) — safe to retry. */
+function isAbortLike(err: unknown): boolean {
+  if (err == null) return false;
+  if (typeof err === "object" && "name" in err) {
+    const n = String((err as { name: string }).name);
+    if (n === "AbortError") return true;
+  }
+  const msg =
+    err instanceof Error
+      ? err.message
+      : typeof err === "object" &&
+          err !== null &&
+          "message" in err &&
+          typeof (err as { message: unknown }).message === "string"
+        ? (err as { message: string }).message
+        : String(err);
+  return /aborted|AbortError/i.test(msg);
+}
+
 export default function AuthCallbackPage() {
   const router = useRouter();
   const [hint, setHint] = useState("Signing you in…");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    let cancelled = false;
+
+    const toError = (msg: string) => {
+      if (cancelled) return;
+      router.replace(`/auth/error?reason=${encodeURIComponent(msg)}`);
+    };
 
     const params = new URLSearchParams(window.location.search);
     const origin = window.location.origin;
@@ -53,15 +86,12 @@ export default function AuthCallbackPage() {
         oauthDescription?.replace(/\+/g, " ") ||
         oauthError ||
         "Authentication was denied.";
-      router.replace(`/auth/error?reason=${encodeURIComponent(msg)}`);
+      toError(msg);
       return;
     }
 
-    const supabase = createAuthCallbackClient();
-    if (!supabase) {
-      router.replace(
-        `/auth/error?reason=${encodeURIComponent(AUTH_UNAVAILABLE_MESSAGE)}`,
-      );
+    if (!isSupabaseConfigured()) {
+      toError(AUTH_UNAVAILABLE_MESSAGE);
       return;
     }
 
@@ -71,75 +101,125 @@ export default function AuthCallbackPage() {
     const next = safeNext(params.get("next"));
 
     const authTimeoutMs = 25_000;
+    const maxAttempts = 3;
 
-    (async () => {
-      try {
-        if (code) {
-          setHint("Completing sign-in…");
+    async function runExchangeCode(): Promise<void> {
+      let lastThrow: unknown;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        if (cancelled) return;
+        if (attempt > 0) await sleep(450);
+        try {
+          const fresh = createAuthCallbackClient();
+          if (!fresh) {
+            toError(AUTH_UNAVAILABLE_MESSAGE);
+            return;
+          }
           const { data, error } = await withTimeout(
-            supabase.auth.exchangeCodeForSession(code),
+            fresh.auth.exchangeCodeForSession(code!),
             authTimeoutMs,
             "Sign-in is taking too long. Check your connection and try again.",
           );
           if (error) {
-            router.replace(
-              `/auth/error?reason=${encodeURIComponent(error.message)}`,
-            );
+            if (isAbortLike(error) && attempt < maxAttempts - 1) continue;
+            toError(error.message);
             return;
           }
           const path = finalizeAuthRedirectPath(next, data.session, null);
           if (!path) {
-            router.replace(
-              `/auth/error?reason=${encodeURIComponent(
-                "Could not create a session from this link. Request a new email and try again.",
-              )}`,
+            toError(
+              "Could not create a session from this link. Request a new email and try again.",
             );
             return;
           }
+          if (cancelled) return;
           window.location.replace(absoluteUrl(origin, path));
           return;
+        } catch (e) {
+          lastThrow = e;
+          if (isAbortLike(e) && attempt < maxAttempts - 1) continue;
+          throw e;
         }
+      }
+      throw lastThrow;
+    }
 
-        if (tokenHash && typeParam && EMAIL_OTP_TYPES.has(typeParam)) {
-          setHint("Verifying your link…");
+    async function runVerifyOtp(): Promise<void> {
+      let lastThrow: unknown;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        if (cancelled) return;
+        if (attempt > 0) await sleep(450);
+        try {
+          const fresh = createAuthCallbackClient();
+          if (!fresh) {
+            toError(AUTH_UNAVAILABLE_MESSAGE);
+            return;
+          }
           const { data, error } = await withTimeout(
-            supabase.auth.verifyOtp({
-              token_hash: tokenHash,
+            fresh.auth.verifyOtp({
+              token_hash: tokenHash!,
               type: typeParam as EmailOtpType,
             }),
             authTimeoutMs,
             "Verification is taking too long. Check your connection and try again.",
           );
           if (error) {
-            router.replace(
-              `/auth/error?reason=${encodeURIComponent(error.message)}`,
-            );
+            if (isAbortLike(error) && attempt < maxAttempts - 1) continue;
+            toError(error.message);
             return;
           }
           const path = finalizeAuthRedirectPath(next, data.session, typeParam);
           if (!path) {
-            router.replace(
-              `/auth/error?reason=${encodeURIComponent(
-                "Could not create a session from this link. Request a new email and try again.",
-              )}`,
+            toError(
+              "Could not create a session from this link. Request a new email and try again.",
             );
             return;
           }
+          if (cancelled) return;
           window.location.replace(absoluteUrl(origin, path));
+          return;
+        } catch (e) {
+          lastThrow = e;
+          if (isAbortLike(e) && attempt < maxAttempts - 1) continue;
+          throw e;
+        }
+      }
+      throw lastThrow;
+    }
+
+    (async () => {
+      try {
+        if (code) {
+          setHint("Completing sign-in…");
+          await runExchangeCode();
           return;
         }
 
-        router.replace(
-          `/auth/error?reason=${encodeURIComponent(
-            "This sign-in link is incomplete or expired. Request a new confirmation or password reset email and open the latest link once.",
-          )}`,
+        if (tokenHash && typeParam && EMAIL_OTP_TYPES.has(typeParam)) {
+          setHint("Verifying your link…");
+          await runVerifyOtp();
+          return;
+        }
+
+        toError(
+          "This sign-in link is incomplete or expired. Request a new confirmation or password reset email and open the latest link once.",
         );
       } catch (e) {
+        if (cancelled) return;
+        if (isAbortLike(e)) {
+          toError(
+            "The sign-in request was interrupted. Please close this tab and open the link from your email again (use the same browser where you started).",
+          );
+          return;
+        }
         const msg =
           e instanceof Error ? e.message : "Something went wrong during sign-in.";
-        router.replace(`/auth/error?reason=${encodeURIComponent(msg)}`);
+        toError(msg);
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   return (
