@@ -7,9 +7,22 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 
+function suggestHostMismatchHint(reason: string | null): boolean {
+  if (!reason) return false;
+  const r = reason.toLowerCase();
+  return (
+    r.includes("code verifier") ||
+    r.includes("pkce") ||
+    r.includes("signal is aborted") ||
+    r.includes("interrupted") ||
+    r.includes("lock") && r.includes("timed out")
+  );
+}
+
 function AuthErrorContent() {
   const searchParams = useSearchParams();
   const reason = searchParams.get("reason");
+  const hostHint = suggestHostMismatchHint(reason);
 
   return (
     <motion.div
@@ -33,10 +46,28 @@ function AuthErrorContent() {
         </p>
 
         {reason && (
-          <p className="text-sm text-foreground/90 mb-6 p-3 rounded-lg bg-muted/50 border border-border text-left break-words">
+          <p className="text-sm text-foreground/90 mb-4 p-3 rounded-lg bg-muted/50 border border-border text-left break-words">
             {reason}
           </p>
         )}
+
+        {hostHint ? (
+          <div className="text-left text-sm text-muted-foreground mb-6 p-3 rounded-lg border border-border bg-secondary/20 space-y-2">
+            <p className="font-medium text-foreground/90">Vercel / multiple URLs</p>
+            <p>
+              Password reset uses a one-time browser cookie. It only exists on the
+              <strong className="text-foreground font-medium"> exact site </strong>
+              where you clicked &quot;Forgot password&quot; (check the address bar),
+              and only in the <strong className="text-foreground font-medium">same browser</strong> you used then.
+            </p>
+            <p>
+              Production (<code className="text-xs bg-muted px-1 rounded">…vercel.app</code> without a long deploy hash)
+              and preview URLs (<code className="text-xs bg-muted px-1 rounded">…-xxxxx.vercel.app</code>) do{" "}
+              <strong className="text-foreground font-medium">not</strong> share that cookie. Request a new reset from the
+              URL you will use when you open the email, and avoid opening the link inside another app&apos;s in-app browser if you started in Chrome or Safari.
+            </p>
+          </div>
+        ) : null}
 
         <div className="space-y-3">
           <Button asChild className="w-full">
