@@ -1,9 +1,18 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  type ReactNode,
+} from "react";
 import { usePathname } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { syncMembershipFromStripe } from "@/app/actions/membership-sync";
 
 export type AccountType = "guest" | "member";
 
@@ -44,6 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  /** One automatic Stripe→profile check per page session for guests (avoids duplicate calls). */
+  const guestMembershipSyncDone = useRef(false);
 
   const onPkceCallback =
     pathname === "/auth/callback" ||
@@ -52,12 +63,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase =
     isSupabaseConfigured() && !onPkceCallback ? createClient() : null;
 
-  const fetchProfile = useCallback(async (userId: string, userEmail?: string): Promise<UserProfile> => {
+  const fetchProfile = useCallback(async (currentUser: User): Promise<UserProfile> => {
+    const userId = currentUser.id;
+    const userEmail = currentUser.email || "";
+
+    const resolveAccountType = (
+      rowType: string | null | undefined,
+    ): AccountType => {
+      if (rowType === "member") return "member";
+      if (currentUser.user_metadata?.account_type === "member") {
+        return "member";
+      }
+      return "guest";
+    };
+
     if (!supabase) {
       return {
         id: userId,
-        email: userEmail || "",
-        accountType: "guest",
+        email: userEmail,
+        accountType: resolveAccountType(null),
         readingsThisYear: 0,
         lastReadingDate: null,
         yearStarted: null,
@@ -75,8 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Error fetching profile:", error.message);
         return {
           id: userId,
-          email: userEmail || "",
-          accountType: "guest",
+          email: userEmail,
+          accountType: resolveAccountType(null),
           readingsThisYear: 0,
           lastReadingDate: null,
           yearStarted: null,
@@ -91,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {
         id: data.id,
         email: data.email || "",
-        accountType: (data.account_type as AccountType) || "guest",
+        accountType: resolveAccountType(data.account_type),
         readingsThisYear,
         lastReadingDate: data.last_reading_date,
         yearStarted: data.year_started,
@@ -108,8 +132,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Error fetching profile:", err);
       return {
         id: userId,
-        email: userEmail || "",
-        accountType: "guest",
+        email: userEmail,
+        accountType: resolveAccountType(null),
         readingsThisYear: 0,
         lastReadingDate: null,
         yearStarted: null,
@@ -117,9 +141,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [supabase]);
 
+  const tryStripeMembershipSync = useCallback(
+    async (currentUser: User, userProfile: UserProfile) => {
+      if (userProfile.accountType === "member") return;
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname.startsWith("/auth/callback")
+      ) {
+        return;
+      }
+      if (guestMembershipSyncDone.current) return;
+      guestMembershipSyncDone.current = true;
+
+      try {
+        const result = await syncMembershipFromStripe();
+        if (result.ok && result.status === "updated_member") {
+          setProfile(await fetchProfile(currentUser));
+        }
+      } catch {
+        /* admin/Stripe unavailable */
+      }
+    },
+    [fetchProfile],
+  );
+
   const refreshProfile = useCallback(async () => {
     if (user) {
-      const newProfile = await fetchProfile(user.id, user.email || undefined);
+      const newProfile = await fetchProfile(user);
       setProfile(newProfile);
     }
   }, [user, fetchProfile]);
@@ -148,11 +196,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(currentUser);
 
           if (currentUser) {
-            const userProfile = await fetchProfile(
-              currentUser.id,
-              currentUser.email || undefined
-            );
+            const userProfile = await fetchProfile(currentUser);
             setProfile(userProfile);
+            void tryStripeMembershipSync(currentUser, userProfile);
           }
         } catch (error) {
           console.error("Auth initialization error:", error);
@@ -170,12 +216,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        const userProfile = await fetchProfile(
-          session.user.id,
-          session.user.email || undefined
-        );
+        const userProfile = await fetchProfile(session.user);
         setProfile(userProfile);
+        void tryStripeMembershipSync(session.user, userProfile);
       } else {
+        guestMembershipSyncDone.current = false;
         setProfile(null);
       }
     });
@@ -185,6 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    guestMembershipSyncDone.current = false;
     if (supabase) {
       await supabase.auth.signOut();
     }

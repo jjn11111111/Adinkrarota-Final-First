@@ -1,19 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe, isStripeConfigured } from "@/lib/stripe";
-import { getPublicSupabaseConfig } from "@/lib/supabase/env";
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import Stripe from "stripe";
-
-function getSupabaseAdmin(): SupabaseClient | null {
-  const cfg = getPublicSupabaseConfig();
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (!cfg || !key) return null;
-  try {
-    return createClient(cfg.url, key);
-  } catch {
-    return null;
-  }
-}
 
 export async function POST(request: Request) {
   if (!isStripeConfigured() || !stripe) {

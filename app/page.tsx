@@ -35,28 +35,6 @@ export default function AdinkrarotaApp() {
   const [activeSpread, setActiveSpread] = useState<CustomSpread | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Supabase sometimes lands PKCE recovery/confirm on Site URL (/?code=...) instead of /auth/callback
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    const token_hash = params.get("token_hash");
-    const type = params.get("type");
-    const oauthError = params.get("error");
-    const oauthDesc = params.get("error_description");
-    if (!code && !token_hash && !oauthError) return;
-
-    const qs = new URLSearchParams();
-    if (code) qs.set("code", code);
-    if (token_hash) qs.set("token_hash", token_hash);
-    if (type) qs.set("type", type);
-    const next = params.get("next");
-    if (next) qs.set("next", next);
-    if (oauthError) qs.set("error", oauthError);
-    if (oauthDesc) qs.set("error_description", oauthDesc);
-    window.location.replace(`/auth/callback?${qs.toString()}`);
-  }, []);
-
   // Sync view with URL on mount and when URL changes
   useEffect(() => {
     if (typeof window === "undefined") return;

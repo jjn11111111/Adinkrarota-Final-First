@@ -56,9 +56,17 @@ export async function getUserAccess(): Promise<UserAccess> {
     .eq("id", user.id)
     .single();
 
-  const accountType: AccountType = (profile?.account_type as AccountType) 
-    || (user.user_metadata?.account_type as AccountType) 
-    || "guest";
+  const rowType = profile?.account_type as string | null | undefined;
+  const metaType = user.user_metadata?.account_type as string | null | undefined;
+
+  let accountType: AccountType = "guest";
+  if (rowType === "member" || metaType === "member") {
+    accountType = "member";
+  } else if (rowType === "member_pending" || metaType === "member_pending") {
+    accountType = "member_pending";
+  } else {
+    accountType = (rowType as AccountType) || (metaType as AccountType) || "guest";
+  }
 
   // Determine features based on account type
   const features = accountType === "member" ? MEMBER_FEATURES : GUEST_FEATURES;

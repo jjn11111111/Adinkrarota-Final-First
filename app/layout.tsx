@@ -4,6 +4,7 @@ import { Bebas_Neue, Jost, Oswald } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { AuthProvider } from '@/components/auth-provider'
+import { AuthReturnRedirect } from '@/components/auth-return-redirect'
 
 const bebasNeue = Bebas_Neue({ 
   subsets: ["latin"],
@@ -66,9 +67,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${bebasNeue.variable} ${oswald.variable} ${jost.variable} font-sans antialiased`}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <AuthReturnRedirect />
+        <AuthProvider>{children}</AuthProvider>
         <Analytics />
       </body>
     </html>

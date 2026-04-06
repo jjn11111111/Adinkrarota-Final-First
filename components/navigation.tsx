@@ -112,11 +112,13 @@ export function Navigation({ currentView, onNavigate }: NavigationProps) {
 
         {/* Pricing Link + User Menu / Auth */}
         <div className="flex items-center gap-2">
-          <Link href="/pricing" className="hidden md:block">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-              Pricing
-            </Button>
-          </Link>
+          {profile?.accountType !== "member" && (
+            <Link href="/pricing" className="hidden md:block">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
+                Pricing
+              </Button>
+            </Link>
+          )}
           {!isLoading && (
             <>
               {isAuthenticated ? (
@@ -193,13 +195,15 @@ export function Navigation({ currentView, onNavigate }: NavigationProps) {
                 {item.label}
               </button>
             ))}
-            <Link
-              href="/pricing"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block w-full text-left px-4 py-2 rounded-md font-serif text-muted-foreground hover:bg-accent"
-            >
-              Pricing
-            </Link>
+            {profile?.accountType !== "member" && (
+              <Link
+                href="/pricing"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block w-full text-left px-4 py-2 rounded-md font-serif text-muted-foreground hover:bg-accent"
+              >
+                Pricing
+              </Link>
+            )}
             <button
               onClick={() => {
                 setShowAISettings(true);
