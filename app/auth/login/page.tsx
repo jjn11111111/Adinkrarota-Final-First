@@ -17,6 +17,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Sparkles, ArrowLeft } from "lucide-react";
 
+/** Internal paths only — avoids open redirects from ?next= */
+function safeNextPath(raw: string | null): string | null {
+  if (!raw) return null;
+  const t = raw.trim();
+  if (!t.startsWith("/") || t.startsWith("//")) return null;
+  if (t.includes("://")) return null;
+  return t;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -82,7 +91,12 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/portal");
+    const next = safeNextPath(
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("next")
+        : null,
+    );
+    router.push(next ?? "/portal");
     router.refresh();
   };
 

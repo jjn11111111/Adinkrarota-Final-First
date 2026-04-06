@@ -93,7 +93,9 @@ export async function getCheckoutSession(sessionId: string) {
   }
 
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ["subscription"],
+    });
 
     // Prevent one user from probing another user's checkout sessions
     const ownerId = session.metadata?.userId;

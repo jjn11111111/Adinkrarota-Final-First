@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getCheckoutSession } from "@/app/actions/stripe";
@@ -9,59 +9,105 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Sparkles, Star, ArrowRight } from "lucide-react";
 
+function checkoutSessionIsSuccessful(session: {
+  status?: string | null;
+  mode?: string | null;
+  payment_status?: string | null;
+  subscription?: string | { id?: string } | null;
+}): boolean {
+  if (session.status !== "complete") return false;
+  const ps = session.payment_status;
+  if (ps === "paid" || ps === "no_payment_required") return true;
+  // Subscription checkouts: Stripe may still show `unpaid` briefly right after redirect;
+  // a present subscription on a complete session means checkout finished successfully.
+  if (
+    session.mode === "subscription" &&
+    !!session.subscription
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const sessionId = searchParams.get("session_id");
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function verifyPayment() {
       if (!sessionId) {
         setStatus("error");
+        setErrorDetail(null);
         return;
       }
 
-      const result = await getCheckoutSession(sessionId);
+      try {
+        const maxAttempts = 6;
+        const delayMs = 700;
 
-      // For subscriptions, check if session is completed and has subscription
-      const isSubscription = result.session?.mode === "subscription";
-      const isPaid = result.session?.payment_status === "paid" || 
-                     (isSubscription && result.session?.subscription);
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          if (cancelled) return;
 
-      if (result.error || !isPaid) {
+          const result = await getCheckoutSession(sessionId);
+
+          if (result.error) {
+            setErrorDetail(result.error);
+            setStatus("error");
+            return;
+          }
+
+          const session = result.session;
+          if (session && checkoutSessionIsSuccessful(session)) {
+            break;
+          }
+
+          if (attempt === maxAttempts - 1) {
+            setErrorDetail(null);
+            setStatus("error");
+            return;
+          }
+
+          await new Promise((r) => setTimeout(r, delayMs));
+        }
+
+        if (cancelled) return;
+
+        // The webhook will handle the profile update, but we can refresh here
+        // Update user metadata for immediate UI update
+        const supabase = createClient();
+        if (!supabase) {
+          setErrorDetail(null);
+          setStatus("error");
+          return;
+        }
+
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          await supabase.auth.updateUser({
+            data: {
+              account_type: "member",
+            },
+          });
+        }
+
+        setStatus("success");
+      } catch {
+        setErrorDetail(null);
         setStatus("error");
-        return;
       }
-
-      // The webhook will handle the profile update, but we can refresh here
-      // Update user metadata for immediate UI update
-      const supabase = createClient();
-      if (!supabase) {
-        setStatus("error");
-        return;
-      }
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        // Update user metadata
-        await supabase.auth.updateUser({
-          data: {
-            account_type: "member",
-          },
-        });
-
-        // Refresh profile - webhook should have updated it, but refresh to be sure
-        // The webhook handles the actual profile update with subscription ID
-      }
-
-      setStatus("success");
     }
 
     verifyPayment();
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId]);
 
   if (status === "loading") {
@@ -78,6 +124,10 @@ function SuccessContent() {
   }
 
   if (status === "error") {
+    const signInHint =
+      errorDetail === "Please sign in to continue" ||
+      errorDetail === "Unauthorized";
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="text-center max-w-md">
@@ -85,13 +135,40 @@ function SuccessContent() {
             <h1 className="text-2xl font-bold text-foreground mb-4">
               Something went wrong
             </h1>
-            <p className="text-muted-foreground mb-6">
-              We could not verify your payment. If you were charged, please
-              contact support.
-            </p>
-            <Button asChild>
-              <Link href="/membership/checkout">Try Again</Link>
-            </Button>
+            {signInHint ? (
+              <p className="text-muted-foreground mb-6">
+                Your payment may have gone through, but we could not match this
+                page to your signed-in account. Sign in with the same account
+                you used for checkout, then open this page again from your
+                email receipt or try membership from the portal.
+              </p>
+            ) : (
+              <p className="text-muted-foreground mb-6">
+                We could not verify your payment yet. If you were charged,
+                please contact support. You can also wait a moment and refresh
+                this page.
+              </p>
+            )}
+            <div className="flex flex-col gap-2">
+              {signInHint && sessionId ? (
+                <Button asChild>
+                  <Link
+                    href={`/auth/login?next=${encodeURIComponent(
+                      `/membership/success?session_id=${sessionId}`,
+                    )}`}
+                  >
+                    Sign in
+                  </Link>
+                </Button>
+              ) : signInHint ? (
+                <Button asChild>
+                  <Link href="/auth/login">Sign in</Link>
+                </Button>
+              ) : null}
+              <Button asChild variant={signInHint ? "outline" : "default"}>
+                <Link href="/membership/checkout">Try Again</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

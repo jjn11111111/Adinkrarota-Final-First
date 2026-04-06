@@ -36,12 +36,38 @@ export default function MembershipCheckoutPage() {
       setError(PAYMENT_UNAVAILABLE_MESSAGE);
       return;
     }
-    
-    fetchClientSecret().then((secret) => {
-      if (secret) {
-        setClientSecret(secret);
+
+    let cancelled = false;
+
+    function load() {
+      setError(null);
+      setClientSecret(null);
+      fetchClientSecret()
+        .then((secret) => {
+          if (cancelled) return;
+          if (secret) {
+            setClientSecret(secret);
+          }
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setError("Could not start checkout. Please refresh and try again.");
+        });
+    }
+
+    load();
+
+    function onPageShow(e: PageTransitionEvent) {
+      if (e.persisted) {
+        load();
       }
-    });
+    }
+
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("pageshow", onPageShow);
+    };
   }, [fetchClientSecret]);
 
   return (

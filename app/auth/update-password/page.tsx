@@ -33,19 +33,37 @@ export default function UpdatePasswordPage() {
 
     let cancelled = false;
 
+    const getUserWithTimeout = (ms: number) =>
+      Promise.race([
+        supabase.auth.getUser(),
+        new Promise<{ data: { user: null } }>((_, reject) =>
+          setTimeout(() => reject(new Error("timeout")), ms),
+        ),
+      ]);
+
     (async () => {
-      for (let i = 0; i < 6; i++) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (cancelled) return;
-        if (user) {
-          setHasSession(true);
-          setChecking(false);
-          return;
+      try {
+        for (let i = 0; i < 8; i++) {
+          if (cancelled) return;
+          try {
+            const { data: { user } } = await getUserWithTimeout(5000);
+            if (cancelled) return;
+            if (user) {
+              setHasSession(true);
+              setChecking(false);
+              return;
+            }
+          } catch {
+            // Network / timeout — retry briefly; do not spin forever
+          }
+          await new Promise((r) => setTimeout(r, 300));
         }
-        await new Promise((r) => setTimeout(r, 250));
+        setHasSession(false);
+      } finally {
+        if (!cancelled) {
+          setChecking(false);
+        }
       }
-      setHasSession(false);
-      setChecking(false);
     })();
 
     return () => {
