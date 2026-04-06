@@ -8,7 +8,20 @@ import {
 
 let client: SupabaseClient | null = null
 
+function isAuthCallbackPath(): boolean {
+  if (typeof window === "undefined") return false
+  const p = window.location.pathname
+  return p === "/auth/callback" || p.startsWith("/auth/callback/")
+}
+
 export function createClient(): SupabaseClient | null {
+  // Do not create/use the main singleton on the PKCE callback route. AuthProvider's
+  // client runs initialize() and holds the Navigator Lock; exchangeCodeForSession
+  // needs the same lock and would block until timeout or hang UX.
+  if (isAuthCallbackPath()) {
+    return null
+  }
+
   if (client) {
     return client
   }
