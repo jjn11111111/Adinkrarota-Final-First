@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { createImplicitRecoveryClient } from "@/lib/supabase/recovery-email-client";
 import { getBaseUrl } from "@/lib/site-config";
 import {
   AUTH_UNAVAILABLE_DEPLOYER_HINT,
@@ -110,7 +111,7 @@ export default function ForgotPasswordPage() {
     setLastRedirectTo(null);
     setLoading(true);
 
-    const supabase = createClient();
+    const supabase = createImplicitRecoveryClient() ?? createClient();
     if (!supabase) {
       setError(AUTH_UNAVAILABLE_MESSAGE);
       setLoading(false);

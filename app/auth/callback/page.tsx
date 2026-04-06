@@ -8,6 +8,7 @@ import {
   EMAIL_OTP_TYPES,
   finalizeAuthRedirectPath,
 } from "@/lib/auth/post-auth-redirect";
+import { parseAuthRedirectParams } from "@/lib/auth/parse-auth-redirect-params";
 import {
   createAuthCallbackClient,
   isSupabaseConfigured,
@@ -76,11 +77,11 @@ export default function AuthCallbackPage() {
       router.replace(`/auth/error?reason=${encodeURIComponent(msg)}`);
     };
 
-    const params = new URLSearchParams(window.location.search);
     const origin = window.location.origin;
+    const p = parseAuthRedirectParams(window.location.href);
 
-    const oauthError = params.get("error");
-    const oauthDescription = params.get("error_description");
+    const oauthError = p.error;
+    const oauthDescription = p.error_description;
     if (oauthError || oauthDescription) {
       const msg =
         oauthDescription?.replace(/\+/g, " ") ||
@@ -95,10 +96,10 @@ export default function AuthCallbackPage() {
       return;
     }
 
-    const code = params.get("code");
-    const tokenHash = params.get("token_hash");
-    const typeParam = params.get("type");
-    const next = safeNext(params.get("next"));
+    const code = p.code ?? null;
+    const tokenHash = p.token_hash ?? null;
+    const typeParam = p.type ?? null;
+    const next = safeNext(p.next ?? null);
 
     const authTimeoutMs = 25_000;
     const maxAttempts = 3;
@@ -180,6 +181,50 @@ export default function AuthCallbackPage() {
       throw lastThrow;
     }
 
+    async function runImplicitHashSession(
+      supabaseOnce: NonNullable<
+        ReturnType<typeof createAuthCallbackClient>
+      >,
+      raw: Record<string, string>,
+    ): Promise<void> {
+      const access_token = raw.access_token!;
+      const refresh_token = raw.refresh_token!;
+
+      setHint("Completing sign-in…");
+      const { data, error } = await withTimeout(
+        supabaseOnce.auth.setSession({
+          access_token,
+          refresh_token,
+        }),
+        authTimeoutMs,
+        "Sign-in is taking too long. Check your connection and try again.",
+      );
+      if (error) {
+        toError(error.message);
+        return;
+      }
+      const otpHint: string | null =
+        raw.type === "recovery"
+          ? "recovery"
+          : raw.type && EMAIL_OTP_TYPES.has(raw.type)
+            ? raw.type
+            : null;
+      const path = finalizeAuthRedirectPath(next, data.session, otpHint);
+      if (!path) {
+        toError(
+          "Could not create a session from this link. Request a new email and try again.",
+        );
+        return;
+      }
+      if (cancelled) return;
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}`,
+      );
+      window.location.replace(absoluteUrl(origin, path));
+    }
+
     (async () => {
       const supabaseOnce = createAuthCallbackClient();
       if (!supabaseOnce) {
@@ -197,6 +242,11 @@ export default function AuthCallbackPage() {
         if (tokenHash && typeParam && EMAIL_OTP_TYPES.has(typeParam)) {
           setHint("Verifying your link…");
           await runVerifyOtp(supabaseOnce);
+          return;
+        }
+
+        if (p.access_token && p.refresh_token) {
+          await runImplicitHashSession(supabaseOnce, p);
           return;
         }
 
