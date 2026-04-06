@@ -103,19 +103,16 @@ export default function AuthCallbackPage() {
     const authTimeoutMs = 25_000;
     const maxAttempts = 3;
 
-    async function runExchangeCode(): Promise<void> {
+    async function runExchangeCode(supabaseOnce: NonNullable<
+      ReturnType<typeof createAuthCallbackClient>
+    >): Promise<void> {
       let lastThrow: unknown;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         if (cancelled) return;
         if (attempt > 0) await sleep(450);
         try {
-          const fresh = createAuthCallbackClient();
-          if (!fresh) {
-            toError(AUTH_UNAVAILABLE_MESSAGE);
-            return;
-          }
           const { data, error } = await withTimeout(
-            fresh.auth.exchangeCodeForSession(code!),
+            supabaseOnce.auth.exchangeCodeForSession(code!),
             authTimeoutMs,
             "Sign-in is taking too long. Check your connection and try again.",
           );
@@ -143,19 +140,16 @@ export default function AuthCallbackPage() {
       throw lastThrow;
     }
 
-    async function runVerifyOtp(): Promise<void> {
+    async function runVerifyOtp(supabaseOnce: NonNullable<
+      ReturnType<typeof createAuthCallbackClient>
+    >): Promise<void> {
       let lastThrow: unknown;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         if (cancelled) return;
         if (attempt > 0) await sleep(450);
         try {
-          const fresh = createAuthCallbackClient();
-          if (!fresh) {
-            toError(AUTH_UNAVAILABLE_MESSAGE);
-            return;
-          }
           const { data, error } = await withTimeout(
-            fresh.auth.verifyOtp({
+            supabaseOnce.auth.verifyOtp({
               token_hash: tokenHash!,
               type: typeParam as EmailOtpType,
             }),
@@ -187,16 +181,22 @@ export default function AuthCallbackPage() {
     }
 
     (async () => {
+      const supabaseOnce = createAuthCallbackClient();
+      if (!supabaseOnce) {
+        toError(AUTH_UNAVAILABLE_MESSAGE);
+        return;
+      }
+
       try {
         if (code) {
           setHint("Completing sign-in…");
-          await runExchangeCode();
+          await runExchangeCode(supabaseOnce);
           return;
         }
 
         if (tokenHash && typeParam && EMAIL_OTP_TYPES.has(typeParam)) {
           setHint("Verifying your link…");
-          await runVerifyOtp();
+          await runVerifyOtp(supabaseOnce);
           return;
         }
 

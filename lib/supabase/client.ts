@@ -50,6 +50,15 @@ export function isSupabaseConfigured(): boolean {
   return hasEnv()
 }
 
+type AuthLockFunc = <R>(
+  name: string,
+  acquireTimeout: number,
+  fn: () => Promise<R>,
+) => Promise<R>
+
+/** Same as GoTrue lockNoOp — avoids Navigator Lock contention between multiple short-lived callback clients. */
+const authCallbackLock: AuthLockFunc = async (_name, _acquireTimeout, fn) => fn()
+
 /**
  * Fresh client for /auth/callback only: does not auto-run initialize() (which can
  * block on _recoverAndRefresh while ?code= is present but the PKCE verifier cookie
@@ -69,8 +78,11 @@ export function createAuthCallbackClient(): SupabaseClient | null {
       cookieOptions: getBrowserAuthCookieOptions(),
       auth: {
         detectSessionInUrl: false,
-        // Supported by GoTrue; @supabase/ssr typings omit it.
-        ...({ skipAutoInitialize: true } as { skipAutoInitialize?: boolean }),
+        // Supported by GoTrue; @supabase/ssr typings omit some keys.
+        ...({
+          skipAutoInitialize: true,
+          lock: authCallbackLock,
+        } as { skipAutoInitialize?: boolean; lock?: AuthLockFunc }),
       },
     })
   } catch {
