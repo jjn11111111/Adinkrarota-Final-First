@@ -10,6 +10,10 @@ import {
   AUTH_UNAVAILABLE_DEPLOYER_HINT,
   AUTH_UNAVAILABLE_MESSAGE,
 } from "@/lib/auth-copy";
+import {
+  PASSWORD_RESET_RESEND_NOT_CONFIGURED,
+  sendPasswordResetEmailViaResend,
+} from "@/app/actions/password-reset-email";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -105,6 +109,18 @@ function RecoveryEmailTroubleshooting({ redirectTo }: { redirectTo: string }) {
               </>
             ) : null}
           </p>
+          <p className="text-foreground/90 font-medium pt-1">
+            Bypass broken Supabase SMTP (optional)
+          </p>
+          <p>
+            In Vercel, add{" "}
+            <code className="text-foreground/85">RESEND_API_KEY</code>,{" "}
+            <code className="text-foreground/85">RESEND_FROM_EMAIL</code> (verified
+            sender), and{" "}
+            <code className="text-foreground/85">SUPABASE_SERVICE_ROLE_KEY</code>.
+            Redeploy: if Supabase returns 500 on send, the app retries via Resend
+            automatically.
+          </p>
         </div>
       </details>
     </>
@@ -163,8 +179,6 @@ export default function ForgotPasswordPage() {
       { redirectTo }
     );
 
-    setLoading(false);
-
     if (resetError) {
       let msg = resetError.message;
       if (isAuthError(resetError)) {
@@ -173,6 +187,29 @@ export default function ForgotPasswordPage() {
           msg = `${msg} (${bits.join(" · ")})`;
         }
       }
+
+      if (looksLikeRecoverySendFailure(msg)) {
+        const fb = await sendPasswordResetEmailViaResend(
+          email.trim().toLowerCase(),
+          redirectTo,
+        );
+        if (fb.ok) {
+          setLoading(false);
+          setCooldownUntil(null);
+          setError(null);
+          setSent(true);
+          return;
+        }
+        if (fb.error !== PASSWORD_RESET_RESEND_NOT_CONFIGURED) {
+          setLoading(false);
+          setError(
+            `${msg}\n\nBackup send (Resend) also failed: ${fb.error}`,
+          );
+          return;
+        }
+      }
+
+      setLoading(false);
       setError(msg);
       const wait = parseRateLimitCooldownSeconds(msg);
       if (wait != null) {
@@ -181,6 +218,7 @@ export default function ForgotPasswordPage() {
       return;
     }
 
+    setLoading(false);
     setCooldownUntil(null);
     setSent(true);
   };
