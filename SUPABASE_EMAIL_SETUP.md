@@ -1,57 +1,77 @@
-# Supabase Email / Confirmation Setup
+# Supabase email (auth confirmations, password reset)
 
-If users don't receive the registration confirmation email, or resend says "unavailable", check these in order.
+SMTP and templates are configured **in the Supabase Dashboard**, not in this repo. This file is the **rollout checklist** so Production / Preview stay aligned with the app.
 
-## 0. Vercel environment variables (most common cause)
+## 0. Vercel environment variables
 
-In **Vercel → Project → Settings → Environment Variables**, ensure these are set for **Production** (and Preview if needed):
+**Vercel → Project → Settings → Environment Variables** — set for **Production** and **Preview** as needed:
 
 | Variable | Required |
-|---------|----------|
+|----------|----------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes |
+| `NEXT_PUBLIC_BASE_URL` | Recommended for stable redirects (optional on client; see `lib/site-config`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | For Stripe webhooks, membership sync, password-reset Resend fallback |
+| `RESEND_API_KEY` | Optional: backup send when Supabase SMTP returns 5xx |
+| `RESEND_FROM_EMAIL` | Must match a sender Resend allows (e.g. `onboarding@resend.dev` for testing) |
 
-Without these, registration, login, and email resend will not work. Redeploy after adding/updating env vars.
+Redeploy after any change.
 
-## 1. Supabase Dashboard → Authentication → Providers → Email
+## 1. Supabase → Authentication → Providers → Email
 
-- **Enable Email provider** – must be ON
-- **Confirm email** – must be ON (otherwise no confirmation email is sent)
+- **Enable Email provider** — ON  
+- **Confirm email** — ON if you want confirmation emails  
 
-## 2. Supabase Dashboard → Authentication → URL Configuration
+## 2. Supabase → Authentication → URL configuration
 
-- **Site URL** – your app’s base URL (e.g. `https://yourdomain.com`)
-- **Redirect URLs** – must include your callback URL:
-  - `https://yourdomain.com/auth/callback`
-  - For local dev: `http://localhost:3000/auth/callback`
-  - For Vercel preview: `https://your-project-*.vercel.app/auth/callback`
+- **Site URL** — canonical app URL (e.g. production domain).  
+- **Redirect URLs** — must include:
+  - `https://YOUR_DOMAIN/auth/callback`
+  - `http://localhost:3000/auth/callback` (local)
+  - `https://*.vercel.app/**` (previews), or each preview host explicitly  
 
-## 3. Environment variable
+Forgot password uses `/auth/callback?next=/auth/update-password` — wildcard preview URLs cover query strings.
 
-Set `NEXT_PUBLIC_BASE_URL` so the app builds the correct redirect URL:
+## 3. Custom SMTP (Authentication → Emails)
 
-```env
-# Production
-NEXT_PUBLIC_BASE_URL=https://yourdomain.com
+Use this when built-in email is unreliable or you see **`535 Authentication credentials invalid`** in **Logs → Auth**.
 
-# Local dev (optional – app will use window.location.origin on client)
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-```
+### Option A — Gmail (`@gmail.com`)
 
-## 4. Supabase default email limits
+1. Google account: enable **2-Step Verification**.  
+2. Create an **[App password](https://myaccount.google.com/apppasswords)** (Mail / custom name “Supabase”).  
+3. **Supabase → Authentication → Emails → Custom SMTP**:
 
-- **Free tier**: ~4 confirmation emails per hour per project
-- Emails can land in **spam** – ask users to check spam/promotions
+| Field | Value |
+|-------|--------|
+| Host | `smtp.gmail.com` |
+| Port | `587` |
+| Username | Full Gmail address (e.g. `you@gmail.com`) |
+| Password | **App password** (16 characters — not your normal Gmail password) |
+| Sender email | **Same** as username |
+| Sender name | e.g. `ADINKRAROTA` |
 
-## 5. Custom SMTP (optional, better deliverability)
+4. **Save**, then test **Forgot password** once and check **Logs → Auth**.
 
-In Supabase Dashboard → **Project Settings → Auth → SMTP**:
+### Option B — Google Workspace (`@yourdomain.com`)
 
-- Enable custom SMTP
-- Use a provider such as Resend, SendGrid, or AWS SES
-- Improves deliverability and reduces spam issues
+Same as A, but username + sender = your Workspace address (e.g. `hello@yourdomain.com`).  
+SPF/MX for that domain should already include Google if mail is hosted on Workspace.
 
-## 6. Resend confirmation from the app
+### Option C — Resend SMTP
 
-- **Register success page**: "Resend confirmation email" (email prefilled if you came from registration)
-- **Login page**: "Resend Confirmation Email" button (appears when "Email not confirmed" error shows)
+Host `smtp.resend.com`, port `587`, user `resend`, password = **Resend API key**, sender = address on a **verified domain** in Resend.  
+If your DNS is limited (e.g. some Wix setups), verify the domain in Resend or use Gmail until DNS allows Resend records.
+
+## 4. App fallback (Resend HTTP API)
+
+If SMTP still returns **500** after save, this repo can send the reset link via **Resend’s API** using `auth.admin.generateLink` (requires `SUPABASE_SERVICE_ROLE_KEY` + `RESEND_*` on Vercel). See `app/actions/password-reset-email.ts` and the forgot-password page.
+
+## 5. Limits and deliverability
+
+- Supabase may rate-limit auth email per address (429) — wait or lower limits under **Authentication → Emails** for testing.  
+- Ask users to check **spam**.  
+
+## 6. In-app “Resend confirmation”
+
+- **Register success** and **Login** pages can resend signup confirmation; they need the same Supabase URL/anon key on Vercel as above.
