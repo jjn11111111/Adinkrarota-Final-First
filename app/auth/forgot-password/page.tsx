@@ -94,7 +94,20 @@ function RecoveryEmailTroubleshooting({ redirectTo }: { redirectTo: string }) {
             Dashboard → <strong>Authentication</strong> →{" "}
             <strong>Emails</strong>. With Resend: user{" "}
             <code className="text-foreground/85">resend</code>, password = API key,
-            sender must use a verified domain. Save, then try again.
+            sender = an address Resend allows (e.g.{" "}
+            <code className="text-foreground/85">onboarding@resend.dev</code> for
+            testing, or <code className="text-foreground/85">noreply@your-domain</code>{" "}
+            after you verify the domain). Save, then try again.
+          </p>
+          <p className="text-foreground/90 font-medium pt-1">Or Gmail (no extra DNS)</p>
+          <p>
+            Host <code className="text-foreground/85">smtp.gmail.com</code>, port{" "}
+            <code className="text-foreground/85">587</code>. Username and sender email =
+            the same Gmail address. Password = Google{" "}
+            <strong>App password</strong> (2FA on → App passwords — not your normal
+            Gmail password). Full checklist:{" "}
+            <code className="text-foreground/85">SUPABASE_EMAIL_SETUP.md</code> in this
+            repo.
           </p>
           <p className="text-foreground/90 font-medium pt-1">Redirect URLs</p>
           <p>Only needed if logs mention an invalid redirect. Add this line:</p>
@@ -124,8 +137,9 @@ function RecoveryEmailTroubleshooting({ redirectTo }: { redirectTo: string }) {
           <p>
             In Vercel, add{" "}
             <code className="text-foreground/85">RESEND_API_KEY</code>,{" "}
-            <code className="text-foreground/85">RESEND_FROM_EMAIL</code> (verified
-            sender), and{" "}
+            <code className="text-foreground/85">RESEND_FROM_EMAIL</code> (same
+            address as Supabase sender, e.g.{" "}
+            <code className="text-foreground/85">onboarding@resend.dev</code>), and{" "}
             <code className="text-foreground/85">SUPABASE_SERVICE_ROLE_KEY</code>.
             Redeploy: if Supabase returns 500 on send, the app retries via Resend
             automatically.
@@ -324,8 +338,10 @@ export default function ForgotPasswordPage() {
                       project → <strong>Environment Variables</strong>, add for{" "}
                       <strong>Preview</strong> (and Production if needed):{" "}
                       <code className="text-foreground/85">RESEND_API_KEY</code>,{" "}
-                      <code className="text-foreground/85">RESEND_FROM_EMAIL</code>,{" "}
-                      <code className="text-foreground/85">SUPABASE_SERVICE_ROLE_KEY</code>
+                      <code className="text-foreground/85">RESEND_FROM_EMAIL</code>{" "}
+                      (match Supabase sender, e.g.{" "}
+                      <code className="text-foreground/85">onboarding@resend.dev</code>
+                      ), <code className="text-foreground/85">SUPABASE_SERVICE_ROLE_KEY</code>
                       , then redeploy. The next attempt will send the reset link through
                       Resend when Supabase returns 500.
                     </p>
