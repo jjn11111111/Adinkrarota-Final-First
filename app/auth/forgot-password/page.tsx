@@ -10,10 +10,6 @@ import {
   AUTH_UNAVAILABLE_DEPLOYER_HINT,
   AUTH_UNAVAILABLE_MESSAGE,
 } from "@/lib/auth-copy";
-import {
-  PASSWORD_RESET_RESEND_NOT_CONFIGURED,
-  sendPasswordResetEmailViaResend,
-} from "@/app/actions/password-reset-email";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,15 +47,6 @@ function looksLikeRecoverySendFailure(message: string): boolean {
   );
 }
 
-/** Also use HTTP status / code — some Supabase clients format the message differently. */
-function shouldTryResendFallback(message: string, resetError: unknown): boolean {
-  if (looksLikeRecoverySendFailure(message)) return true;
-  if (!isAuthError(resetError)) return false;
-  if (resetError.status === 500) return true;
-  const code = String(resetError.code || "").toLowerCase();
-  return code === "unexpected_failure";
-}
-
 function RecoveryEmailTroubleshooting({ redirectTo }: { redirectTo: string }) {
   let origin = "";
   let onVercel = false;
@@ -89,25 +76,19 @@ function RecoveryEmailTroubleshooting({ redirectTo }: { redirectTo: string }) {
           </span>
         </summary>
         <div className="space-y-2 px-2 pb-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/15 pt-2">
-          <p className="text-foreground/90 font-medium">SMTP</p>
+          <p className="text-foreground/90 font-medium">Gmail (common fix for 535)</p>
           <p>
-            Dashboard → <strong>Authentication</strong> →{" "}
-            <strong>Emails</strong>. With Resend: user{" "}
-            <code className="text-foreground/85">resend</code>, password = API key,
-            sender = an address Resend allows (e.g.{" "}
-            <code className="text-foreground/85">onboarding@resend.dev</code> for
-            testing, or <code className="text-foreground/85">noreply@your-domain</code>{" "}
-            after you verify the domain). Save, then try again.
+            Dashboard → <strong>Authentication</strong> → <strong>Emails</strong> →
+            Custom SMTP. Host <code className="text-foreground/85">smtp.gmail.com</code>
+            , port <code className="text-foreground/85">587</code>. Username and sender
+            = the same Gmail address. Password = Google{" "}
+            <strong>App password</strong> (not your normal Gmail password). See{" "}
+            <code className="text-foreground/85">SUPABASE_EMAIL_SETUP.md</code>.
           </p>
-          <p className="text-foreground/90 font-medium pt-1">Or Gmail (no extra DNS)</p>
+          <p className="text-foreground/90 font-medium pt-1">Other SMTP providers</p>
           <p>
-            Host <code className="text-foreground/85">smtp.gmail.com</code>, port{" "}
-            <code className="text-foreground/85">587</code>. Username and sender email =
-            the same Gmail address. Password = Google{" "}
-            <strong>App password</strong> (2FA on → App passwords — not your normal
-            Gmail password). Full checklist:{" "}
-            <code className="text-foreground/85">SUPABASE_EMAIL_SETUP.md</code> in this
-            repo.
+            SendGrid, Amazon SES, or Resend as <strong>SMTP</strong> in the same
+            Supabase screen — use that provider&apos;s host, port, and credentials.
           </p>
           <p className="text-foreground/90 font-medium pt-1">Redirect URLs</p>
           <p>Only needed if logs mention an invalid redirect. Add this line:</p>
@@ -131,19 +112,6 @@ function RecoveryEmailTroubleshooting({ redirectTo }: { redirectTo: string }) {
               </>
             ) : null}
           </p>
-          <p className="text-foreground/90 font-medium pt-1">
-            Bypass broken Supabase SMTP (optional)
-          </p>
-          <p>
-            In Vercel, add{" "}
-            <code className="text-foreground/85">RESEND_API_KEY</code>,{" "}
-            <code className="text-foreground/85">RESEND_FROM_EMAIL</code> (same
-            address as Supabase sender, e.g.{" "}
-            <code className="text-foreground/85">onboarding@resend.dev</code>), and{" "}
-            <code className="text-foreground/85">SUPABASE_SERVICE_ROLE_KEY</code>.
-            Redeploy: if Supabase returns 500 on send, the app retries via Resend
-            automatically.
-          </p>
         </div>
       </details>
     </>
@@ -158,8 +126,6 @@ export default function ForgotPasswordPage() {
   const [lastRedirectTo, setLastRedirectTo] = useState<string | null>(null);
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
   const [cooldownLeft, setCooldownLeft] = useState(0);
-  /** True when 500 occurred but Vercel lacks Resend + service role for auto-retry. */
-  const [resendFallbackOff, setResendFallbackOff] = useState(false);
 
   useEffect(() => {
     if (cooldownUntil == null) {
@@ -184,7 +150,6 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
     setLastRedirectTo(null);
-    setResendFallbackOff(false);
     setLoading(true);
 
     const supabase = createImplicitRecoveryClient() ?? createClient();
@@ -212,28 +177,6 @@ export default function ForgotPasswordPage() {
         if (bits.length) {
           msg = `${msg} (${bits.join(" · ")})`;
         }
-      }
-
-      if (shouldTryResendFallback(msg, resetError)) {
-        const fb = await sendPasswordResetEmailViaResend(
-          email.trim().toLowerCase(),
-          redirectTo,
-        );
-        if (fb.ok) {
-          setLoading(false);
-          setCooldownUntil(null);
-          setError(null);
-          setSent(true);
-          return;
-        }
-        if (fb.error !== PASSWORD_RESET_RESEND_NOT_CONFIGURED) {
-          setLoading(false);
-          setError(
-            `${msg}\n\nBackup send (Resend) also failed: ${fb.error}`,
-          );
-          return;
-        }
-        setResendFallbackOff(true);
       }
 
       setLoading(false);
@@ -312,7 +255,6 @@ export default function ForgotPasswordPage() {
                   onChange={(e) => {
                     setEmail(e.target.value);
                     setCooldownUntil(null);
-                    setResendFallbackOff(false);
                   }}
                   required
                   className="bg-background"
@@ -331,23 +273,7 @@ export default function ForgotPasswordPage() {
                   {(/security purposes|only request this after|request this after \d+|over_email_send_rate_limit|429/i.test(
                     error,
                   )) && <RateLimitHint />}
-                  {resendFallbackOff && (
-                    <p className="mt-2 text-xs text-amber-700 dark:text-amber-400 font-normal normal-case leading-snug border-t border-destructive/20 pt-2">
-                      <strong className="text-foreground/90">Resend backup is off</strong> for
-                      this deployment (missing env or not redeployed). In Vercel → this
-                      project → <strong>Environment Variables</strong>, add for{" "}
-                      <strong>Preview</strong> (and Production if needed):{" "}
-                      <code className="text-foreground/85">RESEND_API_KEY</code>,{" "}
-                      <code className="text-foreground/85">RESEND_FROM_EMAIL</code>{" "}
-                      (match Supabase sender, e.g.{" "}
-                      <code className="text-foreground/85">onboarding@resend.dev</code>
-                      ), <code className="text-foreground/85">SUPABASE_SERVICE_ROLE_KEY</code>
-                      , then redeploy. The next attempt will send the reset link through
-                      Resend when Supabase returns 500.
-                    </p>
-                  )}
-                  {lastRedirectTo &&
-                    (looksLikeRecoverySendFailure(error) || resendFallbackOff) && (
+                  {lastRedirectTo && looksLikeRecoverySendFailure(error) && (
                     <RecoveryEmailTroubleshooting redirectTo={lastRedirectTo} />
                   )}
                 </div>

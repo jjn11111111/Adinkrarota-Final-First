@@ -11,9 +11,7 @@ SMTP and templates are configured **in the Supabase Dashboard**, not in this rep
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes |
 | `NEXT_PUBLIC_BASE_URL` | Recommended for stable redirects (optional on client; see `lib/site-config`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | For Stripe webhooks, membership sync, password-reset Resend fallback |
-| `RESEND_API_KEY` | Optional: backup send when Supabase SMTP returns 5xx |
-| `RESEND_FROM_EMAIL` | Must match a sender Resend allows (e.g. `onboarding@resend.dev` for testing) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only: Stripe webhooks, membership sync (`getSupabaseAdmin`) |
 
 Redeploy after any change.
 
@@ -63,15 +61,11 @@ SPF/MX for that domain should already include Google if mail is hosted on Worksp
 Host `smtp.resend.com`, port `587`, user `resend`, password = **Resend API key**, sender = address on a **verified domain** in Resend.  
 If your DNS is limited (e.g. some Wix setups), verify the domain in Resend or use Gmail until DNS allows Resend records.
 
-## 4. App fallback (Resend HTTP API)
-
-If SMTP still returns **500** after save, this repo can send the reset link via **Resend’s API** using `auth.admin.generateLink` (requires `SUPABASE_SERVICE_ROLE_KEY` + `RESEND_*` on Vercel). See `app/actions/password-reset-email.ts` and the forgot-password page.
-
-## 5. Limits and deliverability
+## 4. Limits and deliverability
 
 - Supabase may rate-limit auth email per address (429) — wait or lower limits under **Authentication → Emails** for testing.  
 - Ask users to check **spam**.  
 
-## 6. In-app “Resend confirmation”
+## 5. In-app “Resend confirmation”
 
-- **Register success** and **Login** pages can resend signup confirmation; they need the same Supabase URL/anon key on Vercel as above.
+- **Register success** and **Login** pages can **resend the signup confirmation email** via Supabase (`auth.resend()`); that is separate from any third-party mail API. They need the same Supabase URL/anon key on Vercel as above.
