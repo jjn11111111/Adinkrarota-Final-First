@@ -41,7 +41,13 @@ function RateLimitHint() {
   );
 }
 
-function RecoveryEmailHint({ redirectTo }: { redirectTo: string }) {
+function looksLikeRecoverySendFailure(message: string): boolean {
+  return /error sending recovery email|unexpected_failure|\b500\b/i.test(
+    message,
+  );
+}
+
+function RecoveryEmailTroubleshooting({ redirectTo }: { redirectTo: string }) {
   let origin = "";
   let onVercel = false;
   try {
@@ -53,62 +59,55 @@ function RecoveryEmailHint({ redirectTo }: { redirectTo: string }) {
   }
 
   return (
-    <div className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2 space-y-2">
-      <p className="text-foreground/95 font-medium">
-        Custom SMTP (Resend, SendGrid, etc.) — check this first
+    <>
+      <p className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2">
+        Supabase could not send the reset email (server-side). In almost all
+        cases the dashboard shows why: open{" "}
+        <strong className="text-foreground/90">Logs</strong> → filter{" "}
+        <strong className="text-foreground/90">Auth</strong> (or{" "}
+        <strong className="text-foreground/90">Edge</strong> / API) and read
+        the latest error — often <code className="text-foreground/85">535</code>{" "}
+        (SMTP) or a blocked &quot;From&quot; address.
       </p>
-      <p>
-        Auth logs often show{" "}
-        <code className="text-foreground/90">535 Authentication credentials invalid</code>
-        : wrong SMTP password (e.g. paste a fresh Resend API key as the
-        password; user <code className="text-foreground/90">resend</code>), or a
-        &quot;From&quot; address your provider does not allow. Fix under{" "}
-        <strong>Authentication → Emails</strong> (SMTP), save, then try again.
-      </p>
-      <p className="text-foreground/95 font-medium pt-2">
-        Redirect URLs (if SMTP is already working)
-      </p>
-      <p>
-        Authentication → URL Configuration → <strong>Redirect URLs</strong> —
-        allow the callback for this tab:
-      </p>
-      <code className="block w-full p-2 rounded-md bg-muted text-foreground text-[11px] break-all border border-border">
-        {redirectTo}
-      </code>
-      {onVercel && (
-        <>
+      <details className="mt-2 rounded-lg border border-destructive/25 bg-destructive/5 open:pb-2">
+        <summary className="cursor-pointer list-none px-2 py-2 text-xs font-medium text-foreground/90 [&::-webkit-details-marker]:hidden">
+          <span className="underline-offset-2 hover:underline">
+            Show SMTP &amp; redirect URL steps
+          </span>
+        </summary>
+        <div className="space-y-2 px-2 pb-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/15 pt-2">
+          <p className="text-foreground/90 font-medium">SMTP</p>
           <p>
-            <strong>Vercel preview</strong> hostnames change each deploy. Add
-            (copy exactly — <code className="text-foreground/90">*</code> then{" "}
-            <code className="text-foreground/90">-.</code> then{" "}
-            <code className="text-foreground/90">vercel.app/**</code>):
+            Dashboard → <strong>Authentication</strong> →{" "}
+            <strong>Emails</strong>. With Resend: user{" "}
+            <code className="text-foreground/85">resend</code>, password = API key,
+            sender must use a verified domain. Save, then try again.
           </p>
-          <code className="block w-full p-2 rounded-md bg-muted text-foreground text-[11px] break-all border border-border tracking-wide">
-            https://*-.vercel.app/**
+          <p className="text-foreground/90 font-medium pt-1">Redirect URLs</p>
+          <p>Only needed if logs mention an invalid redirect. Add this line:</p>
+          <code className="block w-full p-2 rounded-md bg-muted text-foreground text-[11px] break-all border border-border">
+            {redirectTo}
           </code>
+          {onVercel && (
+            <p>
+              For previews, you can add{" "}
+              <code className="text-foreground/85">https://*.vercel.app/**</code>
+            </p>
+          )}
           <p>
-            Or use Forgot password on your stable <strong>production</strong>{" "}
-            URL only.
+            Keep your real site as <strong>Site URL</strong>. Preview hosts only
+            belong under Redirect URLs.
+            {origin ? (
+              <>
+                {" "}
+                This tab:{" "}
+                <code className="text-foreground/85 break-all">{origin}</code>.
+              </>
+            ) : null}
           </p>
-        </>
-      )}
-      <p>
-        Keep <strong>Site URL</strong> as your main production origin; put
-        preview origins in <strong>Redirect URLs</strong> only.
-        {origin ? (
-          <>
-            {" "}
-            Example preview origin:{" "}
-            <code className="text-foreground/90">{origin}</code>.
-          </>
-        ) : null}
-      </p>
-      <p>
-        If the callback URL here does not match the address bar, fix or remove{" "}
-        <code className="text-foreground/90">NEXT_PUBLIC_BASE_URL</code> in
-        Vercel and redeploy.
-      </p>
-    </div>
+        </div>
+      </details>
+    </>
   );
 }
 
@@ -153,7 +152,7 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    // Must match Redirect URLs (wildcard https://*-.vercel.app/** covers ?next=...).
+    // Must match Redirect URLs (e.g. https://*.vercel.app/** for previews).
     // next= forces update-password when JWT amr omits recovery (common); amr still used as fallback.
     const base = getBaseUrl().replace(/\/$/, "");
     const redirectTo = `${base}/auth/callback?next=${encodeURIComponent("/auth/update-password")}`;
@@ -266,8 +265,9 @@ export default function ForgotPasswordPage() {
                   {(/security purposes|only request this after|request this after \d+|over_email_send_rate_limit|429/i.test(
                     error,
                   )) && <RateLimitHint />}
-                  {/error sending recovery email/i.test(error) &&
-                    lastRedirectTo && <RecoveryEmailHint redirectTo={lastRedirectTo} />}
+                  {looksLikeRecoverySendFailure(error) && lastRedirectTo && (
+                    <RecoveryEmailTroubleshooting redirectTo={lastRedirectTo} />
+                  )}
                 </div>
               )}
 
