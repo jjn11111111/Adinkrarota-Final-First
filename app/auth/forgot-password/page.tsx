@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
@@ -16,13 +16,27 @@ import { Label } from "@/components/ui/label";
 import { isAuthError } from "@supabase/supabase-js";
 import { Sparkles, ArrowLeft } from "lucide-react";
 
+/** Supabase returns e.g. "…after 11 seconds" or code over_email_send_rate_limit. */
+function parseRateLimitCooldownSeconds(message: string): number | null {
+  const m = message.match(/after\s+(\d+)\s*seconds?/i);
+  if (m) {
+    const n = parseInt(m[1], 10);
+    if (!Number.isNaN(n)) return Math.min(Math.max(1, n), 3600);
+  }
+  if (
+    /over_email_send_rate_limit|over_sms_send_rate_limit|429/i.test(message)
+  ) {
+    return 60;
+  }
+  return null;
+}
+
 function RateLimitHint() {
   return (
     <p className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2">
-      This is a normal cooldown so one address can&apos;t be spammed. Wait until
-      the timer ends, then click once. While testing, you can lower{" "}
-      <strong>Authentication → Emails</strong> → minimum seconds between emails to
-      the same user.
+      Same-address email cooldown from Supabase (anti-spam). Use the countdown on the
+      button, then tap once. To shorten waits while testing: Supabase Dashboard →{" "}
+      <strong>Authentication → Emails</strong> → rate limits for the same user.
     </p>
   );
 }
@@ -104,6 +118,27 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [lastRedirectTo, setLastRedirectTo] = useState<string | null>(null);
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
+
+  useEffect(() => {
+    if (cooldownUntil == null) {
+      setCooldownLeft(0);
+      return;
+    }
+    const tick = () => {
+      const left = Math.ceil((cooldownUntil - Date.now()) / 1000);
+      if (left <= 0) {
+        setCooldownUntil(null);
+        setCooldownLeft(0);
+        return;
+      }
+      setCooldownLeft(left);
+    };
+    tick();
+    const id = window.setInterval(tick, 500);
+    return () => window.clearInterval(id);
+  }, [cooldownUntil]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,9 +175,14 @@ export default function ForgotPasswordPage() {
         }
       }
       setError(msg);
+      const wait = parseRateLimitCooldownSeconds(msg);
+      if (wait != null) {
+        setCooldownUntil(Date.now() + wait * 1000);
+      }
       return;
     }
 
+    setCooldownUntil(null);
     setSent(true);
   };
 
@@ -205,7 +245,10 @@ export default function ForgotPasswordPage() {
                   type="email"
                   placeholder="your@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setCooldownUntil(null);
+                  }}
                   required
                   className="bg-background"
                   autoComplete="email"
@@ -220,16 +263,24 @@ export default function ForgotPasswordPage() {
                       {AUTH_UNAVAILABLE_DEPLOYER_HINT}
                     </p>
                   )}
-                  {/security purposes|only request this after|request this after \d+/i.test(
+                  {(/security purposes|only request this after|request this after \d+|over_email_send_rate_limit|429/i.test(
                     error,
-                  ) && <RateLimitHint />}
+                  )) && <RateLimitHint />}
                   {/error sending recovery email/i.test(error) &&
                     lastRedirectTo && <RecoveryEmailHint redirectTo={lastRedirectTo} />}
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Sending…" : "Send reset link"}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || cooldownLeft > 0}
+              >
+                {loading
+                  ? "Sending…"
+                  : cooldownLeft > 0
+                    ? `Wait ${cooldownLeft}s to send again`
+                    : "Send reset link"}
               </Button>
             </div>
           </form>
