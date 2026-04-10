@@ -3,6 +3,29 @@ import { stripe, isStripeConfigured } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import Stripe from "stripe";
 
+/** Webhook invoice payloads use expandable fields (string id or object with id). */
+function stripeExpandableId(value: unknown): string | null {
+  if (value == null) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value !== null && "id" in value) {
+    const id = (value as { id: unknown }).id;
+    return typeof id === "string" ? id : null;
+  }
+  return null;
+}
+
+function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
+  return stripeExpandableId(
+    (invoice as Stripe.Invoice & { subscription?: unknown }).subscription,
+  );
+}
+
+function invoiceCustomerId(invoice: Stripe.Invoice): string | null {
+  return stripeExpandableId(
+    (invoice as Stripe.Invoice & { customer?: unknown }).customer,
+  );
+}
+
 export async function POST(request: Request) {
   if (!isStripeConfigured() || !stripe) {
     return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
@@ -86,12 +109,7 @@ export async function POST(request: Request) {
   // Handle subscription renewal
   if (event.type === "invoice.payment_succeeded") {
     const invoice = event.data.object as Stripe.Invoice;
-    // Invoice.subscription can be a string (ID) or Subscription object
-    // Using type assertion as Stripe types may not expose this property directly
-    const subscription = (invoice as any).subscription;
-    const subscriptionId = typeof subscription === "string" 
-      ? subscription 
-      : subscription?.id || null;
+    const subscriptionId = invoiceSubscriptionId(invoice);
 
     if (subscriptionId && invoice.status === "paid") {
       // Subscription renewed successfully - ensure user remains a member
@@ -115,14 +133,8 @@ export async function POST(request: Request) {
     } else {
       // invoice.payment_failed
       const invoice = event.data.object as Stripe.Invoice;
-      const subscription = (invoice as any).subscription;
-      subscriptionId = typeof subscription === "string" 
-        ? subscription 
-        : subscription?.id || null;
-      const customer = (invoice as any).customer;
-      customerId = typeof customer === "string"
-        ? customer
-        : customer?.id || null;
+      subscriptionId = invoiceSubscriptionId(invoice);
+      customerId = invoiceCustomerId(invoice);
     }
 
     if (subscriptionId) {

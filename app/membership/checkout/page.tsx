@@ -19,7 +19,9 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
 export default function MembershipCheckoutPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() =>
+    stripePromise ? null : PAYMENT_UNAVAILABLE_MESSAGE,
+  );
   const product = PRODUCTS.find((p) => p.id === "monthly-membership");
 
   const fetchClientSecret = useCallback(async () => {
@@ -33,7 +35,6 @@ export default function MembershipCheckoutPage() {
 
   useEffect(() => {
     if (!stripePromise) {
-      setError(PAYMENT_UNAVAILABLE_MESSAGE);
       return;
     }
 

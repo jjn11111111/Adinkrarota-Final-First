@@ -129,7 +129,9 @@ export default function ForgotPasswordPage() {
 
   useEffect(() => {
     if (cooldownUntil == null) {
-      setCooldownLeft(0);
+      queueMicrotask(() => {
+        setCooldownLeft(0);
+      });
       return;
     }
     const tick = () => {
@@ -141,7 +143,7 @@ export default function ForgotPasswordPage() {
       }
       setCooldownLeft(left);
     };
-    tick();
+    queueMicrotask(tick);
     const id = window.setInterval(tick, 500);
     return () => window.clearInterval(id);
   }, [cooldownUntil]);

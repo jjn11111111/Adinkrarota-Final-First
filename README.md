@@ -1,55 +1,37 @@
-# Conversation context review
+# ADINKRAROTA
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+An immersive Next.js experience blending Tarot archetypes with West African Adinkra symbols: gallery, readings, guidebook, custom spreads, optional Supabase auth, Stripe membership, and AI-assisted readings.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/re-connect0/v0-conversation-context-review)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/NDhrFgd7Sh3)
+## Development
 
-## Overview
+```bash
+npm install
+npm run dev
+```
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+Open [http://localhost:3000](http://localhost:3000).
+
+## Scripts
+
+| Command        | Description              |
+| -------------- | ------------------------ |
+| `npm run dev`  | Local dev server         |
+| `npm run build`| Production build         |
+| `npm run start`| Serve production build   |
+| `npm run lint` | ESLint (`eslint-config-next`) |
+
+## Environment
+
+Configure as needed for full functionality:
+
+- **Supabase**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and server-side keys where used
+- **Stripe**: publishable/secret keys and webhook secret for checkout and webhooks
+- **AI**: provider keys (e.g. `GROQ_API_KEY`) per your chosen models
+
+## Architecture notes
+
+The main UI is a client SPA in `app/page.tsx` with path aliases (`/gallery`, `/reading`, etc.) re-exporting the same shell for bookmarkable URLs. See `V0_INTEGRATION_GUIDE.md` and `CURRENT_STATUS.md` for integration history with v0.
 
 ## Deployment
 
-Your project is live at:
-
-**[https://vercel.com/re-connect0/v0-conversation-context-review](https://vercel.com/re-connect0/v0-conversation-context-review)**
-
-## Build your app
-
-Continue building your app on:
-
-**[https://v0.app/chat/NDhrFgd7Sh3](https://v0.app/chat/NDhrFgd7Sh3)**
-
-## How It Works
-
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
-
-## Architecture & Integration
-
-This project uses a **unified SPA architecture** with proper URL routing. See:
-
-- **[V0_INTEGRATION_GUIDE.md](./V0_INTEGRATION_GUIDE.md)** - Complete guide for integrating fixes with V0
-- **[.v0-preserve-patterns.md](./.v0-preserve-patterns.md)** - Quick reference for preserving critical patterns
-
-### Key Architectural Features
-
-- ✅ Unified SPA structure (single source of truth)
-- ✅ Bookmarkable URLs with proper routing
-- ✅ SSR-safe localStorage operations
-- ✅ Proper AI SDK provider configuration
-- ✅ Browser navigation support (back/forward buttons)
-
-### Quick V0 Prompts
-
-When working with V0, use these prompts to maintain compatibility:
-
-```
-"Maintain unified SPA architecture - route pages should re-export app/page.tsx"
-"Always check typeof window before accessing localStorage"
-"Import AI providers explicitly: import { anthropic } from '@ai-sdk/anthropic'"
-```
+Deploy on [Vercel](https://vercel.com) or any Node host that supports Next.js App Router. Set the same environment variables in the hosting dashboard.

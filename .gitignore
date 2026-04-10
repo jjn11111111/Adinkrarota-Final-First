@@ -33,3 +33,6 @@ next-env.d.ts
 
 # Pineal Vision assets (separate project - do not commit to Adinkrarota)
 stereo11.jpg
+
+# Local scratch / dropped files (not part of the app source)
+app/dc.pdf

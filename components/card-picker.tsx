@@ -28,19 +28,20 @@ export function CardPicker({ positions, onComplete, onCancel, isVisible }: CardP
   const [shuffledDeck, setShuffledDeck] = useState<Array<{ card: CardType; polarity: CardPolarity }>>([]);
   
   useEffect(() => {
-    if (isVisible) {
-      // Shuffle deck and assign random polarity to each card position
+    if (!isVisible) return;
+    const frame = requestAnimationFrame(() => {
       const shuffled = [...allCards]
         .sort(() => Math.random() - 0.5)
-        .map(card => ({
+        .map((card) => ({
           card,
-          polarity: (Math.random() < 0.5 ? "upright" : "reversed") as CardPolarity
+          polarity: (Math.random() < 0.5 ? "upright" : "reversed") as CardPolarity,
         }));
       setShuffledDeck(shuffled);
       setSelectedCards([]);
       setCurrentPositionIndex(0);
       setRevealedCardIndex(null);
-    }
+    });
+    return () => cancelAnimationFrame(frame);
   }, [isVisible]);
 
   const currentPosition = positions[currentPositionIndex];

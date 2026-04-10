@@ -32,6 +32,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { getAISettings, type AISettings, DEFAULT_MODEL_ID } from "@/lib/ai-settings";
 
+function nextCreatedAtTimestamp(existing?: number): number {
+  return existing ?? Date.now();
+}
+
 export interface CustomSpreadPosition {
   id: string;
   name: string;
@@ -124,10 +128,11 @@ export function SpreadBuilder({
   const [submissionNotes, setSubmissionNotes] = useState("");
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  // Load AI settings
+  // Load AI settings after mount (localStorage); defer avoids sync setState-in-effect lint.
   useEffect(() => {
-    const settings = getAISettings();
-    setAiSettings(settings);
+    queueMicrotask(() => {
+      setAiSettings(getAISettings());
+    });
   }, []);
 
   // AI Chat for spread suggestions
@@ -186,7 +191,7 @@ export function SpreadBuilder({
         ...p,
         name: p.name || `Position ${i + 1}`,
       })),
-      createdAt: editingSpread?.createdAt || Date.now(),
+      createdAt: nextCreatedAtTimestamp(editingSpread?.createdAt),
     };
 
     onSave(spread);
