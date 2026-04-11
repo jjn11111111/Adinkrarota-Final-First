@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { AuthProvider } from '@/components/auth-provider'
 import { AuthReturnRedirect } from '@/components/auth-return-redirect'
+import { getConfiguredSiteOrigin } from '@/lib/site-config'
 
 const bebasNeue = Bebas_Neue({ 
   subsets: ["latin"],
@@ -26,7 +27,7 @@ const jost = Jost({
 });
 
 const siteUrl =
-  process.env.NEXT_PUBLIC_BASE_URL ||
+  getConfiguredSiteOrigin() ||
   (process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : "http://localhost:3000");
