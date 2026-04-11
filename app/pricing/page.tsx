@@ -27,9 +27,9 @@ export default function PricingPage() {
         <motion.div
           className="absolute inset-0 opacity-5"
           style={{
-            backgroundImage: `url('/images/adinkra-pattern.png')`,
-            backgroundSize: "400px",
-            backgroundRepeat: "repeat",
+            backgroundImage:
+              "repeating-linear-gradient(135deg, hsl(var(--foreground) / 0.08) 0 1px, transparent 1px 32px)",
+            backgroundSize: "32px 32px",
             transform: `translate(${mousePosition.x * 0.05}px, ${mousePosition.y * 0.05}px)`,
           }}
         />

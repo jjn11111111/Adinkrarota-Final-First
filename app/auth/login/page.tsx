@@ -107,9 +107,9 @@ export default function LoginPage() {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `url('/images/adinkra-pattern.png')`,
-            backgroundSize: "400px",
-            backgroundRepeat: "repeat",
+            backgroundImage:
+              "repeating-linear-gradient(135deg, hsl(var(--foreground) / 0.08) 0 1px, transparent 1px 32px)",
+            backgroundSize: "32px 32px",
           }}
         />
       </div>
@@ -187,7 +187,9 @@ export default function LoginPage() {
                 {error}
                 {error === AUTH_UNAVAILABLE_MESSAGE && (
                   <p className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2">
-                    {AUTH_UNAVAILABLE_DEPLOYER_HINT}
+                    <span className="whitespace-pre-line">
+                      {AUTH_UNAVAILABLE_DEPLOYER_HINT}
+                    </span>
                   </p>
                 )}
                 {error.includes("Email not confirmed") && (

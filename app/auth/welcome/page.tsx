@@ -52,9 +52,9 @@ export default function WelcomePage() {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `url('/images/adinkra-pattern.png')`,
-            backgroundSize: "400px",
-            backgroundRepeat: "repeat",
+            backgroundImage:
+              "repeating-linear-gradient(135deg, hsl(var(--foreground) / 0.08) 0 1px, transparent 1px 32px)",
+            backgroundSize: "32px 32px",
           }}
         />
       </div>

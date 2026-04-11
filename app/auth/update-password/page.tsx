@@ -124,9 +124,9 @@ export default function UpdatePasswordPage() {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `url('/images/adinkra-pattern.png')`,
-            backgroundSize: "400px",
-            backgroundRepeat: "repeat",
+            backgroundImage:
+              "repeating-linear-gradient(135deg, hsl(var(--foreground) / 0.08) 0 1px, transparent 1px 32px)",
+            backgroundSize: "32px 32px",
           }}
         />
       </div>
@@ -156,7 +156,7 @@ export default function UpdatePasswordPage() {
         {supabaseMissing ? (
           <div className="p-6 rounded-2xl bg-card border border-destructive/30 text-destructive text-sm">
             {AUTH_UNAVAILABLE_MESSAGE}
-            <p className="mt-2 text-xs text-muted-foreground font-normal normal-case">
+            <p className="mt-2 text-xs text-muted-foreground font-normal normal-case whitespace-pre-line">
               {AUTH_UNAVAILABLE_DEPLOYER_HINT}
             </p>
           </div>

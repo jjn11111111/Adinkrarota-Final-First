@@ -201,9 +201,9 @@ export default function ForgotPasswordPage() {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `url('/images/adinkra-pattern.png')`,
-            backgroundSize: "400px",
-            backgroundRepeat: "repeat",
+            backgroundImage:
+              "repeating-linear-gradient(135deg, hsl(var(--foreground) / 0.08) 0 1px, transparent 1px 32px)",
+            backgroundSize: "32px 32px",
           }}
         />
       </div>
@@ -268,7 +268,7 @@ export default function ForgotPasswordPage() {
                 <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
                   {error}
                   {error === AUTH_UNAVAILABLE_MESSAGE && (
-                    <p className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2">
+                    <p className="mt-2 text-xs text-muted-foreground font-normal normal-case leading-snug border-t border-destructive/20 pt-2 whitespace-pre-line">
                       {AUTH_UNAVAILABLE_DEPLOYER_HINT}
                     </p>
                   )}

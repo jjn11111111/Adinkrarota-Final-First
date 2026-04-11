@@ -6,7 +6,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { getBaseUrl } from "@/lib/site-config";
-import { AUTH_UNAVAILABLE_MESSAGE } from "@/lib/auth-copy";
+import {
+  AUTH_UNAVAILABLE_DEPLOYER_HINT,
+  AUTH_UNAVAILABLE_MESSAGE,
+} from "@/lib/auth-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,9 +63,9 @@ function RegisterSuccessContent() {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `url('/images/adinkra-pattern.png')`,
-            backgroundSize: "400px",
-            backgroundRepeat: "repeat",
+            backgroundImage:
+              "repeating-linear-gradient(135deg, hsl(var(--foreground) / 0.08) 0 1px, transparent 1px 32px)",
+            backgroundSize: "32px 32px",
           }}
         />
       </div>
@@ -210,8 +213,9 @@ function RegisterSuccessContent() {
                 Did not receive the confirmation email?
               </p>
               {!isSupabaseConfigured() ? (
-                <p className="text-sm text-amber-600 dark:text-amber-500">
-                  Resend is unavailable — add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel for Production, then redeploy.
+                <p className="text-sm text-amber-600 dark:text-amber-500 whitespace-pre-line">
+                  Resend is unavailable — Supabase client is not configured.{"\n\n"}
+                  {AUTH_UNAVAILABLE_DEPLOYER_HINT}
                 </p>
               ) : (
                 <>
