@@ -6,6 +6,7 @@ import {
   isGroqInvalidApiKeyMessage,
 } from "@/lib/ai-groq";
 import { groqLanguageModel, isGroqConfigured } from "@/lib/ai-groq-server";
+import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 60;
 
@@ -15,6 +16,44 @@ export async function POST(req: Request) {
       return Response.json(
         { error: `AI is not configured. ${GROQ_ENV_HINT}` },
         { status: 503 },
+      );
+    }
+
+    const supabase = await createClient();
+    if (!supabase) {
+      return Response.json(
+        { error: "Authentication is not configured." },
+        { status: 503 },
+      );
+    }
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return Response.json(
+        { error: "Sign in required to use AI readings." },
+        { status: 401 },
+      );
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("account_type")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("AI reading profile check:", profileError);
+      return Response.json(
+        { error: "Could not verify membership." },
+        { status: 500 },
+      );
+    }
+    if (profile?.account_type !== "member") {
+      return Response.json(
+        { error: "Membership is required for AI readings." },
+        { status: 403 },
       );
     }
 

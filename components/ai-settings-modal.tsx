@@ -61,6 +61,7 @@ export function AISettingsModal({
     try {
       const response = await fetch("/api/ai-reading", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [{ id: "test", role: "user", parts: [{ type: "text", text: "Say hello in one word." }] }],

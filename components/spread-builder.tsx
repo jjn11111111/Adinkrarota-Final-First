@@ -140,6 +140,8 @@ export function SpreadBuilder({
     () =>
       new DefaultChatTransport({
         api: "/api/ai-reading",
+        fetch: (input, init) =>
+          fetch(input, { ...init, credentials: "same-origin" }),
         body: {
           modelId: aiSettings?.modelId || DEFAULT_MODEL_ID,
           readingContext: "SPREAD_BUILDER_MODE\n\nYou are helping the user create a custom tarot spread. Suggest position names, descriptions, and thematic coherence. Keep suggestions concise and meaningful.",

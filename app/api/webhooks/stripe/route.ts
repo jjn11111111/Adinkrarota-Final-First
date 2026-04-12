@@ -75,13 +75,19 @@ export async function POST(request: Request) {
 
     // Get user ID from metadata
     const userId = session.metadata?.userId;
-    const subscriptionId = session.subscription as string;
+    const subscriptionId = stripeExpandableId(session.subscription);
 
     const paid =
       session.payment_status === "paid" ||
       session.payment_status === "no_payment_required";
+    // Match membership/success/page.tsx: subscription mode can briefly show
+    // payment_status !== "paid" right after embedded checkout while still complete.
+    const subscriptionCheckoutOk =
+      session.mode === "subscription" &&
+      !!subscriptionId &&
+      session.status === "complete";
 
-    if (userId && paid && subscriptionId && session.status === "complete") {
+    if (userId && subscriptionId && session.status === "complete" && (paid || subscriptionCheckoutOk)) {
       try {
         // Update user profile to member
         const { error } = await supabaseAdmin

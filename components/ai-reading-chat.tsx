@@ -158,7 +158,10 @@ export function AIReadingChat({
         api: "/api/ai-reading",
         fetch: async (input, init) => {
           try {
-            const res = await fetch(input, init);
+            const res = await fetch(input, {
+              ...init,
+              credentials: "same-origin",
+            });
             if (!res.ok) {
               const text = await res.text();
               let msg = res.statusText || `Request failed (${res.status})`;
