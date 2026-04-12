@@ -37,25 +37,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("account_type")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (profileError) {
-      console.error("AI reading profile check:", profileError);
-      return Response.json(
-        { error: "Could not verify membership." },
-        { status: 500 },
-      );
-    }
-    if (profile?.account_type !== "member") {
-      return Response.json(
-        { error: "Membership is required for AI readings." },
-        { status: 403 },
-      );
-    }
+    // Signed-in users only (matches pre-hardening behavior: guests could use AI where the UI allows it).
+    // Optional: reintroduce a member check here if you want AI strictly behind subscription.
 
     const body = await req.json().catch(() => ({}));
     const rawMessages = body?.messages as UIMessage[] | undefined;
