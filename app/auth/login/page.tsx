@@ -96,8 +96,12 @@ export default function LoginPage() {
         ? new URLSearchParams(window.location.search).get("next")
         : null,
     );
+    setLoading(false);
     router.push(next ?? "/portal");
-    router.refresh();
+    // Defer RSC refresh so navigation paints first (avoids feeling "stuck" on sign-in).
+    queueMicrotask(() => {
+      router.refresh();
+    });
   };
 
   return (

@@ -48,6 +48,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/** Renders portal immediately after session exists; DB profile loads in background. */
+function optimisticProfileFromUser(u: User): UserProfile {
+  const meta = u.user_metadata?.account_type;
+  const accountType: AccountType = meta === "member" ? "member" : "guest";
+  return {
+    id: u.id,
+    email: u.email || "",
+    accountType,
+    readingsThisYear: 0,
+    lastReadingDate: null,
+    yearStarted: null,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
@@ -189,21 +203,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setIsLoading(true);
 
+        let currentUser: User | null = null;
         try {
           const {
-            data: { user: currentUser },
+            data: { user },
           } = await supabase.auth.getUser();
+          currentUser = user;
           setUser(currentUser);
 
           if (currentUser) {
-            const userProfile = await fetchProfile(currentUser);
-            setProfile(userProfile);
-            void tryStripeMembershipSync(currentUser, userProfile);
+            setProfile(optimisticProfileFromUser(currentUser));
+          } else {
+            setProfile(null);
           }
         } catch (error) {
           console.error("Auth initialization error:", error);
         } finally {
           setIsLoading(false);
+        }
+
+        if (currentUser) {
+          void (async () => {
+            const userProfile = await fetchProfile(currentUser!);
+            setProfile(userProfile);
+            void tryStripeMembershipSync(currentUser!, userProfile);
+          })();
         }
       }
     };
@@ -216,9 +240,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        const userProfile = await fetchProfile(session.user);
-        setProfile(userProfile);
-        void tryStripeMembershipSync(session.user, userProfile);
+        setProfile(optimisticProfileFromUser(session.user));
+        void (async () => {
+          const userProfile = await fetchProfile(session.user);
+          setProfile(userProfile);
+          void tryStripeMembershipSync(session.user, userProfile);
+        })();
       } else {
         guestMembershipSyncDone.current = false;
         setProfile(null);
