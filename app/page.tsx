@@ -11,6 +11,7 @@ import { CardReading } from "@/components/card-reading";
 import { Guidebook } from "@/components/guidebook";
 import { SpreadBuilder, type CustomSpread } from "@/components/spread-builder";
 import { SpinCycle } from "@/components/spin-cycle";
+import { useAuth } from "@/components/auth-provider";
 import { ParallaxStarfield, CosmicOrbs, RevealOnScroll, ParallaxSection } from "@/components/parallax-layers";
 
 type View = "home" | "gallery" | "reading" | "guidebook" | "spread-builder" | "spin-cycle";
@@ -29,6 +30,7 @@ const PATH_TO_VIEW: Record<string, View> = {
 
 export default function AdinkrarotaApp() {
   const router = useRouter();
+  const { profile, isAuthenticated } = useAuth();
   const [currentView, setCurrentView] = useState<View>("home");
   const contentRef = useRef<HTMLDivElement>(null);
   
@@ -325,7 +327,7 @@ export default function AdinkrarotaApp() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <SpinCycle />
+              <SpinCycle canUseInteractive={isAuthenticated && profile?.accountType === "member"} />
             </motion.div>
           )}
 

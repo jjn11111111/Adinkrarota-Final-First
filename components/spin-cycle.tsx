@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
@@ -40,6 +41,10 @@ const emptyFields: SpinCycleFields = {
   natalProfile: "",
   transitContext: "",
 };
+
+interface SpinCycleProps {
+  canUseInteractive: boolean;
+}
 
 function trimSnippet(text: string, max: number): string {
   const t = text.trim();
@@ -132,7 +137,82 @@ function toDatetimeLocalValue(d: Date): string {
   return `${y}-${mo}-${da}T${h}:${mi}`;
 }
 
-export function SpinCycle() {
+function SpinCycleCaseStudy() {
+  return (
+    <div className="rounded-xl mystical-border bg-card/40 backdrop-blur-sm p-6 md:p-8 space-y-6">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-semibold text-gold-gradient">Case Study: Dream Job, New Continent</h2>
+        <p className="text-sm text-muted-foreground font-serif leading-relaxed">
+          A Cancer querant receives a dream international offer. Their excitement is real, and so is the
+          anxiety: no familiar support system, fear of overwhelm, health vulnerability under stress. Spin
+          Cycle maps this polarity into a practical present-moment strategy.
+        </p>
+      </div>
+
+      <section className="space-y-3">
+        <h3 className="text-xs uppercase tracking-widest text-primary">1) Submission</h3>
+        <p className="text-sm font-serif text-muted-foreground">
+          The question is submitted in plain language: what is changing, what is desired, and what feels
+          destabilizing right now.
+        </p>
+        <div className="rounded-md border border-border bg-background/60 p-3 text-xs font-mono whitespace-pre-wrap">
+          Situation: I got the job I prayed for in another country. I feel called to it, but I am panicking
+          about starting over and losing my grounding.
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="text-xs uppercase tracking-widest text-primary">2) Discovery</h3>
+        <p className="text-sm font-serif text-muted-foreground">
+          The wheel is split into two forces: fulfillment and cost. This prevents spiritual bypass and
+          clarifies the true energetic equation.
+        </p>
+        <div className="grid md:grid-cols-2 gap-3 text-sm font-serif">
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3">
+            <p className="text-primary font-semibold mb-1">Fulfillment Pole</p>
+            <p className="text-muted-foreground">Purpose, expansion, earned opportunity, visibility, growth.</p>
+          </div>
+          <div className="rounded-md border border-accent/30 bg-accent/5 p-3">
+            <p className="text-foreground font-semibold mb-1">Cost / Anxiety Pole</p>
+            <p className="text-muted-foreground">Loss of familiarity, isolation risk, nervous-system overload.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="text-xs uppercase tracking-widest text-primary">3) Identification</h3>
+        <p className="text-sm font-serif text-muted-foreground">
+          Natal tone identifies default coping patterns (for example: Cancer stress response = protective
+          withdrawal + somatic load). This names the personal bias that colors interpretation.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="text-xs uppercase tracking-widest text-primary">4) Current Ephemeris Layer</h3>
+        <p className="text-sm font-serif text-muted-foreground">
+          Current transits are compared with natal tone to separate temporary weather from enduring identity.
+          The output supports timing and pacing decisions.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="text-xs uppercase tracking-widest text-primary">5) Present-Moment Strategy</h3>
+        <ul className="list-disc pl-5 space-y-2 text-sm font-serif text-muted-foreground">
+          <li>Anchor one non-negotiable body-care ritual daily (sleep + food + breath).</li>
+          <li>Build one bridge each week (local relationship, mentor, or community contact).</li>
+          <li>Stage integration in 90-day windows to protect energy while momentum builds.</li>
+          <li>Use anxiety as a signal for calibration, not as proof the path is wrong.</li>
+        </ul>
+        <p className="text-sm font-serif text-foreground">
+          Highest outcome: the dream is accepted without self-abandonment. Choice stays sovereign, and pace
+          becomes the cure.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
   const [step, setStep] = useState(0);
   const [fields, setFields] = useState<SpinCycleFields>(emptyFields);
   const [copied, setCopied] = useState(false);
@@ -265,6 +345,15 @@ export function SpinCycle() {
         </p>
       </header>
 
+      {!canUseInteractive && (
+        <div className="mb-8 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-serif text-muted-foreground">
+          Interactive Spin Cycle is a Membership feature ($2.22). You can explore the full method below
+          with this in-depth case study.
+        </div>
+      )}
+
+      {canUseInteractive ? (
+        <>
       {/* Step tabs */}
       <nav className="flex flex-wrap justify-center gap-2 mb-10" aria-label="Spin Cycle steps">
         {STEPS.map((s, i) => (
@@ -566,6 +655,28 @@ export function SpinCycle() {
           </div>
         )}
       </div>
+        </>
+      ) : (
+        <div className="space-y-6">
+          <SpinCycleCaseStudy />
+          <div className="rounded-xl border border-primary/30 bg-card/60 p-5 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <div>
+              <p className="font-serif text-foreground">Want to run your own Spin Cycle live?</p>
+              <p className="text-sm text-muted-foreground font-serif">
+                Membership unlocks the interactive workflow plus in-app ephemeris snapshot.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/auth/login">
+                <Button variant="outline" className="font-serif">Sign In</Button>
+              </Link>
+              <Link href="/pricing">
+                <Button className="font-serif">Unlock for $2.22</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

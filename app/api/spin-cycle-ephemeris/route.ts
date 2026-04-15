@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
 import {
   computePlanetRows,
   formatEphemerisBlock,
@@ -13,6 +14,32 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const supabase = await createClient();
+  if (!supabase) {
+    return NextResponse.json({ error: "Authentication is not configured." }, { status: 503 });
+  }
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Sign in required for Spin Cycle ephemeris." }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("account_type")
+    .eq("id", user.id)
+    .single();
+  const accountType = profile?.account_type ?? user.user_metadata?.account_type;
+  if (accountType !== "member") {
+    return NextResponse.json(
+      { error: "Spin Cycle interactive ephemeris is available with Membership ($2.22)." },
+      { status: 403 },
+    );
+  }
+
   let json: unknown;
   try {
     json = await req.json();

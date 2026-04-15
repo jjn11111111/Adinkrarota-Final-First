@@ -34,6 +34,7 @@ export type PremiumFeature =
   | "ai_oracle"             // AI interpretation
   | "reading_journal"       // Save and review readings
   | "custom_spreads"        // Create custom spreads
+  | "spin_cycle"            // Spin Cycle interactive mode
   | "astro_integration"     // Birth chart features
   | "synastry"              // Relationship readings
   | "unlimited_daily";      // Daily reading (vs 7/year for guests)
@@ -46,6 +47,7 @@ export const MEMBER_FEATURES: PremiumFeature[] = [
   "ai_oracle", 
   "reading_journal",
   "custom_spreads",
+  "spin_cycle",
   "astro_integration",
   "synastry",
   "unlimited_daily",

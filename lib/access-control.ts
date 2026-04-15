@@ -149,6 +149,10 @@ export function canCreateCustomSpreads(access: UserAccess): boolean {
   return hasFeature(access, "custom_spreads");
 }
 
+export function canUseSpinCycle(access: UserAccess): boolean {
+  return hasFeature(access, "spin_cycle");
+}
+
 export function canUseAstrology(access: UserAccess): boolean {
   return hasFeature(access, "astro_integration");
 }
