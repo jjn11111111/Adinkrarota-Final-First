@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth-provider";
+import { syncMembershipFromStripe } from "@/app/actions/membership-sync";
 import { DailyWisdom } from "@/components/daily-wisdom";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,7 @@ import {
   ChevronUp,
   User,
   Shield,
+  RefreshCw,
 } from "lucide-react";
 
 interface ReadingRecord {
@@ -53,6 +55,8 @@ export default function PortalPage() {
   const [readings, setReadings] = useState<ReadingRecord[]>([]);
   const [loadingReadings, setLoadingReadings] = useState(true);
   const [expandedReading, setExpandedReading] = useState<string | null>(null);
+  const [syncingMembership, setSyncingMembership] = useState(false);
+  const [membershipSyncMessage, setMembershipSyncMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -124,6 +128,31 @@ export default function PortalPage() {
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
+  };
+
+  const handleRestoreMembership = async () => {
+    setMembershipSyncMessage(null);
+    setSyncingMembership(true);
+    try {
+      const result = await syncMembershipFromStripe();
+      if (!result.ok) {
+        setMembershipSyncMessage(result.error);
+        return;
+      }
+
+      if (result.status === "updated_member") {
+        await refreshProfile();
+        setMembershipSyncMessage("Membership restored. Your account is now active.");
+      } else {
+        setMembershipSyncMessage(
+          "No active Stripe subscription found for this account yet. If you just paid, wait a minute and try again.",
+        );
+      }
+    } catch {
+      setMembershipSyncMessage("Could not check membership right now. Please try again.");
+    } finally {
+      setSyncingMembership(false);
+    }
   };
 
   if (isLoading) {
@@ -473,13 +502,28 @@ export default function PortalPage() {
               Daily readings, Celtic Cross spread, AI Oracle, reading journal, custom spreads,
               and birth chart integration -- all for $2.22/month. Cancel anytime.
             </p>
-            <Link href="/membership/checkout">
-              <Button className="gap-2">
-                <Star className="w-4 h-4" />
-                Become a Member - $2.22/month
-                <ArrowRight className="w-4 h-4" />
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link href="/membership/checkout">
+                <Button className="gap-2">
+                  <Star className="w-4 h-4" />
+                  Become a Member - $2.22/month
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2 bg-transparent"
+                disabled={syncingMembership}
+                onClick={() => void handleRestoreMembership()}
+              >
+                <RefreshCw className={`w-4 h-4 ${syncingMembership ? "animate-spin" : ""}`} />
+                {syncingMembership ? "Checking..." : "Restore Membership"}
               </Button>
-            </Link>
+            </div>
+            {membershipSyncMessage ? (
+              <p className="text-xs text-muted-foreground mt-3">{membershipSyncMessage}</p>
+            ) : null}
           </motion.div>
         )}
 
