@@ -11,11 +11,13 @@ import {
   RefreshCw,
   CircleDot,
   Loader2,
+  Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DEFAULT_MODEL_ID, getAISettings } from "@/lib/ai-settings";
 
 const STEPS = [
   { id: 0, label: "Situation" },
@@ -30,6 +32,7 @@ export interface SpinCycleFields {
   fulfillmentPole: string;
   anxietyPole: string;
   natalProfile: string;
+  numerologyProfile: string;
   transitContext: string;
 }
 
@@ -39,6 +42,7 @@ const emptyFields: SpinCycleFields = {
   fulfillmentPole: "",
   anxietyPole: "",
   natalProfile: "",
+  numerologyProfile: "",
   transitContext: "",
 };
 
@@ -68,7 +72,9 @@ export function buildSpinSynthesis(
   const fulfill = f.fulfillmentPole.trim();
   const anxiety = f.anxietyPole.trim();
   const natal = f.natalProfile.trim();
+  const numerology = f.numerologyProfile.trim();
   const transits = f.transitContext.trim();
+  const baseline = [natal, numerology].filter(Boolean).join(" | ");
 
   const headline =
     situation.length > 0
@@ -87,12 +93,12 @@ export function buildSpinSynthesis(
   }
 
   let transitLayer: string;
-  if (transits && natal) {
-    transitLayer = `Against your baseline tone (${trimSnippet(natal, 100)}), the current weather reads as: ${trimSnippet(transits, 160)}. The useful question is where those layers agree, clash, or ask for a slower tempo—not which side “wins.”`;
+  if (transits && baseline) {
+    transitLayer = `Against your baseline tone (${trimSnippet(baseline, 100)}), the current weather reads as: ${trimSnippet(transits, 160)}. The useful question is where those layers agree, clash, or ask for a slower tempo—not which side “wins.”`;
   } else if (transits) {
     transitLayer = `Present transits and timing: ${trimSnippet(transits, 220)}. Treat this as moving sky over steady ground: notice pace, pressure, and where you need support, not just insight.`;
-  } else if (natal) {
-    transitLayer = `You’ve named your natal / numerological tone (${trimSnippet(natal, 120)}). Add a few words on what’s moving now (dates, seasons, major life events) so the neutral node can sit between chart and moment.`;
+  } else if (baseline) {
+    transitLayer = `You’ve named your natal / numerological tone (${trimSnippet(baseline, 120)}). Add a few words on what’s moving now (dates, seasons, major life events) so the neutral node can sit between chart and moment.`;
   } else {
     transitLayer =
       "Add both a natal snapshot (Sun, Moon, rising, life path, or how you typically handle change) and what’s astrologically or practically “in motion” now. The neutral node lives in the overlap.";
@@ -221,6 +227,9 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
   const [birthEphemLocal, setBirthEphemLocal] = useState("");
   const [ephemerisLoading, setEphemerisLoading] = useState(false);
   const [ephemerisError, setEphemerisError] = useState<string | null>(null);
+  const [aiInsight, setAiInsight] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const synthesis = useMemo(
     () => buildSpinSynthesis(fields, { ephemerisBlock: ephemerisBlock || undefined }),
@@ -249,6 +258,7 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
       "",
       "Natal / numerology notes:",
       fields.natalProfile.trim() || "(—)",
+      fields.numerologyProfile.trim() ? `Numerology notes: ${fields.numerologyProfile.trim()}` : "",
       "",
       "Transits / timing:",
       fields.transitContext.trim() || "(—)",
@@ -261,6 +271,8 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
       synthesis.transitLayer,
       "",
       synthesis.neutralNode,
+      aiInsight.trim() ? "\n— AI Strategy —" : "",
+      aiInsight.trim() ? aiInsight.trim() : "",
       "",
       "Practice:",
       ...synthesis.practices.map((p) => `• ${p}`),
@@ -285,6 +297,8 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
     setTransitEphemLocal(toDatetimeLocalValue(new Date()));
     setBirthEphemLocal("");
     setEphemerisError(null);
+    setAiInsight("");
+    setAiError(null);
   };
 
   const fetchEphemeris = async () => {
@@ -323,6 +337,47 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
       setEphemerisError("Network error — try again.");
     } finally {
       setEphemerisLoading(false);
+    }
+  };
+
+  const generateAiInsight = async () => {
+    setAiError(null);
+    setAiInsight("");
+
+    const aiSettings = getAISettings();
+    const modelId = aiSettings?.enabled ? aiSettings.modelId : DEFAULT_MODEL_ID;
+
+    setAiLoading(true);
+    try {
+      const res = await fetch("/api/spin-cycle-insight", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          modelId,
+          cycleTitle: fields.cycleTitle,
+          situation: fields.situation,
+          fulfillmentPole: fields.fulfillmentPole,
+          anxietyPole: fields.anxietyPole,
+          natalProfile: fields.natalProfile,
+          numerologyProfile: fields.numerologyProfile,
+          transitContext: fields.transitContext,
+          ephemerisBlock: ephemerisBlock || undefined,
+        }),
+      });
+      const data = (await res.json()) as { insight?: string; error?: string };
+      if (!res.ok) {
+        setAiError(data.error || "Could not generate strategy.");
+        return;
+      }
+      if (typeof data.insight === "string") {
+        setAiInsight(data.insight);
+      } else {
+        setAiError("AI returned an empty response.");
+      }
+    } catch {
+      setAiError("Network error while generating strategy.");
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -455,6 +510,18 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
                   value={fields.natalProfile}
                   onChange={(e) => setFields((p) => ({ ...p, natalProfile: e.target.value }))}
                   className="mt-2 min-h-28 font-serif"
+                />
+              </div>
+              <div>
+                <Label htmlFor="numerology" className="font-serif">
+                  Numerology notes (optional)
+                </Label>
+                <Textarea
+                  id="numerology"
+                  placeholder="Life path, personal year, repeating number patterns, or any numerical themes shaping this cycle."
+                  value={fields.numerologyProfile}
+                  onChange={(e) => setFields((p) => ({ ...p, numerologyProfile: e.target.value }))}
+                  className="mt-2 min-h-20 font-serif"
                 />
               </div>
             </motion.div>
@@ -616,6 +683,39 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
                     ))}
                   </ul>
                 </div>
+              </section>
+
+              <section className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-xs uppercase tracking-widest text-primary">AI Strategy</h3>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="gap-2 font-serif"
+                    disabled={aiLoading}
+                    onClick={() => void generateAiInsight()}
+                  >
+                    {aiLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                    ) : (
+                      <Wand2 className="w-4 h-4" aria-hidden />
+                    )}
+                    {aiLoading ? "Generating..." : "Generate aligned actions"}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground font-serif">
+                  Uses your current Spin Cycle inputs plus transit/ephemeris context to propose precise
+                  next actions aligned with your highest desired outcome.
+                </p>
+                {aiError ? (
+                  <p className="text-sm text-destructive font-serif">{aiError}</p>
+                ) : null}
+                {aiInsight ? (
+                  <pre className="text-xs md:text-sm font-serif whitespace-pre-wrap text-foreground rounded-md border border-border bg-background/60 p-3">
+                    {aiInsight}
+                  </pre>
+                ) : null}
               </section>
 
               <div className="flex flex-wrap gap-3 pt-2">
