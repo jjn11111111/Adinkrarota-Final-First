@@ -149,7 +149,7 @@ export function SpinCycle() {
 
   const canAdvance =
     step === 0
-      ? fields.cycleTitle.trim().length > 0 && fields.situation.trim().length > 0
+      ? fields.situation.trim().length > 0
       : step === 1
         ? fields.fulfillmentPole.trim().length > 0 && fields.anxietyPole.trim().length > 0
         : true;
@@ -209,7 +209,12 @@ export function SpinCycle() {
 
   const fetchEphemeris = async () => {
     setEphemerisError(null);
-    const transitIso = new Date(transitEphemLocal).toISOString();
+    const transitDate = new Date(transitEphemLocal);
+    if (Number.isNaN(transitDate.getTime())) {
+      setEphemerisError("Transit date/time is not valid.");
+      return;
+    }
+    const transitIso = transitDate.toISOString();
     let birthIso: string | undefined;
     if (birthEphemLocal.trim()) {
       const b = new Date(birthEphemLocal);
