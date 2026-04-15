@@ -8,7 +8,7 @@ import { AISettingsModal } from "./ai-settings-modal";
 import { useAuth } from "./auth-provider";
 import Link from "next/link";
 
-type View = "home" | "gallery" | "reading" | "guidebook" | "spread-builder";
+type View = "home" | "gallery" | "reading" | "guidebook" | "spread-builder" | "spin-cycle";
 
 interface NavigationProps {
   currentView: View;
@@ -24,6 +24,7 @@ export function Navigation({ currentView, onNavigate }: NavigationProps) {
     { label: "Home", view: "home" },
     { label: "The Deck", view: "gallery" },
     { label: "Reading", view: "reading" },
+    { label: "Spin Cycle", view: "spin-cycle" },
     { label: "Create Spread", view: "spread-builder" },
     { label: "Guidebook", view: "guidebook" },
   ];

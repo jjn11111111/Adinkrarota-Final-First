@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { ChevronDown, BookOpen, Sparkles } from "lucide-react";
+import { ChevronDown, BookOpen, Sparkles, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMouseParallax } from "@/hooks/use-parallax";
 import { FloatingElement } from "@/components/parallax-layers";
@@ -10,9 +10,10 @@ import { useRef } from "react";
 interface HeroSectionProps {
   onExplore: () => void;
   onReading: () => void;
+  onSpinCycle?: () => void;
 }
 
-export function HeroSection({ onExplore, onReading }: HeroSectionProps) {
+export function HeroSection({ onExplore, onReading, onSpinCycle }: HeroSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const mousePosition = useMouseParallax({ strength: 25, easing: 0.04 });
   
@@ -271,25 +272,38 @@ export function HeroSection({ onExplore, onReading }: HeroSectionProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          className="flex flex-col items-center justify-center gap-4"
         >
-          <Button
-            size="lg"
-            onClick={onReading}
-            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 text-base px-8"
-          >
-            <Sparkles className="w-5 h-5" />
-            Begin Reading
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={onExplore}
-            className="gap-2 text-base px-8 bg-transparent"
-          >
-            <BookOpen className="w-5 h-5" />
-            Explore the Deck
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button
+              size="lg"
+              onClick={onReading}
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 text-base px-8"
+            >
+              <Sparkles className="w-5 h-5" />
+              Begin Reading
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={onExplore}
+              className="gap-2 text-base px-8 bg-transparent"
+            >
+              <BookOpen className="w-5 h-5" />
+              Explore the Deck
+            </Button>
+          </div>
+          {onSpinCycle && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onSpinCycle}
+              className="gap-2 text-muted-foreground hover:text-primary font-serif"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Spin Cycle — map your focus
+            </Button>
+          )}
         </motion.div>
 
         {/* Cultural note */}

@@ -10,9 +10,10 @@ import { CardGallery } from "@/components/card-gallery";
 import { CardReading } from "@/components/card-reading";
 import { Guidebook } from "@/components/guidebook";
 import { SpreadBuilder, type CustomSpread } from "@/components/spread-builder";
+import { SpinCycle } from "@/components/spin-cycle";
 import { ParallaxStarfield, CosmicOrbs, RevealOnScroll, ParallaxSection } from "@/components/parallax-layers";
 
-type View = "home" | "gallery" | "reading" | "guidebook" | "spread-builder";
+type View = "home" | "gallery" | "reading" | "guidebook" | "spread-builder" | "spin-cycle";
 
 const STORAGE_KEY = "adinkrarota-custom-spreads";
 
@@ -23,6 +24,7 @@ const PATH_TO_VIEW: Record<string, View> = {
   "/reading": "reading",
   "/guidebook": "guidebook",
   "/spread-builder": "spread-builder",
+  "/spin-cycle": "spin-cycle",
 };
 
 export default function AdinkrarotaApp() {
@@ -148,6 +150,7 @@ export default function AdinkrarotaApp() {
               <HeroSection
                 onExplore={() => handleNavigate("gallery")}
                 onReading={() => handleNavigate("reading")}
+                onSpinCycle={() => handleNavigate("spin-cycle")}
               />
 
               {/* Feature highlights with parallax reveal */}
@@ -311,6 +314,18 @@ export default function AdinkrarotaApp() {
               <div className="pt-8">
                 <Guidebook />
               </div>
+            </motion.div>
+          )}
+
+          {currentView === "spin-cycle" && (
+            <motion.div
+              key="spin-cycle"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <SpinCycle />
             </motion.div>
           )}
 
