@@ -25,6 +25,13 @@ export interface PlanetLongitudeRow {
   retrograde: boolean;
 }
 
+export interface AspectRow {
+  from: string;
+  to: string;
+  aspect: "Conjunction" | "Sextile" | "Square" | "Trine" | "Opposition";
+  orb: number;
+}
+
 function norm360(lon: number): number {
   let x = lon % 360;
   if (x < 0) x += 360;
@@ -91,4 +98,53 @@ export function formatEphemerisBlock(label: string, date: Date, rows: PlanetLong
       `  ${r.name}: ${r.sign} ${r.degreeInSign.toFixed(1)}°${r.retrograde ? " Rx" : ""} (${r.longitudeDeg.toFixed(2)}°)`,
   );
   return `[${label} — tropical, geocentric — ${iso}]\n${lines.join("\n")}`;
+}
+
+function shortestAngleDistance(a: number, b: number): number {
+  let d = Math.abs(a - b) % 360;
+  if (d > 180) d = 360 - d;
+  return d;
+}
+
+const ASPECTS: { name: AspectRow["aspect"]; degrees: number; orb: number }[] = [
+  { name: "Conjunction", degrees: 0, orb: 6 },
+  { name: "Sextile", degrees: 60, orb: 4 },
+  { name: "Square", degrees: 90, orb: 5 },
+  { name: "Trine", degrees: 120, orb: 5 },
+  { name: "Opposition", degrees: 180, orb: 6 },
+];
+
+export function computeCrossAspects(
+  leftRows: PlanetLongitudeRow[],
+  rightRows: PlanetLongitudeRow[],
+): AspectRow[] {
+  const out: AspectRow[] = [];
+  for (const l of leftRows) {
+    for (const r of rightRows) {
+      const d = shortestAngleDistance(l.longitudeDeg, r.longitudeDeg);
+      for (const a of ASPECTS) {
+        const orb = Math.abs(d - a.degrees);
+        if (orb <= a.orb) {
+          out.push({
+            from: l.name,
+            to: r.name,
+            aspect: a.name,
+            orb,
+          });
+          break;
+        }
+      }
+    }
+  }
+  return out.sort((x, y) => x.orb - y.orb);
+}
+
+export function formatAspectBlock(label: string, aspects: AspectRow[]): string {
+  if (aspects.length === 0) {
+    return `[${label}]\n  (No major aspects found within configured orbs.)`;
+  }
+  const lines = aspects.slice(0, 24).map(
+    (a) => `  ${a.from} ${a.aspect} ${a.to} (orb ${a.orb.toFixed(1)}°)`,
+  );
+  return `[${label}]\n${lines.join("\n")}`;
 }

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import {
   computePlanetRows,
+  computeCrossAspects,
+  formatAspectBlock,
   formatEphemerisBlock,
 } from "@/lib/spin-cycle-ephemeris";
 
@@ -65,6 +67,7 @@ export async function POST(req: Request) {
 
   let birthText: string | undefined;
   let birthRows: ReturnType<typeof computePlanetRows> | undefined;
+  let aspectText: string | undefined;
   if (parsed.data.birthIso) {
     const birthDate = new Date(parsed.data.birthIso);
     if (Number.isNaN(birthDate.getTime())) {
@@ -72,6 +75,8 @@ export async function POST(req: Request) {
     }
     birthRows = computePlanetRows(birthDate);
     birthText = formatEphemerisBlock("Natal sky (same longitudes as birth moment)", birthDate, birthRows);
+    const aspects = computeCrossAspects(transitRows, birthRows);
+    aspectText = formatAspectBlock("Transit-to-natal major aspects", aspects);
   }
 
   return NextResponse.json({
@@ -82,7 +87,10 @@ export async function POST(req: Request) {
       birthRows && birthText
         ? { iso: new Date(parsed.data.birthIso!).toISOString(), rows: birthRows, text: birthText }
         : null,
+    aspects: aspectText ? { text: aspectText } : null,
     /** Ready to paste into Spin Cycle notes */
-    combinedText: birthText ? `${transitText}\n\n${birthText}` : transitText,
+    combinedText: birthText
+      ? `${transitText}\n\n${birthText}${aspectText ? `\n\n${aspectText}` : ""}`
+      : transitText,
   });
 }

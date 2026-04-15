@@ -21,7 +21,7 @@ import { DEFAULT_MODEL_ID, getAISettings } from "@/lib/ai-settings";
 
 const STEPS = [
   { id: 0, label: "Situation" },
-  { id: 1, label: "Polarity" },
+  { id: 1, label: "Birth keys" },
   { id: 2, label: "Transits" },
   { id: 3, label: "Neutral node" },
 ] as const;
@@ -29,20 +29,28 @@ const STEPS = [
 export interface SpinCycleFields {
   cycleTitle: string;
   situation: string;
+  birthName: string;
+  birthDate: string;
+  birthTime: string;
+  birthPlace: string;
   fulfillmentPole: string;
   anxietyPole: string;
   natalProfile: string;
-  numerologyProfile: string;
+  extraContext: string;
   transitContext: string;
 }
 
 const emptyFields: SpinCycleFields = {
   cycleTitle: "",
   situation: "",
+  birthName: "",
+  birthDate: "",
+  birthTime: "",
+  birthPlace: "",
   fulfillmentPole: "",
   anxietyPole: "",
   natalProfile: "",
-  numerologyProfile: "",
+  extraContext: "",
   transitContext: "",
 };
 
@@ -72,9 +80,9 @@ export function buildSpinSynthesis(
   const fulfill = f.fulfillmentPole.trim();
   const anxiety = f.anxietyPole.trim();
   const natal = f.natalProfile.trim();
-  const numerology = f.numerologyProfile.trim();
+  const extra = f.extraContext.trim();
   const transits = f.transitContext.trim();
-  const baseline = [natal, numerology].filter(Boolean).join(" | ");
+  const baseline = [natal, extra].filter(Boolean).join(" | ");
 
   const headline =
     situation.length > 0
@@ -240,7 +248,10 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
     step === 0
       ? fields.situation.trim().length > 0
       : step === 1
-        ? fields.fulfillmentPole.trim().length > 0 && fields.anxietyPole.trim().length > 0
+        ? fields.birthName.trim().length > 0 &&
+          fields.birthDate.trim().length > 0 &&
+          fields.birthTime.trim().length > 0 &&
+          fields.birthPlace.trim().length > 0
         : true;
 
   const copySummary = async () => {
@@ -250,15 +261,24 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
       "Situation:",
       fields.situation.trim(),
       "",
+      "Birth name:",
+      fields.birthName.trim() || "(—)",
+      "Birth date:",
+      fields.birthDate.trim() || "(—)",
+      "Birth time:",
+      fields.birthTime.trim() || "(—)",
+      "Birth place:",
+      fields.birthPlace.trim() || "(—)",
+      "",
       "Fulfillment pole:",
-      fields.fulfillmentPole.trim(),
+      fields.fulfillmentPole.trim() || "(inferred by AI)",
       "",
       "Anxiety / cost pole:",
-      fields.anxietyPole.trim(),
+      fields.anxietyPole.trim() || "(inferred by AI)",
       "",
-      "Natal / numerology notes:",
+      "Natal notes:",
       fields.natalProfile.trim() || "(—)",
-      fields.numerologyProfile.trim() ? `Numerology notes: ${fields.numerologyProfile.trim()}` : "",
+      fields.extraContext.trim() ? `Other relevant notes: ${fields.extraContext.trim()}` : "",
       "",
       "Transits / timing:",
       fields.transitContext.trim() || "(—)",
@@ -310,8 +330,12 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
     }
     const transitIso = transitDate.toISOString();
     let birthIso: string | undefined;
-    if (birthEphemLocal.trim()) {
-      const b = new Date(birthEphemLocal);
+    const birthLocalCandidate =
+      fields.birthDate && fields.birthTime
+        ? `${fields.birthDate}T${fields.birthTime}`
+        : birthEphemLocal.trim();
+    if (birthLocalCandidate) {
+      const b = new Date(birthLocalCandidate);
       if (Number.isNaN(b.getTime())) {
         setEphemerisError("Birth date/time is not valid.");
         return;
@@ -356,10 +380,14 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
           modelId,
           cycleTitle: fields.cycleTitle,
           situation: fields.situation,
-          fulfillmentPole: fields.fulfillmentPole,
-          anxietyPole: fields.anxietyPole,
+          fulfillmentPole: fields.fulfillmentPole || undefined,
+          anxietyPole: fields.anxietyPole || undefined,
+          birthName: fields.birthName,
+          birthDate: fields.birthDate,
+          birthTime: fields.birthTime,
+          birthPlace: fields.birthPlace,
           natalProfile: fields.natalProfile,
-          numerologyProfile: fields.numerologyProfile,
+          extraContext: fields.extraContext,
           transitContext: fields.transitContext,
           ephemerisBlock: ephemerisBlock || undefined,
         }),
@@ -473,56 +501,114 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
               className="space-y-6"
             >
               <p className="text-sm text-muted-foreground font-serif">
-                The wheel turns between two poles. Honor both—this is how intention becomes a spell
-                of focus instead of a fight with yourself.
+                Enter your birth keys so Spin Cycle can connect your baseline patterning to present
+                transits. You can also add any extra astrology or numerology notes.
               </p>
-              <div>
-                <Label htmlFor="fulfill" className="font-serif">
-                  Fulfillment pole (what excites, expands, or calls you)
-                </Label>
-                <Textarea
-                  id="fulfill"
-                  placeholder="e.g. Finally stepping into the role I trained for; sense of destiny; growth."
-                  value={fields.fulfillmentPole}
-                  onChange={(e) => setFields((p) => ({ ...p, fulfillmentPole: e.target.value }))}
-                  className="mt-2 min-h-24 font-serif"
-                />
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="birth-name" className="font-serif">
+                    Birth certificate name
+                  </Label>
+                  <Input
+                    id="birth-name"
+                    value={fields.birthName}
+                    onChange={(e) => setFields((p) => ({ ...p, birthName: e.target.value }))}
+                    className="mt-2 font-serif"
+                    placeholder="Full birth name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="birth-place" className="font-serif">
+                    Place of birth
+                  </Label>
+                  <Input
+                    id="birth-place"
+                    value={fields.birthPlace}
+                    onChange={(e) => setFields((p) => ({ ...p, birthPlace: e.target.value }))}
+                    className="mt-2 font-serif"
+                    placeholder="City, Country"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="anxiety" className="font-serif">
-                  Cost / anxiety pole (what drains, destabilizes, or fears you)
-                </Label>
-                <Textarea
-                  id="anxiety"
-                  placeholder="e.g. New continent, no familiar roots; fear of isolation; health and sleep slipping."
-                  value={fields.anxietyPole}
-                  onChange={(e) => setFields((p) => ({ ...p, anxietyPole: e.target.value }))}
-                  className="mt-2 min-h-24 font-serif"
-                />
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="birth-date" className="font-serif">
+                    Birth date
+                  </Label>
+                  <Input
+                    id="birth-date"
+                    type="date"
+                    value={fields.birthDate}
+                    onChange={(e) => setFields((p) => ({ ...p, birthDate: e.target.value }))}
+                    className="mt-2 font-serif"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="birth-time" className="font-serif">
+                    Birth time
+                  </Label>
+                  <Input
+                    id="birth-time"
+                    type="time"
+                    value={fields.birthTime}
+                    onChange={(e) => setFields((p) => ({ ...p, birthTime: e.target.value }))}
+                    className="mt-2 font-serif"
+                  />
+                </div>
               </div>
               <div>
                 <Label htmlFor="natal" className="font-serif">
-                  Natal & numerology tone (optional but powerful)
+                  Natal astrology notes (optional)
                 </Label>
                 <Textarea
                   id="natal"
-                  placeholder="Sun, Moon, rising, key aspects, life path—whatever defines your default wiring under stress and joy."
+                  placeholder="Sun, Moon, rising, key natal aspects, houses, sensitivities."
                   value={fields.natalProfile}
                   onChange={(e) => setFields((p) => ({ ...p, natalProfile: e.target.value }))}
                   className="mt-2 min-h-28 font-serif"
                 />
               </div>
               <div>
-                <Label htmlFor="numerology" className="font-serif">
-                  Numerology notes (optional)
+                <Label htmlFor="extra-context" className="font-serif">
+                  Other relevant context (optional)
                 </Label>
                 <Textarea
-                  id="numerology"
-                  placeholder="Life path, personal year, repeating number patterns, or any numerical themes shaping this cycle."
-                  value={fields.numerologyProfile}
-                  onChange={(e) => setFields((p) => ({ ...p, numerologyProfile: e.target.value }))}
+                  id="extra-context"
+                  placeholder="Numerology, health patterns, spiritual practices, or any detail you want included."
+                  value={fields.extraContext}
+                  onChange={(e) => setFields((p) => ({ ...p, extraContext: e.target.value }))}
                   className="mt-2 min-h-20 font-serif"
                 />
+              </div>
+              <div className="rounded-md border border-border bg-background/40 p-3 space-y-3">
+                <p className="text-xs font-serif text-muted-foreground">
+                  Optional: if you already know your polarity, add it. Otherwise AI will infer both
+                  opposing poles directly from your situation.
+                </p>
+                <div>
+                  <Label htmlFor="fulfill" className="font-serif text-xs">
+                    Fulfillment pole (optional)
+                  </Label>
+                  <Textarea
+                    id="fulfill"
+                    placeholder="What outcome or expansion are you called toward?"
+                    value={fields.fulfillmentPole}
+                    onChange={(e) => setFields((p) => ({ ...p, fulfillmentPole: e.target.value }))}
+                    className="mt-1 min-h-20 font-serif"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="anxiety" className="font-serif text-xs">
+                    Anxiety/cost pole (optional)
+                  </Label>
+                  <Textarea
+                    id="anxiety"
+                    placeholder="What fear, burden, or destabilizing cost is active?"
+                    value={fields.anxietyPole}
+                    onChange={(e) => setFields((p) => ({ ...p, anxietyPole: e.target.value }))}
+                    className="mt-1 min-h-20 font-serif"
+                  />
+                </div>
               </div>
             </motion.div>
           )}
@@ -579,14 +665,17 @@ export function SpinCycle({ canUseInteractive }: SpinCycleProps) {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="ephem-birth" className="font-serif text-xs">
-                      Birth moment (optional, local)
+                    <Label htmlFor="ephem-birth-derived" className="font-serif text-xs">
+                      Birth moment used for natal snapshot
                     </Label>
                     <Input
-                      id="ephem-birth"
-                      type="datetime-local"
-                      value={birthEphemLocal}
-                      onChange={(e) => setBirthEphemLocal(e.target.value)}
+                      id="ephem-birth-derived"
+                      readOnly
+                      value={
+                        fields.birthDate && fields.birthTime
+                          ? `${fields.birthDate} ${fields.birthTime}`
+                          : "Set birth date/time in Birth keys step"
+                      }
                       className="mt-1.5 font-serif"
                     />
                   </div>
