@@ -37,14 +37,40 @@ export async function syncMembershipFromStripe(): Promise<SyncMembershipResult> 
     };
   }
 
-  const { data: row, error: rowError } = await admin
-    .from("profiles")
-    .select("stripe_customer_id, stripe_payment_id, account_type")
-    .eq("id", user.id)
-    .single();
+  const loadProfileRow = async () =>
+    admin
+      .from("profiles")
+      .select("stripe_customer_id, stripe_payment_id, account_type")
+      .eq("id", user.id)
+      .single();
+
+  let { data: row, error: rowError } = await loadProfileRow();
 
   if (rowError || !row) {
-    return { ok: false, error: "Could not load your profile." };
+    // Recovery path: some projects miss the auth->profiles trigger or have stale rows.
+    // Create a minimal profile so paid users can self-restore without support.
+    const { error: insertError } = await admin.from("profiles").upsert(
+      {
+        id: user.id,
+        email: user.email || "",
+        account_type: "guest",
+        year_started: new Date().getFullYear(),
+        readings_this_year: 0,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" },
+    );
+
+    if (insertError) {
+      return { ok: false, error: "Could not load your profile." };
+    }
+
+    const retry = await loadProfileRow();
+    row = retry.data;
+    rowError = retry.error;
+    if (rowError || !row) {
+      return { ok: false, error: "Could not load your profile." };
+    }
   }
 
   const persistMember = async (opts: {
