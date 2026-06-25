@@ -1,0 +1,474 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #b8e8e8; /* Light cyan/aqua from guidebook */
+  --foreground: #1a1a2e; /* Dark navy for contrast */
+  --card: #a8dede; /* Slightly darker cyan for cards */
+  --card-foreground: #1a1a2e;
+  --popover: #a8dede;
+  --popover-foreground: #1a1a2e;
+  --primary: #e91e8c; /* Magenta/pink from guidebook symbols */
+  --primary-foreground: #ffffff;
+  --secondary: #98d4d4; /* Muted cyan */
+  --secondary-foreground: #1a1a2e;
+  --muted: #c8f0f0; /* Light muted cyan */
+  --muted-foreground: #2d3748; /* Darker gray for better contrast */
+  --accent: #00b894; /* Teal/green accent */
+  --accent-foreground: #ffffff;
+  --destructive: #e74c3c;
+  --destructive-foreground: #ffffff;
+  --border: #7ac4c4; /* Cyan border */
+  --input: #c8f0f0;
+  --ring: #e91e8c;
+  --radius: 0.5rem;
+  --gold-glow: rgba(233, 30, 140, 0.4); /* Pink glow */
+  --cosmic-purple: #e91e8c; /* Magenta */
+  --cosmic-blue: #00b894; /* Teal */
+  --chart-1: oklch(0.646 0.222 41.116); /* Added from shadcn/ui */
+  --chart-2: oklch(0.6 0.118 184.704); /* Added from shadcn/ui */
+  --chart-3: oklch(0.398 0.07 227.392); /* Added from shadcn/ui */
+  --chart-4: oklch(0.828 0.189 84.429); /* Added from shadcn/ui */
+  --chart-5: oklch(0.769 0.188 70.08); /* Added from shadcn/ui */
+  --sidebar: oklch(0.985 0 0); /* Added from shadcn/ui */
+  --sidebar-foreground: oklch(0.145 0 0); /* Added from shadcn/ui */
+  --sidebar-primary: oklch(0.205 0 0); /* Added from shadcn/ui */
+  --sidebar-primary-foreground: oklch(0.985 0 0); /* Added from shadcn/ui */
+  --sidebar-accent: oklch(0.97 0 0); /* Added from shadcn/ui */
+  --sidebar-accent-foreground: oklch(0.205 0 0); /* Added from shadcn/ui */
+  --sidebar-border: oklch(0.922 0 0); /* Added from shadcn/ui */
+  --sidebar-ring: oklch(0.708 0 0); /* Added from shadcn/ui */
+}
+
+.dark {
+  --background: #b8e8e8; /* Keep light cyan theme */
+  --foreground: #1a1a2e;
+  --card: #a8dede;
+  --card-foreground: #1a1a2e;
+  --popover: #a8dede;
+  --popover-foreground: #1a1a2e;
+  --primary: #e91e8c;
+  --primary-foreground: #ffffff;
+  --secondary: #98d4d4;
+  --secondary-foreground: #1a1a2e;
+  --muted: #c8f0f0;
+  --muted-foreground: #2d3748;
+  --accent: #00b894;
+  --accent-foreground: #ffffff;
+  --destructive: #e74c3c;
+  --destructive-foreground: #ffffff;
+  --border: #7ac4c4;
+  --input: #c8f0f0;
+  --ring: #e91e8c;
+  --chart-1: oklch(0.488 0.243 264.376); /* Added from shadcn/ui */
+  --chart-2: oklch(0.696 0.17 162.48); /* Added from shadcn/ui */
+  --chart-3: oklch(0.769 0.188 70.08); /* Added from shadcn/ui */
+  --chart-4: oklch(0.627 0.265 303.9); /* Added from shadcn/ui */
+  --chart-5: oklch(0.645 0.246 16.439); /* Added from shadcn/ui */
+  --sidebar: oklch(0.205 0 0); /* Added from shadcn/ui */
+  --sidebar-foreground: oklch(0.985 0 0); /* Added from shadcn/ui */
+  --sidebar-primary: oklch(0.488 0.243 264.376); /* Added from shadcn/ui */
+  --sidebar-primary-foreground: oklch(0.985 0 0); /* Added from shadcn/ui */
+  --sidebar-accent: oklch(0.269 0 0); /* Added from shadcn/ui */
+  --sidebar-accent-foreground: oklch(0.985 0 0); /* Added from shadcn/ui */
+  --sidebar-border: oklch(0.269 0 0); /* Added from shadcn/ui */
+  --sidebar-ring: oklch(0.439 0 0); /* Added from shadcn/ui */
+}
+
+@theme inline {
+  --font-sans: 'Bebas Neue', sans-serif;
+  --font-serif: 'Oswald', sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gold: #e91e8c; /* Magenta/pink */
+  --color-gold-light: #ff69b4; /* Light pink */
+  --color-cosmic-purple: #e91e8c; /* Magenta */
+  --color-cosmic-blue: #00b894; /* Teal */
+  --color-chart-1: var(--chart-1); /* Added from shadcn/ui */
+  --color-chart-2: var(--chart-2); /* Added from shadcn/ui */
+  --color-chart-3: var(--chart-3); /* Added from shadcn/ui */
+  --color-chart-4: var(--chart-4); /* Added from shadcn/ui */
+  --color-chart-5: var(--chart-5); /* Added from shadcn/ui */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar); /* Added from shadcn/ui */
+  --color-sidebar-foreground: var(--sidebar-foreground); /* Added from shadcn/ui */
+  --color-sidebar-primary: var(--sidebar-primary); /* Added from shadcn/ui */
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground); /* Added from shadcn/ui */
+  --color-sidebar-accent: var(--sidebar-accent); /* Added from shadcn/ui */
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground); /* Added from shadcn/ui */
+  --color-sidebar-border: var(--sidebar-border); /* Added from shadcn/ui */
+  --color-sidebar-ring: var(--sidebar-ring); /* Added from shadcn/ui */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Cosmic background effect */
+.cosmic-bg {
+  background: 
+    radial-gradient(ellipse at 20% 20%, rgba(233, 30, 140, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(0, 184, 148, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(233, 30, 140, 0.03) 0%, transparent 70%),
+    var(--background);
+}
+
+/* Starfield styles */
+.star {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle var(--duration, 3s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(1deg); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(233, 30, 140, 0.3), 0 0 40px rgba(233, 30, 140, 0.1);
+    filter: brightness(1);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(233, 30, 140, 0.5), 0 0 80px rgba(233, 30, 140, 0.2);
+    filter: brightness(1.1);
+  }
+}
+
+@keyframes card-reveal {
+  0% { transform: scale(0.8) rotateY(180deg); opacity: 0; }
+  100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(10px, -15px) rotate(1deg); }
+  50% { transform: translate(-5px, -25px) rotate(-1deg); }
+  75% { transform: translate(-15px, -10px) rotate(0.5deg); }
+}
+
+@keyframes cosmic-pulse {
+  0%, 100% { 
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-10px) translateX(5px); }
+  50% { transform: translateY(-5px) translateX(-5px); }
+  75% { transform: translateY(-15px) translateX(3px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.animate-card-reveal {
+  animation: card-reveal 0.8s ease-out forwards;
+}
+
+.animate-drift {
+  animation: drift 20s ease-in-out infinite;
+}
+
+.animate-cosmic-pulse {
+  animation: cosmic-pulse 8s ease-in-out infinite;
+}
+
+.animate-gentle-float {
+  animation: gentle-float 12s ease-in-out infinite;
+}
+
+/* Parallax layer utilities */
+.parallax-slow {
+  will-change: transform;
+  transition: transform 0.1s linear;
+}
+
+.parallax-medium {
+  will-change: transform;
+  transition: transform 0.08s linear;
+}
+
+.parallax-fast {
+  will-change: transform;
+  transition: transform 0.05s linear;
+}
+
+/* Depth layers for parallax */
+.depth-far {
+  transform: translateZ(-100px) scale(1.1);
+}
+
+.depth-mid {
+  transform: translateZ(-50px) scale(1.05);
+}
+
+.depth-near {
+  transform: translateZ(0);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-glow,
+  .animate-drift,
+  .animate-cosmic-pulse,
+  .animate-gentle-float {
+    animation: none;
+  }
+  
+  .parallax-slow,
+  .parallax-medium,
+  .parallax-fast {
+    transition: none;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Card 3D transform styles */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-2000 {
+  perspective: 2000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Enhanced 3D card hover effect */
+.card-3d-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-3d-hover:hover {
+  transform: perspective(1000px) rotateX(5deg) rotateY(5deg) translateZ(10px);
+  box-shadow: 
+    -10px 10px 30px rgba(0, 0, 0, 0.2),
+    0 0 20px rgba(233, 30, 140, 0.2);
+}
+
+/* Parallax scroll indicator */
+@keyframes scroll-hint {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(10px); opacity: 1; }
+}
+
+.scroll-indicator {
+  animation: scroll-hint 2s ease-in-out infinite;
+}
+
+/* Floating particles animation */
+@keyframes particle-float {
+  0%, 100% { 
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0.6;
+  }
+  33% { 
+    transform: translateY(-30px) translateX(10px) scale(1.1);
+    opacity: 0.9;
+  }
+  66% { 
+    transform: translateY(-15px) translateX(-10px) scale(0.95);
+    opacity: 0.7;
+  }
+}
+
+.particle-float {
+  animation: particle-float 15s ease-in-out infinite;
+}
+
+/* Smooth entrance animations */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+}
+
+.animate-fade-in-scale {
+  animation: fade-in-scale 0.5s ease-out forwards;
+}
+
+/* Staggered animation delays */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+/* Water ripple effect */
+@keyframes ripple {
+  0%, 100% { 
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+  50% { 
+    transform: translateY(2px);
+    opacity: 0.5;
+  }
+}
+
+/* Orb breathing animation */
+@keyframes orb-breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.5;
+  }
+}
+
+.orb-breathe {
+  animation: orb-breathe 8s ease-in-out infinite;
+}
+
+/* Magenta text gradient */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #e91e8c 0%, #ff69b4 50%, #e91e8c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Magenta shimmer effect */
+.gold-shimmer {
+  background: linear-gradient(
+    90deg,
+    #e91e8c 0%,
+    #ff69b4 25%,
+    #e91e8c 50%,
+    #ff69b4 75%,
+    #e91e8c 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Mystical border */
+.mystical-border {
+  border: 1px solid var(--border);
+  box-shadow: 
+    inset 0 0 30px rgba(233, 30, 140, 0.05),
+    0 0 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Card glow on hover */
+.card-glow {
+  transition: all 0.4s ease;
+}
+
+.card-glow:hover {
+  box-shadow: 
+    0 0 30px rgba(233, 30, 140, 0.4),
+    0 0 60px rgba(233, 30, 140, 0.2),
+    0 0 90px rgba(233, 30, 140, 0.1);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
